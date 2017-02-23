@@ -22,14 +22,14 @@
     "definitelytyped-header-parser": "Microsoft/definitelytyped-header-parser#production",
     "fs-promise": "^2.0.0",
     "strip-json-comments": "^2.0.1",
-    "tslint": "^4.4.2",
     "yargs": "^6.6.0"
   },
   "devDependencies": {
     "@types/node": "^7.0.5",
     "@types/strip-json-comments": "0.0.28",
     "@types/yargs": "^6.6.0",
-    "typescript": "^2"
+    "tslint": "^4.4.2",
+    "typescript": "^2.2.1"
   },
   "license": "MIT"
 }
