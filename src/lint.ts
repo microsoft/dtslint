@@ -9,8 +9,9 @@ import { Options, TestError } from "./index";
 import { getLinter, rulesDirectory } from "./installer";
 import { readJson } from "./util";
 
-export async function lintWithVersion(dirPath: string, options: Options, version: TypeScriptVersion): Promise<TestError | undefined> {
-	const tslint = await getLinter(version);
+export async function lintWithVersion(
+	dirPath: string, options: Options, version: TypeScriptVersion | "next"): Promise<TestError | undefined> {
+	const tslint = getLinter(version);
 	const program = tslint.Linter.createProgram(path.join(dirPath, "tsconfig.json"));
 	global.program = program;
 

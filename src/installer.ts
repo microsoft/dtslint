@@ -6,9 +6,8 @@ import * as TsLintType from "tslint";
 
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 
-export async function getLinter(version: TypeScriptVersion): Promise<typeof TsLintType> {
+export async function install(version: TypeScriptVersion | "next"): Promise<void> {
 	const dir = installDir(version);
-
 	if (!await fsp.existsSync(dir)) {
 		console.log(`Installing to ${dir}...`);
 		await fsp.mkdirp(dir);
@@ -18,12 +17,14 @@ export async function getLinter(version: TypeScriptVersion): Promise<typeof TsLi
 		await fsp.copy(path.join(__dirname, "rules"), path.join(dir, "rules"));
 		console.log("Installed!");
 	}
+}
 
-	const tslintPath = path.join(dir, "node_modules", "tslint");
+export function getLinter(version: TypeScriptVersion | "next"): typeof TsLintType {
+	const tslintPath = path.join(installDir(version), "node_modules", "tslint");
 	return require(tslintPath);
 }
 
-export function rulesDirectory(version: TypeScriptVersion): string {
+export function rulesDirectory(version: TypeScriptVersion | "next"): string {
 	return path.join(installDir(version), "rules");
 }
 
@@ -31,11 +32,11 @@ export function cleanInstalls(): Promise<void> {
 	return fsp.remove(installsDir);
 }
 
-export function tscPath(version: TypeScriptVersion) {
+export function tscPath(version: TypeScriptVersion | "next"): string {
 	return path.join(installDir(version), "node_modules", "typescript", "lib", "tsc.js");
 }
 
-function installDir(version: TypeScriptVersion) {
+function installDir(version: TypeScriptVersion | "next"): string {
 	return path.join(installsDir, version);
 }
 
@@ -58,13 +59,13 @@ if (!tslintVersion) {
 	throw new Error("Missing tslint version.");
 }
 
-function packageJson(version: TypeScriptVersion): {} {
+function packageJson(version: TypeScriptVersion | "next"): {} {
 	return {
-		description: "",
-		repository: "",
-		license: "",
+		description: `Installs typescript@${version}`,
+		repository: "N/A",
+		license: "MIT",
 		dependencies: {
-			typescript: `${version}.x`,
+			typescript: version,
 			tslint: tslintVersion,
 		},
 	};

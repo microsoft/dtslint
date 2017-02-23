@@ -7,24 +7,24 @@ import { Program } from "typescript";
 import * as yargs from "yargs";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, tscPath } from "./installer";
+import { cleanInstalls, install, tscPath } from "./installer";
 import { lintWithVersion } from "./lint";
 
 export interface Options {
 	dt: boolean;
 	noLint: boolean;
+	tsNext: boolean;
 }
 
 async function main(): Promise<void> {
 	const argv = yargs.argv;
 
 	for (const key in argv) {
-		if (key === "_" || key === "clean" || key === "dt" || key === "version" || key === "noLint" || /^\$\d$/.test(key)) {
-			continue;
+		if (!(["_", "clean", "dt", "version", "noLint", "tsNext"].includes(key) || /^\$\d$/.test(key))) {
+			console.error(`Unexpected argument '${key}'\n`);
+			usage();
+			return;
 		}
-		console.error(`Unexpected argument '${key}'\n`);
-		usage();
-		return;
 	}
 
 	if (argv.version) {
@@ -41,7 +41,7 @@ async function main(): Promise<void> {
 	const cwd = process.cwd();
 	const name = argv._[0];
 	const dirPath = name ? path.join(cwd, name) : cwd;
-	await runTests(dirPath, { dt: !!argv.dt, noLint: !!argv.noLint });
+	await runTests(dirPath, { dt: !!argv.dt, noLint: !!argv.noLint, tsNext: !!argv.tsNext });
 }
 
 function usage() {
@@ -51,6 +51,7 @@ function usage() {
 	console.log("  --dt     Run extra checks for DefinitelyTyped packages.");
 	console.log("  --clean  Clean typescript installs and install again.");
 	console.log("  --noLint Just run 'tsc'.");
+	console.log("  --tsNext Run with 'typescript@next' instead of the specified version.");
 }
 
 // KLUDGE -- tslint creates a duplicate program, so must set this to the original program.
@@ -67,7 +68,7 @@ async function runTests(dirPath: string, options: Options): Promise<void> {
 		if (text.includes("// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped") && !options.dt) {
 			console.warn("Warning: Text includes DefinitelyTyped link, but '--dt' is not set.");
 		}
-		const version = getTypeScriptVersion(text);
+		const version = options.tsNext ? "next" : getTypeScriptVersion(text);
 
 		if (options.dt) {
 			await checkPackageJson(dirPath);
@@ -94,7 +95,7 @@ function getTypeScriptVersion(text: string): TypeScriptVersion {
 	return parseTypeScriptVersionLine(line);
 }
 
-async function test(dirPath: string, options: Options, version: TypeScriptVersion): Promise<void> {
+async function test(dirPath: string, options: Options, version: TypeScriptVersion | "next"): Promise<void> {
 	const a = await testWithVersion(dirPath, options, version);
 	if (a) {
 		if (version !== TypeScriptVersion.Latest) {
@@ -112,7 +113,8 @@ async function test(dirPath: string, options: Options, version: TypeScriptVersio
 
 export interface TestError { message: string; }
 
-function testWithVersion(dirPath: string, options: Options, version: TypeScriptVersion): Promise<TestError | undefined> {
+async function testWithVersion(dirPath: string, options: Options, version: TypeScriptVersion | "next"): Promise<TestError | undefined> {
+	await install(version);
 	if (options.noLint) {
 		// Special for old DefinitelyTyped packages that aren't linted yet.
 		return execScript("node " + tscPath(version), dirPath);
