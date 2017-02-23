@@ -30,7 +30,7 @@ Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-
 
 #### `types/tsconfig.json`
 
-```json
+```ts
 {
     "compilerOptions": {
         "module": "commonjs",
