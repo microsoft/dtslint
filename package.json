@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "fs-promise": "^2.0.0",
-    "json-comments": "^0.2.1",
     "strip-json-comments": "^2.0.1",
     "tslint": "^4.4.2",
     "types-publisher": "github:microsoft/types-publisher#production",
