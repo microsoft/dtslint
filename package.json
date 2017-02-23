@@ -1,0 +1,35 @@
+{
+  "name": "dtslint",
+  "version": "0.0.0",
+  "description": "Runs tests on TypeScript definition files",
+  "main": "bin",
+  "bin": "./bin/index.js",
+  "contributors": [
+    "Andy Hanson <andy-ms@microsoft.com> (https://github.com/andy-ms)",
+    "Dan Vanderkam <danvdk@gmail.com> (https://github.com/danvk)"
+  ],
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "lint": "tslint --project tsconfig.json --type-check --format stylish"
+  },
+  "dependencies": {
+    "fs-promise": "^2.0.0",
+    "json-comments": "^0.2.1",
+    "strip-json-comments": "^2.0.1",
+    "tslint": "^4.4.2",
+    "types-publisher": "github:microsoft/types-publisher#production",
+    "yargs": "^6.6.0"
+  },
+  "peerDependencies": {
+    "typescript": "^2",
+    "definitelytyped-header-parser": "Microsoft/definitelytyped-header-parser#production"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.5",
+    "@types/strip-json-comments": "0.0.28",
+    "@types/yargs": "^6.6.0",
+    "typescript": "^2"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,66 @@
+{
+    "extends": "tslint:latest",
+    // This will get overridden with the rules directory in `typescript-installs`. But having this here lets tslint editor plugins work.
+    // TODO: this won't work until the `global.program` hack is gotten rid of. See `expectRule.ts`.
+    //"rulesDirectory": "./bin/rules",
+    "rules": {
+        // Custom rules
+        "expect": true,
+        "export-just-namespace": true,
+        "forbidden-types": true,
+        "no-dead-reference": true,
+        "no-public": true,
+        "no-reference-import": true,
+        "no-single-declare-module": true,
+        "trim-file": true,
+        "unified-signatures": true,
+        "void-return": true,
+
+        // TODO: once https://github.com/palantir/tslint/pull/2229 is in, remove this
+        "only-arrow-functions": false,
+        "only-arrow-functions-2": [true, "allow-declarations", "allow-named-functions"],
+
+        "interface-name": [true, "never-prefix"],
+        "max-line-length": [true, 200],
+        "whitespace": [
+			true,
+            "check-branch",
+            "check-decl",
+            "check-operator",
+            "check-module",
+            "check-separator",
+            "check-type",
+            "check-typecast"
+        ],
+
+        "arrow-parens": false,
+        "class-name": false,
+        "curly": false,
+        "eofline": false,
+        "forin": false,
+        "indent": false,
+        "jsdoc-format": false,
+        "max-classes-per-file": false,
+        "member-access": false,
+        "member-ordering": false,
+        "no-angle-bracket-type-assertion": false,
+        "no-bitwise": false,
+        "no-consecutive-blank-lines": false,
+        "no-console": false,
+        "no-empty": false,
+        "no-namespace": false,
+        "no-reference": false, // But see src/tslint/noParentReferencesRule.ts
+        "no-shadowed-variable": false,
+        "no-string-literal": false,
+        "no-unused-expression": false,
+        "no-unused-new": false,
+        "no-var-keyword": false,
+        "object-literal-sort-keys": false,
+        "one-variable-per-declaration": false,
+        "ordered-imports": false,
+        "quotemark": false,
+        "switch-default": false,
+        "trailing-comma": false,
+        "variable-name": false
+    }
+}

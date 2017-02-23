@@ -1,0 +1,7 @@
+{
+    "extends": "./dtslint.json",
+    "rules": {
+        "dt-header": true,
+        "no-bad-reference": true
+    }
+}
