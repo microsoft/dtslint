@@ -24,9 +24,15 @@ class Walker extends Lint.RuleWalker {
 		const text = node.getFullText();
 
 		if (!isMainFile(node.fileName)) {
-			if (text.startsWith("// Type definitions for")) {
-				this.addFailureAt(0, 1, "Header should only be in `index.d.ts`.");
-			}
+			const lookFor = (search: string, explanation: string) => {
+				const idx = text.indexOf(search);
+				if (idx !== -1) {
+					this.addFailureAt(idx, search.length, explanation);
+				}
+			};
+
+			lookFor("// Type definitions for", "Header should only be in `index.d.ts`.");
+			lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
 			return;
 		}
 
