@@ -15,16 +15,18 @@ export class Rule extends Lint.Rules.AbstractRule {
 	static FAILURE_STRING = "Use the `void` type for return types only. Otherwise, use `undefined`.";
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
-class Walker extends Lint.RuleWalker {
-	visitNode(node: ts.Node) {
+function walk(ctx: Lint.WalkContext<void>): void {
+	ts.forEachChild(ctx.sourceFile, recur);
+	function recur(node: ts.Node) {
 		if (node.kind === ts.SyntaxKind.VoidKeyword && !mayContainVoid(node.parent!) && !isReturnType(node)) {
-			this.addFailureAtNode(node, Rule.FAILURE_STRING);
+			ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
+		} else {
+			ts.forEachChild(node, recur);
 		}
-		super.visitNode(node);
 	}
 }
 
@@ -58,7 +60,6 @@ function isSignatureDeclaration(node: ts.Node): node is ts.SignatureDeclaration 
 		case ts.SyntaxKind.MethodDeclaration:
 		case ts.SyntaxKind.MethodSignature:
 			return true;
-
 		default:
 			return false;
 	}

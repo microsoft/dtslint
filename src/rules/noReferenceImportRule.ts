@@ -1,4 +1,5 @@
 import * as Lint from "tslint";
+import * as util from "tsutils";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -17,44 +18,41 @@ export class Rule extends Lint.Rules.AbstractRule {
 	}
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
-class Walker extends Lint.RuleWalker {
-	visitSourceFile(node: ts.SourceFile) {
-		const imports = allImports(node);
-		for (const ref of node.typeReferenceDirectives) {
-			if (imports.has(ref.fileName)) {
-				this.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING(ref.fileName));
-			}
+function walk(ctx: Lint.WalkContext<void>): void {
+	const { sourceFile } = ctx;
+	const imports = allImports(sourceFile);
+	for (const ref of sourceFile.typeReferenceDirectives) {
+		if (imports.has(ref.fileName)) {
+			ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING(ref.fileName));
 		}
-
-		// Don't recurse; we're done.
 	}
 }
 
 function allImports(sourceFile: ts.SourceFile): Set<string> {
 	const imports = new Set<string>();
 
-	function recur(node: ts.Node) {
-		if (node.kind === ts.SyntaxKind.ImportEqualsDeclaration) {
-			const ref = (node as ts.ImportEqualsDeclaration).moduleReference;
+	function recur(node: ts.Node): void {
+		if (util.isImportEqualsDeclaration(node)) {
+			const ref = node.moduleReference;
 			if (ref.kind === ts.SyntaxKind.ExternalModuleReference) {
 				if (ref.expression) {
 					addImport(ref.expression);
 				}
 			}
-		} else if (node.kind === ts.SyntaxKind.ImportDeclaration) {
-			addImport((node as ts.ImportDeclaration).moduleSpecifier);
+		} else if (util.isImportDeclaration(node)) {
+			addImport(node.moduleSpecifier);
 		} else {
 			ts.forEachChild(node, recur);
 		}
 	}
 
-	function addImport(moduleReference: ts.Expression) {
-		if (moduleReference.kind === ts.SyntaxKind.StringLiteral) {
-			imports.add((moduleReference as ts.StringLiteral).text);
+	function addImport(moduleReference: ts.Expression): void {
+		if (util.isStringLiteral(moduleReference)) {
+			imports.add(moduleReference.text);
 		}
 	}
 

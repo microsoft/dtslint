@@ -55,7 +55,7 @@ function usage() {
 }
 
 // KLUDGE -- tslint creates a duplicate program, so must set this to the original program.
-// See https://github.com/palantir/tslint/issues/1969
+// See https://github.com/palantir/tslint/issues/1969 and https://github.com/palantir/tslint/pull/2235
 declare global {
 	namespace NodeJS {
 		interface Global { program: Program; }

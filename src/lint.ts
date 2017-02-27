@@ -34,7 +34,10 @@ export async function lintWithVersion(
 
 async function getLintConfig(configuration: Configuration, configPath: string, options: Options): Promise<IConfigurationFile> {
 	if (!await exists(configPath)) {
-		return defaultConfig(configuration, options);
+		if (options.dt) {
+			throw new Error('On DefinitelyTyped, must include `tslint.json` containing `{ "extends": "../tslint.json" }`');
+		}
+		return defaultConfig(configuration);
 	}
 
 	const tslintJson = await readJson(configPath);
@@ -55,7 +58,6 @@ function loadConfiguration(configuration: Configuration, configPath: string): IC
 	return config;
 }
 
-function defaultConfig(configuration: Configuration, { dt }: Options): IConfigurationFile {
-	const name = dt ? "dtslint-definitelytyped.json" : "dtslint.json";
-	return loadConfiguration(configuration, path.join(__dirname, "..", name));
+function defaultConfig(configuration: Configuration): IConfigurationFile {
+	return loadConfiguration(configuration, path.join(__dirname, "..", "dtslint.json"));
 }
