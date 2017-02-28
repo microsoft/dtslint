@@ -15,19 +15,17 @@ export class Rule extends Lint.Rules.AbstractRule {
 	public static FAILURE_STRING_TRAILING = "File should not end with a blank line. (Ending in '\n' OK, ending in '\n\n' not OK.)";
 
 	public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
-class Walker extends Lint.RuleWalker {
-	visitSourceFile(sourceFile: ts.SourceFile) {
-		const { text } = sourceFile;
-		if (text.startsWith("\n")) {
-			this.addFailureAt(0, 1, Rule.FAILURE_STRING_LEADING);
-		}
+function walk(ctx: Lint.WalkContext<void>): void {
+	const { sourceFile: { text } } = ctx;
+	if (text.startsWith("\n")) {
+		ctx.addFailureAt(0, 1, Rule.FAILURE_STRING_LEADING);
+	}
 
-		if (text.endsWith("\n\n")) {
-			this.addFailureAt(text.length - 1, 1, Rule.FAILURE_STRING_TRAILING);
-		}
+	if (text.endsWith("\n\n")) {
+		ctx.addFailureAt(text.length - 1, 1, Rule.FAILURE_STRING_TRAILING);
 	}
 }

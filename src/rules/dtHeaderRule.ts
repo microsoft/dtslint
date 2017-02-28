@@ -15,27 +15,32 @@ export class Rule extends Lint.Rules.AbstractRule {
 	};
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
-class Walker extends Lint.RuleWalker {
-	visitSourceFile(node: ts.SourceFile) {
-		const text = node.getFullText();
+function walk(ctx: Lint.WalkContext<void>): void {
+	const { sourceFile } = ctx;
+	const { text } = sourceFile;
 
-		if (!isMainFile(node.fileName)) {
-			if (text.startsWith("// Type definitions for")) {
-				this.addFailureAt(0, 1, "Header should only be in `index.d.ts`.");
+	if (!isMainFile(sourceFile.fileName)) {
+		const lookFor = (search: string, explanation: string) => {
+			const idx = text.indexOf(search);
+			if (idx !== -1) {
+				ctx.addFailureAt(idx, search.length, explanation);
 			}
-			return;
-		}
+		};
 
-		const error = validate(text);
-		if (error) {
-			this.addFailureAt(error.index, 1, `Error parsing header. Expected: ${renderExpected(error.expected)}`);
-		}
-		// Don't recurse, we're done.
+		lookFor("// Type definitions for", "Header should only be in `index.d.ts`.");
+		lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
+		return;
 	}
+
+	const error = validate(text);
+	if (error) {
+		ctx.addFailureAt(error.index, 1, `Error parsing header. Expected: ${renderExpected(error.expected)}`);
+	}
+	// Don't recurse, we're done.
 }
 
 function isMainFile(fileName: string) {

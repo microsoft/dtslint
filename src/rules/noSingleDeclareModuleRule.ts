@@ -1,4 +1,5 @@
 import * as Lint from "tslint";
+import * as util from "tsutils";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -15,46 +16,31 @@ export class Rule extends Lint.Rules.AbstractRule {
 	static FAILURE_STRING = "File has only 1 module declaration — write it as an external module.";
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		// If it's an external module, any module declarations inside are augmentations.
-		if (ts.isExternalModule(sourceFile)) {
-			return [];
-		}
-
-		if (hasSoleModuleDeclaration(sourceFile)) {
-			return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
-		} else {
-			return [];
-		}
+		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
-// A walker is needed for `tslint:disable` to work.
-class Walker extends Lint.RuleWalker {
-	visitModuleDeclaration(node: ts.ModuleDeclaration) {
-		if (isModuleDeclaration(node)) {
-			this.addFailureAtNode(node, Rule.FAILURE_STRING);
-		}
-	}
-}
+function walk(ctx: Lint.WalkContext<void>): void {
+	const { sourceFile } = ctx;
 
-function hasSoleModuleDeclaration({ statements }: ts.SourceFile): boolean {
+	// If it's an external module, any module declarations inside are augmentations.
+	if (ts.isExternalModule(sourceFile)) {
+		return;
+	}
+
 	let moduleDecl: ts.ModuleDeclaration | undefined;
-	for (const statement of statements) {
-		if (statement.kind === ts.SyntaxKind.ModuleDeclaration) {
-			const decl = statement as ts.ModuleDeclaration;
-			if (isModuleDeclaration(decl)) {
-				if (moduleDecl === undefined) {
-					moduleDecl = decl;
-				} else {
-					// Has more than 1 declaration
-					return false;
-				}
+	for (const statement of sourceFile.statements) {
+		if (util.isModuleDeclaration(statement) && util.isStringLiteral(statement.name)) {
+			if (moduleDecl === undefined) {
+				moduleDecl = statement;
+			} else {
+				// Has more than 1 declaration
+				return;
 			}
 		}
 	}
-	return !!moduleDecl;
-}
 
-function isModuleDeclaration(decl: ts.ModuleDeclaration): boolean {
-	return decl.name.kind === ts.SyntaxKind.StringLiteral;
+	if (moduleDecl) {
+		ctx.addFailureAtNode(moduleDecl, Rule.FAILURE_STRING);
+	}
 }

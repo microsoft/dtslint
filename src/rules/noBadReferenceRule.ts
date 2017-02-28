@@ -18,24 +18,19 @@ export class Rule extends Lint.Rules.AbstractRule {
 		"Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'";
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
-class Walker extends Lint.RuleWalker {
-	visitSourceFile(node: ts.SourceFile) {
-		for (const ref of node.referencedFiles) {
-			if (node.isDeclarationFile) {
-				if (ref.fileName.startsWith("..")) {
-					this.addFailureAtRef(ref, Rule.FAILURE_STRING);
-				}
-			} else {
-				this.addFailureAtRef(ref, Rule.FAILURE_STRING_REFERENCE_IN_TEST);
+function walk(ctx: Lint.WalkContext<void>): void {
+	const { sourceFile } = ctx;
+	for (const ref of sourceFile.referencedFiles) {
+		if (sourceFile.isDeclarationFile) {
+			if (ref.fileName.startsWith("..")) {
+				ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING);
 			}
+		} else {
+			ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING_REFERENCE_IN_TEST);
 		}
-	}
-
-	private addFailureAtRef(ref: ts.FileReference, failure: string) {
-		this.addFailureAt(ref.pos, ref.end, failure);
 	}
 }

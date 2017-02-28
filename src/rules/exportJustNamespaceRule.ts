@@ -1,4 +1,5 @@
 import * as Lint from "tslint";
+import * as util from "tsutils";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -26,10 +27,10 @@ class Walker extends Lint.RuleWalker {
 			return;
 		}
 		const expr = exportEqualsNode.expression;
-		if (expr.kind !== ts.SyntaxKind.Identifier) {
+		if (!util.isIdentifier(expr)) {
 			return;
 		}
-		const exportEqualsName = (expr as ts.Identifier).text;
+		const exportEqualsName = expr.text;
 
 		if (exportEqualsName && isJustNamespace(node.statements, exportEqualsName)) {
 			this.addFailureAtNode(exportEqualsNode, Rule.FAILURE_STRING);
@@ -38,11 +39,11 @@ class Walker extends Lint.RuleWalker {
 }
 
 function isExportEquals(node: ts.Node): boolean {
-	return node.kind === ts.SyntaxKind.ExportAssignment && !!(node as ts.ExportAssignment).isExportEquals;
+	return util.isExportAssignment(node) && !!node.isExportEquals;
 }
 
 /** Returns true if there is a namespace but there are no functions/classes with the name. */
-function isJustNamespace(statements: ts.Statement[], exportEqualsName: string) {
+function isJustNamespace(statements: ts.Statement[], exportEqualsName: string): boolean {
 	let anyNamespace = false;
 
 	for (const statement of statements) {
@@ -72,9 +73,7 @@ function isJustNamespace(statements: ts.Statement[], exportEqualsName: string) {
 	return anyNamespace;
 
 	function nameMatches(nameNode: ts.Node | undefined): boolean {
-		return nameNode !== undefined &&
-			nameNode.kind === ts.SyntaxKind.Identifier &&
-			(nameNode as ts.Identifier).text === exportEqualsName;
+		return nameNode !== undefined && util.isIdentifier(nameNode) && nameNode.text === exportEqualsName;
 	}
 }
 
