@@ -1,4 +1,6 @@
 import * as Lint from "tslint";
+// TODO: Remove when https://github.com/palantir/tslint/pull/2273 is in
+
 import * as util from "tsutils";
 import * as ts from "typescript";
 
