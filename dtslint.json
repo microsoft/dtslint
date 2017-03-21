@@ -15,9 +15,8 @@
         "unified-signatures": true,
         "void-return": true,
 
-        // TODO: once https://github.com/palantir/tslint/pull/2229 is in, remove this
+        // TODO: once https://github.com/palantir/tslint/pull/2229 is in, enable this
         "only-arrow-functions": false,
-        "only-arrow-functions-2": [true, "allow-declarations", "allow-named-functions"],
 
         "interface-name": [true, "never-prefix"],
         "max-line-length": [true, 200],
