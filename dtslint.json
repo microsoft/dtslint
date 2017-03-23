@@ -22,9 +22,13 @@
         // TODO: once https://github.com/palantir/tslint/pull/2229 is in, enable this
         "only-arrow-functions": false,
 
+        "no-var-keyword": false,
+        "no-var": true,
+
         "interface-name": [true, "never-prefix"],
         "max-line-length": [true, 200],
         "no-consecutive-blank-lines": true,
+        "object-literal-key-quotes": [true, "as-needed"],
         "one-line": [
             true,
             "check-catch",

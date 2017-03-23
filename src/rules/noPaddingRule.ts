@@ -27,7 +27,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 				case ts.SyntaxKind.OpenBracketToken:
 				case ts.SyntaxKind.OpenBraceToken:
 					if (blankLineInBetween(child.getEnd(), children[i + 1].getStart())) {
-						ctx.addFailureAtNode(child, "Don't leave a blank line after '{'");
+						fail("after");
 					}
 					break;
 
@@ -35,12 +35,16 @@ function walk(ctx: Lint.WalkContext<void>): void {
 				case ts.SyntaxKind.CloseBracketToken:
 				case ts.SyntaxKind.CloseBraceToken:
 					if (blankLineInBetween(child.getStart() - 1, children[i - 1].getEnd() - 1)) {
-						ctx.addFailureAtNode(child, "Don't leave a blank line before '}'");
+						fail("before");
 					}
 					break;
 
 				default:
 					cb(child);
+			}
+
+			function fail(kind: "before" | "after"): void {
+				ctx.addFailureAtNode(child, `Don't leave a blank line ${kind} '${ts.tokenToString(child.kind)}'`);
 			}
 		}
 	});
