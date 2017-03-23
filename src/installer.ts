@@ -6,6 +6,13 @@ import * as TsLintType from "tslint";
 
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 
+export async function installAll() {
+	for (const v of TypeScriptVersion.All) {
+		await install(v);
+	}
+	await install("next");
+}
+
 export async function install(version: TypeScriptVersion | "next"): Promise<void> {
 	const dir = installDir(version);
 	if (!await fsp.existsSync(dir)) {

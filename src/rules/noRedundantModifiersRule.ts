@@ -1,0 +1,82 @@
+import * as Lint from "tslint";
+import * as ts from "typescript";
+
+export class Rule extends Lint.Rules.AbstractRule {
+	public static metadata: Lint.IRuleMetadata = {
+		ruleName: "no-redundant-modifiers",
+		description: "Forbids unnecessary 'export' or 'declare' modifiers in declaration files.",
+		optionsDescription: "Not configurable.",
+		options: null,
+		type: "style",
+		typescriptOnly: true,
+	};
+
+	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+		if (!sourceFile.isDeclarationFile) {
+			return [];
+		}
+		return this.applyWithFunction(sourceFile, walk);
+	}
+}
+
+function walk(ctx: Lint.WalkContext<void>): void {
+	for (const node of ctx.sourceFile.statements) {
+		if (isDeclare(node)) {
+			if (isExport(node)) {
+				ctx.addFailureAtNode(node, "'export declare' is redundant, just use 'export'.");
+			} else {
+				// Types do not need 'declare'.
+				switch (node.kind) {
+					case ts.SyntaxKind.InterfaceDeclaration:
+					case ts.SyntaxKind.TypeAliasDeclaration:
+						ctx.addFailureAtNode(node, "'declare' keyword is redundant here.");
+				}
+			}
+		}
+
+		if (isModuleDeclaration(node)) {
+			checkModule(node);
+		}
+	}
+
+	function checkModule(s: ts.ModuleDeclaration): void {
+		const body = s.body;
+		if (!body) {
+			return;
+		}
+
+		switch (body.kind) {
+			case ts.SyntaxKind.ModuleDeclaration:
+				checkModule(body);
+				break;
+			case ts.SyntaxKind.ModuleBlock:
+				checkBlock(body);
+				break;
+		}
+	}
+
+	function checkBlock(block: ts.ModuleBlock): void {
+		for (const s of block.statements) {
+			// Compiler will error for 'declare' here anyway, so just check for 'export'.
+			if (isExport(s)) {
+				ctx.addFailureAtNode(s, "'export' keyword is redundant here.");
+			}
+
+			if (isModuleDeclaration(s)) {
+				checkModule(s);
+			}
+		}
+	}
+}
+
+function isModuleDeclaration(node: ts.Node): node is ts.ModuleDeclaration {
+	return node.kind === ts.SyntaxKind.ModuleDeclaration;
+}
+
+function isDeclare(node: ts.Node): boolean {
+	return Lint.hasModifier(node.modifiers, ts.SyntaxKind.DeclareKeyword);
+}
+
+function isExport(node: ts.Node): boolean {
+	return Lint.hasModifier(node.modifiers, ts.SyntaxKind.ExportKeyword);
+}

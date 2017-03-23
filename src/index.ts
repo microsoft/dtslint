@@ -7,7 +7,7 @@ import { Program } from "typescript";
 import * as yargs from "yargs";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, install, tscPath } from "./installer";
+import { cleanInstalls, install, installAll, tscPath } from "./installer";
 import { lintWithVersion } from "./lint";
 
 export interface Options {
@@ -20,7 +20,7 @@ async function main(): Promise<void> {
 	const argv = yargs.argv;
 
 	for (const key in argv) {
-		if (!(["_", "clean", "dt", "version", "noLint", "tsNext"].includes(key) || /^\$\d$/.test(key))) {
+		if (!(["_", "clean", "dt", "installAll", "version", "noLint", "tsNext"].includes(key) || /^\$\d$/.test(key))) {
 			console.error(`Unexpected argument '${key}'\n`);
 			usage();
 			return;
@@ -29,6 +29,13 @@ async function main(): Promise<void> {
 
 	if (argv.version) {
 		console.log(require("../package.json").version);
+		return;
+	}
+
+	if (argv.installAll) {
+		console.log("Installing for all TypeScript versions...");
+		await cleanInstalls();
+		await installAll();
 		return;
 	}
 
