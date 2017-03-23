@@ -21,11 +21,11 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 function walk(ctx: Lint.WalkContext<void>): void {
 	const { sourceFile: { text } } = ctx;
-	if (text.startsWith("\n")) {
+	if (text.startsWith("\r") || text.startsWith("\n")) {
 		ctx.addFailureAt(0, 1, Rule.FAILURE_STRING_LEADING);
 	}
 
-	if (text.endsWith("\n\n")) {
+	if (text.endsWith("\n\n") || text.endsWith("\r\n\r\n")) {
 		ctx.addFailureAt(text.length - 1, 1, Rule.FAILURE_STRING_TRAILING);
 	}
 }
