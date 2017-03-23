@@ -47,7 +47,6 @@
         "arrow-parens": false,
         "class-name": false,
         "curly": false,
-        "eofline": false,
         "forin": false,
         "indent": false,
         "jsdoc-format": false,
