@@ -15,6 +15,7 @@
         "no-redundant-modifiers": true,
         "no-single-declare-module": true,
 		"no-useless-files": true,
+        "prefer-declare-function": true,
         "trim-file": true,
         "unified-signatures": true,
         "void-return": true,
