@@ -38,6 +38,7 @@
             "check-open-brace",
             "check-whitespace"
         ],
+        "prefer-method-signature": true,
         "whitespace": [
 			true,
             "check-branch",

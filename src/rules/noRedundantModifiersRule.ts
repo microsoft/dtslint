@@ -22,12 +22,14 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 function walk(ctx: Lint.WalkContext<void>): void {
 	const { sourceFile } = ctx;
+	const isExportAssign = sourceFile.statements.some(s => s.kind === ts.SyntaxKind.ExportAssignment);
+
 	for (const node of sourceFile.statements) {
 		if (isDeclare(node)) {
 			if (isExport(node)) {
 				ctx.addFailureAtNode(node, "'export declare' is redundant, just use 'export'.");
 			} else {
-				if (ts.isExternalModule(sourceFile)) {
+				if (ts.isExternalModule(sourceFile) && !isExportAssign) {
 					ctx.addFailureAtNode(node, "Prefer 'export' to 'declare' in an external module.");
 				} else {
 					// Types do not need 'declare'.
