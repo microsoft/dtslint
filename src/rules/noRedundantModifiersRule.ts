@@ -15,21 +15,27 @@ export class Rule extends Lint.Rules.AbstractRule {
 		if (!sourceFile.isDeclarationFile) {
 			return [];
 		}
+
 		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
 function walk(ctx: Lint.WalkContext<void>): void {
-	for (const node of ctx.sourceFile.statements) {
+	const { sourceFile } = ctx;
+	for (const node of sourceFile.statements) {
 		if (isDeclare(node)) {
 			if (isExport(node)) {
 				ctx.addFailureAtNode(node, "'export declare' is redundant, just use 'export'.");
 			} else {
-				// Types do not need 'declare'.
-				switch (node.kind) {
-					case ts.SyntaxKind.InterfaceDeclaration:
-					case ts.SyntaxKind.TypeAliasDeclaration:
-						ctx.addFailureAtNode(node, "'declare' keyword is redundant here.");
+				if (ts.isExternalModule(sourceFile)) {
+					ctx.addFailureAtNode(node, "Prefer 'export' to 'declare' in an external module.");
+				} else {
+					// Types do not need 'declare'.
+					switch (node.kind) {
+						case ts.SyntaxKind.InterfaceDeclaration:
+						case ts.SyntaxKind.TypeAliasDeclaration:
+							ctx.addFailureAtNode(node, "'declare' keyword is redundant here.");
+					}
 				}
 			}
 		}
@@ -39,8 +45,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		}
 	}
 
-	function checkModule(s: ts.ModuleDeclaration): void {
-		const body = s.body;
+	function checkModule({ body }: ts.ModuleDeclaration): void {
 		if (!body) {
 			return;
 		}
