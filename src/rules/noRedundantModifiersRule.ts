@@ -29,8 +29,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			if (isExport(node)) {
 				ctx.addFailureAtNode(node, "'export declare' is redundant, just use 'export'.");
 			} else {
-				if (ts.isExternalModule(sourceFile) && !isExportAssign) {
-					ctx.addFailureAtNode(node, "Prefer 'export' to 'declare' in an external module.");
+				if (ts.isExternalModule(sourceFile)) {
+					if (!isExportAssign && !isExternalModuleDeclaration(node)) {
+						ctx.addFailureAtNode(node, "Prefer 'export' to 'declare' in an external module.");
+					}
 				} else {
 					// Types do not need 'declare'.
 					switch (node.kind) {
@@ -74,6 +76,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			}
 		}
 	}
+}
+
+function isExternalModuleDeclaration(node: ts.Node): boolean {
+	return isModuleDeclaration(node) && node.name.kind === ts.SyntaxKind.StringLiteral;
 }
 
 function isModuleDeclaration(node: ts.Node): node is ts.ModuleDeclaration {
