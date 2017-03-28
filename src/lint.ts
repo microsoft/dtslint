@@ -1,4 +1,4 @@
-import { TypeScriptVersion } from "definitelytyped-header-parser";
+import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 import { exists, readFile } from "fs-promise";
 import * as path from "path";
 import { Configuration, ILinterOptions } from "tslint";

@@ -19,14 +19,17 @@
     "lint": "tslint --project tsconfig.json --type-check --format stylish"
   },
   "dependencies": {
-    "definitelytyped-header-parser": "Microsoft/definitelytyped-header-parser#production",
     "fs-promise": "^2.0.0",
+    "parsimmon": "^1.2.0",
     "strip-json-comments": "^2.0.1",
     "tsutils": "^1.1.0",
     "yargs": "^6.6.0"
   },
   "devDependencies": {
+    "@types/fs-extra": "^2.0.0",
+    "@types/mz": "0.0.30",
     "@types/node": "^7.0.5",
+    "@types/parsimmon": "^1.0.3",
     "@types/strip-json-comments": "0.0.28",
     "@types/yargs": "^6.6.0",
     "tslint": "^4.5.1",
