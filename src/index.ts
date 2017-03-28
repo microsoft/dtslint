@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { exec } from "child_process";
-import { parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
+import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 import { readFile } from "fs-promise";
 import * as path from "path";
 import { Program } from "typescript";
