@@ -111,15 +111,9 @@ For bundled typings, this can go on any line (but should be near the top).
 
 ## Run tests
 
-* Global use:
-    - `npm install -g dtslint`
-    - `dtslint types` or `cd types; dtslint`
-    - Use the `--dt` option if on `DefinitelyTyped`.
-* Local use:
-    - `npm install --save-dev dtslint`
-    - Add to your `package.json` `scripts`: `"dtslint": "dtslint types"`
-    - `npm run dtslint`
-
+- `npm install --save-dev dtslint`
+- Add to your `package.json` `scripts`: `"dtslint": "dtslint types"`
+- `npm run dtslint`
 
 
 # Contributing
