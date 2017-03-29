@@ -63,9 +63,13 @@ async function main(): Promise<void> {
 		}
 	}
 
+	if (clean) {
+		await cleanInstalls();
+	}
+
 	const cwd = process.cwd();
 	const dirPath = cwdSubDir ? joinPaths(cwd, cwdSubDir) : cwd;
-	await runTests(dirPath, { dt, noLint, tsNext});
+	await runTests(dirPath, { dt, noLint, tsNext });
 }
 
 function usage(): void {

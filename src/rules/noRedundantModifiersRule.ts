@@ -30,7 +30,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 				ctx.addFailureAtNode(node, "'export declare' is redundant, just use 'export'.");
 			} else {
 				if (ts.isExternalModule(sourceFile)) {
-					if (!isExportAssign && !isExternalModuleDeclaration(node)) {
+					if (!isExportAssign && !isDeclareGlobalOrExternalModuleDeclaration(node)) {
 						ctx.addFailureAtNode(node, "Prefer 'export' to 'declare' in an external module.");
 					}
 				} else {
@@ -78,8 +78,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
 	}
 }
 
-function isExternalModuleDeclaration(node: ts.Node): boolean {
-	return isModuleDeclaration(node) && node.name.kind === ts.SyntaxKind.StringLiteral;
+function isDeclareGlobalOrExternalModuleDeclaration(node: ts.Node): boolean {
+	return isModuleDeclaration(node) && (
+		node.name.kind === ts.SyntaxKind.StringLiteral ||
+		node.name.kind === ts.SyntaxKind.Identifier && node.name.text === "global");
 }
 
 function isModuleDeclaration(node: ts.Node): node is ts.ModuleDeclaration {
