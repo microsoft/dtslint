@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { exec } from "child_process";
-import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 import { readFile } from "fs-promise";
 import { join as joinPaths } from "path";
 import { Program } from "typescript";
+
+import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, install, installAll, tscPath } from "./installer";
@@ -63,19 +64,24 @@ async function main(): Promise<void> {
 		}
 	}
 
+	if (clean) {
+		await cleanInstalls();
+	}
+
 	const cwd = process.cwd();
 	const dirPath = cwdSubDir ? joinPaths(cwd, cwdSubDir) : cwd;
-	await runTests(dirPath, { dt, noLint, tsNext});
+	await runTests(dirPath, { dt, noLint, tsNext });
 }
 
 function usage(): void {
 	console.log("Usage: dtslint [--dt] [--clean]");
 	console.log("Args:");
-	console.log("  --version Print version and exit.");
-	console.log("  --dt     Run extra checks for DefinitelyTyped packages.");
-	console.log("  --clean  Clean typescript installs and install again.");
-	console.log("  --noLint Just run 'tsc'.");
-	console.log("  --tsNext Run with 'typescript@next' instead of the specified version.");
+	console.log("  --version    Print version and exit.");
+	console.log("  --dt         Run extra checks for DefinitelyTyped packages.");
+	console.log("  --clean      Clean TypeScript installs and install again.");
+	console.log("  --noLint     Just run 'tsc'.");
+	console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
+	console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
 
 // KLUDGE -- tslint creates a duplicate program, so must set this to the original program.

@@ -65,7 +65,7 @@ function headerParser(strict: boolean): pm.Parser<Header> {
 			libraryName: label.name,
 			libraryMajorVersion: label.major,
 			libraryMinorVersion: label.minor,
-			projects, contributors, typeScriptVersion
+			projects, contributors, typeScriptVersion,
 		}));
 }
 
