@@ -10,9 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
-const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const fs_promise_1 = require("fs-promise");
 const path_1 = require("path");
+const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const checks_1 = require("./checks");
 const installer_1 = require("./installer");
 const lint_1 = require("./lint");
@@ -55,6 +55,9 @@ function main() {
                     cwdSubDir = cwdSubDir === undefined ? arg : path_1.join(cwdSubDir, arg);
             }
         }
+        if (clean) {
+            yield installer_1.cleanInstalls();
+        }
         const cwd = process.cwd();
         const dirPath = cwdSubDir ? path_1.join(cwd, cwdSubDir) : cwd;
         yield runTests(dirPath, { dt, noLint, tsNext });
@@ -63,11 +66,12 @@ function main() {
 function usage() {
     console.log("Usage: dtslint [--dt] [--clean]");
     console.log("Args:");
-    console.log("  --version Print version and exit.");
-    console.log("  --dt     Run extra checks for DefinitelyTyped packages.");
-    console.log("  --clean  Clean typescript installs and install again.");
-    console.log("  --noLint Just run 'tsc'.");
-    console.log("  --tsNext Run with 'typescript@next' instead of the specified version.");
+    console.log("  --version    Print version and exit.");
+    console.log("  --dt         Run extra checks for DefinitelyTyped packages.");
+    console.log("  --clean      Clean TypeScript installs and install again.");
+    console.log("  --noLint     Just run 'tsc'.");
+    console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
+    console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
 function runTests(dirPath, options) {
     return __awaiter(this, void 0, void 0, function* () {

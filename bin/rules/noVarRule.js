@@ -25,7 +25,8 @@ function walk(ctx) {
             case ts.SyntaxKind.VariableStatement:
                 if (!Lint.hasModifier(node.modifiers, ts.SyntaxKind.DeclareKeyword)
                     && !Lint.isBlockScopedVariable(node)
-                    && !(sourceFile.isDeclarationFile && !ts.isExternalModule(ctx.sourceFile) && node.parent === sourceFile)) {
+                    && !(node.parent.kind === ts.SyntaxKind.ModuleBlock && isDeclareGlobal(node.parent.parent))
+                    && !(node.parent === sourceFile && !ts.isExternalModule(sourceFile) && sourceFile.isDeclarationFile)) {
                     ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
                 }
                 break;
@@ -43,5 +44,11 @@ function walk(ctx) {
         }
         ts.forEachChild(node, cb);
     });
+}
+function isDeclareGlobal(node) {
+    return isModuleDeclaration(node) && node.name.kind === ts.SyntaxKind.Identifier && node.name.text === "global";
+}
+function isModuleDeclaration(node) {
+    return node.kind === ts.SyntaxKind.ModuleDeclaration;
 }
 //# sourceMappingURL=noVarRule.js.map

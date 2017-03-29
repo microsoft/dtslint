@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const definitelytyped_header_parser_1 = require("./definitelytyped-header-parser");
 const path_1 = require("path");
 const Lint = require("tslint");
+const definitelytyped_header_parser_1 = require("./definitelytyped-header-parser");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
         return this.applyWithFunction(sourceFile, walk);

@@ -29,7 +29,7 @@ function walk(ctx) {
             }
             else {
                 if (ts.isExternalModule(sourceFile)) {
-                    if (!isExportAssign && !isExternalModuleDeclaration(node)) {
+                    if (!isExportAssign && !isDeclareGlobalOrExternalModuleDeclaration(node)) {
                         ctx.addFailureAtNode(node, "Prefer 'export' to 'declare' in an external module.");
                     }
                 }
@@ -72,8 +72,9 @@ function walk(ctx) {
         }
     }
 }
-function isExternalModuleDeclaration(node) {
-    return isModuleDeclaration(node) && node.name.kind === ts.SyntaxKind.StringLiteral;
+function isDeclareGlobalOrExternalModuleDeclaration(node) {
+    return isModuleDeclaration(node) && (node.name.kind === ts.SyntaxKind.StringLiteral ||
+        node.name.kind === ts.SyntaxKind.Identifier && node.name.text === "global");
 }
 function isModuleDeclaration(node) {
     return node.kind === ts.SyntaxKind.ModuleDeclaration;
