@@ -5,6 +5,7 @@
         "lib": ["es2017"],
         "outDir": "bin",
         "sourceMap": true,
+        "newLine": "LF",
 
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,
