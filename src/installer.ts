@@ -1,8 +1,9 @@
 import { exec } from "child_process";
-import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 import * as fsp from "fs-promise";
 import * as path from "path";
 import * as TsLintType from "tslint";
+
+import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 

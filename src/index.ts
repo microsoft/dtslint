@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { exec } from "child_process";
-import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 import { readFile } from "fs-promise";
 import { join as joinPaths } from "path";
 import { Program } from "typescript";
+
+import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, install, installAll, tscPath } from "./installer";
