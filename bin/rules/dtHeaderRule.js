@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const definitelytyped_header_parser_1 = require("./definitelytyped-header-parser");
 const path_1 = require("path");
 const Lint = require("tslint");
-const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
-        return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+        return this.applyWithFunction(sourceFile, walk);
     }
 }
 Rule.metadata = {
@@ -17,21 +17,25 @@ Rule.metadata = {
     typescriptOnly: true,
 };
 exports.Rule = Rule;
-class Walker extends Lint.RuleWalker {
-    visitSourceFile(node) {
-        const text = node.getFullText();
-        if (!isMainFile(node.fileName)) {
-            if (text.startsWith("// Type definitions for")) {
-                this.addFailureAt(0, 1, "Header should only be in `index.d.ts`.");
+function walk(ctx) {
+    const { sourceFile } = ctx;
+    const { text } = sourceFile;
+    if (!isMainFile(sourceFile.fileName)) {
+        const lookFor = (search, explanation) => {
+            const idx = text.indexOf(search);
+            if (idx !== -1) {
+                ctx.addFailureAt(idx, search.length, explanation);
             }
-            return;
-        }
-        const error = definitelytyped_header_parser_1.validate(text);
-        if (error) {
-            this.addFailureAt(error.index, 1, `Error parsing header. Expected: ${definitelytyped_header_parser_1.renderExpected(error.expected)}`);
-        }
-        // Don't recurse, we're done.
+        };
+        lookFor("// Type definitions for", "Header should only be in `index.d.ts`.");
+        lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
+        return;
     }
+    const error = definitelytyped_header_parser_1.validate(text);
+    if (error) {
+        ctx.addFailureAt(error.index, 1, `Error parsing header. Expected: ${definitelytyped_header_parser_1.renderExpected(error.expected)}`);
+    }
+    // Don't recurse, we're done.
 }
 function isMainFile(fileName) {
     // Linter may be run with cwd of the package. We want `index.d.ts` but not `submodule/index.d.ts` to match.

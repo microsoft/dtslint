@@ -10,37 +10,54 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
-const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
+const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const fs_promise_1 = require("fs-promise");
-const path = require("path");
-const yargs = require("yargs");
+const path_1 = require("path");
 const checks_1 = require("./checks");
 const installer_1 = require("./installer");
 const lint_1 = require("./lint");
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        const argv = yargs.argv;
-        for (const key in argv) {
-            if (key === "_" || key === "clean" || key === "dt" || key === "version" || key === "noLint" || /^\$\d$/.test(key)) {
-                continue;
+        const args = process.argv.slice(2);
+        let clean = false;
+        let dt = false;
+        let noLint = false;
+        let tsNext = false;
+        let cwdSubDir;
+        for (const arg of args) {
+            switch (arg) {
+                case "--clean":
+                    clean = true;
+                    break;
+                case "--dt":
+                    dt = true;
+                    break;
+                case "--installAll":
+                    console.log("Installing for all TypeScript versions...");
+                    yield installer_1.cleanInstalls();
+                    yield installer_1.installAll();
+                    return;
+                case "--version":
+                    console.log(require("../package.json").version);
+                    return;
+                case "--noLint":
+                    noLint = true;
+                    break;
+                case "--tsNext":
+                    tsNext = true;
+                    break;
+                default:
+                    if (arg.startsWith("--")) {
+                        console.error(`Unknown option '${arg}'`);
+                        usage();
+                        process.exit(1);
+                    }
+                    cwdSubDir = cwdSubDir === undefined ? arg : path_1.join(cwdSubDir, arg);
             }
-            console.error(`Unexpected argument '${key}'\n`);
-            usage();
-            return;
-        }
-        if (argv.version) {
-            console.log(require("../package.json").version);
-            return;
-        }
-        if (argv.clean) {
-            console.log("Cleaning typescript installs...");
-            yield installer_1.cleanInstalls();
-            console.log("Cleaned.");
         }
         const cwd = process.cwd();
-        const name = argv._[0];
-        const dirPath = name ? path.join(cwd, name) : cwd;
-        yield runTests(dirPath, { dt: !!argv.dt, noLint: !!argv.noLint });
+        const dirPath = cwdSubDir ? path_1.join(cwd, cwdSubDir) : cwd;
+        yield runTests(dirPath, { dt, noLint, tsNext });
     });
 }
 function usage() {
@@ -50,25 +67,20 @@ function usage() {
     console.log("  --dt     Run extra checks for DefinitelyTyped packages.");
     console.log("  --clean  Clean typescript installs and install again.");
     console.log("  --noLint Just run 'tsc'.");
+    console.log("  --tsNext Run with 'typescript@next' instead of the specified version.");
 }
 function runTests(dirPath, options) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const text = yield fs_promise_1.readFile(path.join(dirPath, "index.d.ts"), "utf-8");
-            if (text.includes("// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped") && !options.dt) {
-                console.warn("Warning: Text includes DefinitelyTyped link, but '--dt' is not set.");
-            }
-            const version = getTypeScriptVersion(text);
-            if (options.dt) {
-                yield checks_1.checkPackageJson(dirPath);
-            }
-            yield checks_1.checkTsconfig(dirPath, options);
-            yield test(dirPath, options, version);
+        const text = yield fs_promise_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
+        if (text.includes("// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped") && !options.dt) {
+            console.warn("Warning: Text includes DefinitelyTyped link, but '--dt' is not set.");
         }
-        catch (e) {
-            console.error(e.message);
-            process.exit(1);
+        const version = options.tsNext ? "next" : getTypeScriptVersion(text);
+        if (options.dt) {
+            yield checks_1.checkPackageJson(dirPath);
         }
+        yield checks_1.checkTsconfig(dirPath, options);
+        yield test(dirPath, options, version);
     });
 }
 function getTypeScriptVersion(text) {
@@ -101,13 +113,16 @@ function test(dirPath, options, version) {
     });
 }
 function testWithVersion(dirPath, options, version) {
-    if (options.noLint) {
-        // Special for old DefinitelyTyped packages that aren't linted yet.
-        return execScript("node " + installer_1.tscPath(version), dirPath);
-    }
-    else {
-        return lint_1.lintWithVersion(dirPath, options, version);
-    }
+    return __awaiter(this, void 0, void 0, function* () {
+        yield installer_1.install(version);
+        if (options.noLint) {
+            // Special for old DefinitelyTyped packages that aren't linted yet.
+            return execScript("node " + installer_1.tscPath(version), dirPath);
+        }
+        else {
+            return lint_1.lintWithVersion(dirPath, options, version);
+        }
+    });
 }
 function execScript(cmd, cwd) {
     return new Promise(resolve => {
@@ -116,6 +131,9 @@ function execScript(cmd, cwd) {
     });
 }
 if (!module.parent) {
-    main().catch(console.error);
+    main().catch(err => {
+        console.error(err.message);
+        process.exit(1);
+    });
 }
 //# sourceMappingURL=index.js.map

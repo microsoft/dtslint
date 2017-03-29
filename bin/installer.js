@@ -9,10 +9,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
+const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const fsp = require("fs-promise");
 const path = require("path");
 const installsDir = path.join(__dirname, "..", "typescript-installs");
-function getLinter(version) {
+function installAll() {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (const v of definitelytyped_header_parser_1.TypeScriptVersion.All) {
+            yield install(v);
+        }
+        yield install("next");
+    });
+}
+exports.installAll = installAll;
+function install(version) {
     return __awaiter(this, void 0, void 0, function* () {
         const dir = installDir(version);
         if (!(yield fsp.existsSync(dir))) {
@@ -24,9 +34,12 @@ function getLinter(version) {
             yield fsp.copy(path.join(__dirname, "rules"), path.join(dir, "rules"));
             console.log("Installed!");
         }
-        const tslintPath = path.join(dir, "node_modules", "tslint");
-        return require(tslintPath);
     });
+}
+exports.install = install;
+function getLinter(version) {
+    const tslintPath = path.join(installDir(version), "node_modules", "tslint");
+    return require(tslintPath);
 }
 exports.getLinter = getLinter;
 function rulesDirectory(version) {
@@ -61,17 +74,17 @@ function execAndThrowErrors(cmd, cwd) {
     });
 }
 exports.execAndThrowErrors = execAndThrowErrors;
-const tslintVersion = require("../package.json").dependencies.tslint; // tslint:disable-line:no-var-requires
+const tslintVersion = require("../package.json").devDependencies.tslint; // tslint:disable-line:no-var-requires
 if (!tslintVersion) {
-    throw new Error("!");
+    throw new Error("Missing tslint version.");
 }
 function packageJson(version) {
     return {
-        description: "",
-        repository: "",
-        license: "",
+        description: `Installs typescript@${version}`,
+        repository: "N/A",
+        license: "MIT",
         dependencies: {
-            typescript: `${version}.x`,
+            typescript: version,
             tslint: tslintVersion,
         },
     };

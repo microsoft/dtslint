@@ -4,7 +4,7 @@ const Lint = require("tslint");
 const ts = require("typescript");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
-        return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+        return this.applyWithFunction(sourceFile, walk);
     }
 }
 Rule.metadata = {
@@ -18,12 +18,15 @@ Rule.metadata = {
 };
 Rule.FAILURE_STRING = "Use the `void` type for return types only. Otherwise, use `undefined`.";
 exports.Rule = Rule;
-class Walker extends Lint.RuleWalker {
-    visitNode(node) {
+function walk(ctx) {
+    ts.forEachChild(ctx.sourceFile, recur);
+    function recur(node) {
         if (node.kind === ts.SyntaxKind.VoidKeyword && !mayContainVoid(node.parent) && !isReturnType(node)) {
-            this.addFailureAtNode(node, Rule.FAILURE_STRING);
+            ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
         }
-        super.visitNode(node);
+        else {
+            ts.forEachChild(node, recur);
+        }
     }
 }
 function mayContainVoid({ kind }) {

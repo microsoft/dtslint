@@ -14,7 +14,7 @@ const installer_1 = require("./installer");
 const util_1 = require("./util");
 function lintWithVersion(dirPath, options, version) {
     return __awaiter(this, void 0, void 0, function* () {
-        const tslint = yield installer_1.getLinter(version);
+        const tslint = installer_1.getLinter(version);
         const program = tslint.Linter.createProgram(path.join(dirPath, "tsconfig.json"));
         global.program = program;
         const lintOptions = {
@@ -36,7 +36,10 @@ exports.lintWithVersion = lintWithVersion;
 function getLintConfig(configuration, configPath, options) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!(yield fs_promise_1.exists(configPath))) {
-            return defaultConfig(configuration, options);
+            if (options.dt) {
+                throw new Error('On DefinitelyTyped, must include `tslint.json` containing `{ "extends": "../tslint.json" }`');
+            }
+            return defaultConfig(configuration);
         }
         const tslintJson = yield util_1.readJson(configPath);
         if (!tslintJson.extends) {
@@ -54,8 +57,7 @@ function loadConfiguration(configuration, configPath) {
     }
     return config;
 }
-function defaultConfig(configuration, { dt }) {
-    const name = dt ? "dtslint-definitelytyped.json" : "dtslint.json";
-    return loadConfiguration(configuration, path.join(__dirname, "..", name));
+function defaultConfig(configuration) {
+    return loadConfiguration(configuration, path.join(__dirname, "..", "dtslint.json"));
 }
 //# sourceMappingURL=lint.js.map

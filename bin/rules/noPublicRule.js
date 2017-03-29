@@ -1,3 +1,4 @@
+// TODO: remove when https://github.com/palantir/tslint/pull/2247 is in
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");

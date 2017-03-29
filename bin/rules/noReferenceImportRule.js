@@ -1,13 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
+// TODO: Remove when https://github.com/palantir/tslint/pull/2273 is in
+const util = require("tsutils");
 const ts = require("typescript");
 class Rule extends Lint.Rules.AbstractRule {
     static FAILURE_STRING(moduleReference) {
         return `No need to reference ${moduleReference}, since it is imported anyway.`;
     }
     apply(sourceFile) {
-        return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+        return this.applyWithFunction(sourceFile, walk);
     }
 }
 Rule.metadata = {
@@ -20,21 +22,19 @@ Rule.metadata = {
     typescriptOnly: true,
 };
 exports.Rule = Rule;
-class Walker extends Lint.RuleWalker {
-    visitSourceFile(node) {
-        const imports = allImports(node);
-        for (const ref of node.typeReferenceDirectives) {
-            if (imports.has(ref.fileName)) {
-                this.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING(ref.fileName));
-            }
+function walk(ctx) {
+    const { sourceFile } = ctx;
+    const imports = allImports(sourceFile);
+    for (const ref of sourceFile.typeReferenceDirectives) {
+        if (imports.has(ref.fileName)) {
+            ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING(ref.fileName));
         }
-        // Don't recurse; we're done.
     }
 }
 function allImports(sourceFile) {
     const imports = new Set();
     function recur(node) {
-        if (node.kind === ts.SyntaxKind.ImportEqualsDeclaration) {
+        if (util.isImportEqualsDeclaration(node)) {
             const ref = node.moduleReference;
             if (ref.kind === ts.SyntaxKind.ExternalModuleReference) {
                 if (ref.expression) {
@@ -42,7 +42,7 @@ function allImports(sourceFile) {
                 }
             }
         }
-        else if (node.kind === ts.SyntaxKind.ImportDeclaration) {
+        else if (util.isImportDeclaration(node)) {
             addImport(node.moduleSpecifier);
         }
         else {
@@ -50,7 +50,7 @@ function allImports(sourceFile) {
         }
     }
     function addImport(moduleReference) {
-        if (moduleReference.kind === ts.SyntaxKind.StringLiteral) {
+        if (util.isStringLiteral(moduleReference)) {
             imports.add(moduleReference.text);
         }
     }
