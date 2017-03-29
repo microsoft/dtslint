@@ -71,11 +71,12 @@ async function main(): Promise<void> {
 function usage(): void {
 	console.log("Usage: dtslint [--dt] [--clean]");
 	console.log("Args:");
-	console.log("  --version Print version and exit.");
-	console.log("  --dt     Run extra checks for DefinitelyTyped packages.");
-	console.log("  --clean  Clean typescript installs and install again.");
-	console.log("  --noLint Just run 'tsc'.");
-	console.log("  --tsNext Run with 'typescript@next' instead of the specified version.");
+	console.log("  --version    Print version and exit.");
+	console.log("  --dt         Run extra checks for DefinitelyTyped packages.");
+	console.log("  --clean      Clean TypeScript installs and install again.");
+	console.log("  --noLint     Just run 'tsc'.");
+	console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
+	console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
 
 // KLUDGE -- tslint creates a duplicate program, so must set this to the original program.
