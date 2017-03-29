@@ -13,6 +13,10 @@
     "Andy Hanson <andy-ms@microsoft.com> (https://github.com/andy-ms)",
     "Dan Vanderkam <danvdk@gmail.com> (https://github.com/danvk)"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Microsoft/dtslint.git"
+  },
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
