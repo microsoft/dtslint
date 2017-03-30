@@ -4,14 +4,13 @@ const Lint = require("tslint");
 const util = require("tsutils");
 const ts = require("typescript");
 // Based on https://github.com/danvk/typings-checker
-// TODO: Want TypedRule, but currently it gives me a bad `program`.
-class Rule extends Lint.Rules.AbstractRule {
+class Rule extends Lint.Rules.TypedRule {
     /* tslint:enable:object-literal-sort-keys */
     static FAILURE_STRING(expectedType, actualType) {
         return `Expected type to be '${expectedType}'; got '${actualType}'.`;
     }
-    apply(sourceFile) {
-        return this.applyWithFunction(sourceFile, ctx => walk(ctx, global.program));
+    applyWithProgram(sourceFile, program) {
+        return this.applyWithFunction(sourceFile, ctx => walk(ctx, program));
     }
 }
 /* tslint:disable:object-literal-sort-keys */
@@ -29,8 +28,7 @@ Rule.FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this asser
 Rule.FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found none.";
 exports.Rule = Rule;
 function walk(ctx, program) {
-    // See https://github.com/palantir/tslint/issues/1969
-    const sourceFile = program.getSourceFile(ctx.sourceFile.fileName);
+    const { sourceFile } = ctx;
     const checker = program.getTypeChecker();
     // Don't care about emit errors.
     const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile);

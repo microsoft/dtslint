@@ -7,9 +7,8 @@ class Rule extends Lint.Rules.AbstractRule {
     }
 }
 Rule.metadata = {
-    ruleName: "no-parent-references",
-    description: 'Forbid <reference path="../etc"/>',
-    rationale: "Parent references are not inferred as dependencies by types-publisher.",
+    ruleName: "no-bad-reference",
+    description: 'Forbid <reference path="../etc"/> in any file, and forbid <reference path> in test files.',
     optionsDescription: "Not configurable.",
     options: null,
     type: "functionality",

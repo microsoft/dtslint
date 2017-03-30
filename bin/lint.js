@@ -16,7 +16,6 @@ function lintWithVersion(dirPath, options, version) {
     return __awaiter(this, void 0, void 0, function* () {
         const tslint = installer_1.getLinter(version);
         const program = tslint.Linter.createProgram(path.join(dirPath, "tsconfig.json"));
-        global.program = program;
         const lintOptions = {
             fix: false,
             formatter: "stylish",
@@ -29,7 +28,7 @@ function lintWithVersion(dirPath, options, version) {
             linter.lint(filename, contents, config);
         }
         const result = linter.getResult();
-        return result.failureCount ? { message: result.output } : undefined;
+        return result.failures.length ? { message: result.output } : undefined;
     });
 }
 exports.lintWithVersion = lintWithVersion;
