@@ -14,7 +14,6 @@ export async function lintWithVersion(
 	dirPath: string, options: Options, version: TypeScriptVersion | "next"): Promise<TestError | undefined> {
 	const tslint = getLinter(version);
 	const program = tslint.Linter.createProgram(path.join(dirPath, "tsconfig.json"));
-	global.program = program;
 
 	const lintOptions: ILinterOptions = {
 		fix: false,
@@ -30,7 +29,7 @@ export async function lintWithVersion(
 	}
 
 	const result = linter.getResult();
-	return result.failureCount ? { message: result.output } : undefined;
+	return result.failures.length ? { message: result.output } : undefined;
 }
 
 async function getLintConfig(configuration: Configuration, configPath: string, options: Options): Promise<IConfigurationFile> {
