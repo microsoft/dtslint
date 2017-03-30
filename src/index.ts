@@ -2,7 +2,6 @@
 import { exec } from "child_process";
 import { readFile } from "fs-promise";
 import { join as joinPaths } from "path";
-import { Program } from "typescript";
 
 import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 
@@ -82,14 +81,6 @@ function usage(): void {
 	console.log("  --noLint     Just run 'tsc'.");
 	console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
 	console.log("  --installAll Cleans and installs all TypeScript versions.");
-}
-
-// KLUDGE -- tslint creates a duplicate program, so must set this to the original program.
-// See https://github.com/palantir/tslint/issues/1969 and https://github.com/palantir/tslint/pull/2235
-declare global {
-	namespace NodeJS {
-		interface Global { program: Program; }
-	}
 }
 
 async function runTests(dirPath: string, options: Options): Promise<void> {

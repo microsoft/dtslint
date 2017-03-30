@@ -1,7 +1,7 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
-export class Rule extends Lint.Rules.AbstractRule {
+export class Rule extends Lint.Rules.TypedRule {
 	public static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-relative-import-in-test",
 		description: "Forbids test (non-declaration) files to use relative imports.",
@@ -11,22 +11,20 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: false,
 	};
 
-	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+	applyWithProgram(sourceFile: ts.SourceFile, program: ts.Program): Lint.RuleFailure[] {
 		if (sourceFile.isDeclarationFile) {
 			return [];
 		}
 
-		return this.applyWithFunction(sourceFile, ctx => walk(ctx, global.program));
+		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program.getTypeChecker()));
 	}
 }
 
 const FAILURE_STRING = "Test file should not use a relative import. " +
 	"Use a global import as if this were a user of the package.";
 
-function walk(ctx: Lint.WalkContext<void>, program: ts.Program): void {
-	// See https://github.com/palantir/tslint/issues/1969
-	const sourceFile = program.getSourceFile(ctx.sourceFile.fileName);
-	const checker = program.getTypeChecker();
+function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
+	const { sourceFile } = ctx;
 
 	for (const i of sourceFile.imports) {
 		if (i.text.startsWith(".")) {
