@@ -96,7 +96,7 @@ function contributorsParser(strict: boolean): pm.Parser<Author[]> {
 		return pm.seqMap(contributors, pm.regexp(/ */), a => a);
 	}
 	return contributors;
-};
+}
 
 // TODO: Should we do something with the URL?
 const definitionsParser = pm.regexp(/\r?\n\/\/ Definitions: [^\r\n]+/);
