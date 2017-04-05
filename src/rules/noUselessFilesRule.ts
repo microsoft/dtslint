@@ -5,7 +5,7 @@ import * as ts from "typescript";
 // Remove when that PR is in.
 
 export class Rule extends Lint.Rules.AbstractRule {
-	public static metadata: Lint.IRuleMetadata = {
+	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-useless-files",
 		description: "Forbids files with no content.",
 		optionsDescription: "Not configurable.",
@@ -14,9 +14,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: false,
 	};
 
-	public static FAILURE_STRING = "File has no content.";
+	static FAILURE_STRING = "File has no content.";
 
-	public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		if (sourceFile.statements.length) {
 			return [];
 		}

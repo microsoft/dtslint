@@ -2,15 +2,16 @@
 	"extends": "tslint:latest",
 	"rules": {
 		"indent": [true, "tabs"],
+		"member-access": [true, "no-public"],
+
 		"arrow-parens": false,
 		"interface-name": false,
 		"max-classes-per-file": false,
-		"member-access": false,
 		"member-ordering": false,
 		"no-console": false,
 		"no-namespace": false,
 		"object-literal-sort-keys": false,
-		"max-line-length": [true, 140],
+		"max-line-length": [true, 120],
 		"switch-default": false,
 		"variable-name": false
 	}

@@ -2,7 +2,7 @@ import * as Lint from "tslint";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
-	public static metadata: Lint.IRuleMetadata = {
+	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-redundant-modifiers",
 		description: "Forbids unnecessary 'export' or 'declare' modifiers in declaration files.",
 		optionsDescription: "Not configurable.",
@@ -37,8 +37,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
 					// Types do not need 'declare'.
 					switch (node.kind) {
 						case ts.SyntaxKind.InterfaceDeclaration:
-						case ts.SyntaxKind.TypeAliasDeclaration:
-							ctx.addFailureAtNode(node, "'declare' keyword is redundant here.");
+						case ts.SyntaxKind.TypeAliasDeclaration: {
+							const { name } = node as ts.TypeAliasDeclaration | ts.InterfaceDeclaration;
+							ctx.addFailureAtNode(name, "'declare' keyword is redundant here.");
+						}
 					}
 				}
 			}

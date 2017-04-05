@@ -1,0 +1,5 @@
+namespace N {
+    export const x: number;
+}
+export = N;
+~~~~~~~~~~~ [Instead of `export =`-ing a namespace, use the body of the namespace as the module body.]

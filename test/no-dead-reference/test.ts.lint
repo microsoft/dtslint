@@ -1,0 +1,8 @@
+/// <reference types="foo" />
+import * as bar from "bar";
+/// <reference path="baz" />
+~~~~~~~~~~~~~~ [0]
+    /// <reference types="bang" />
+    ~~~~~~~~~~~~~~ [0]
+
+[0]: `/// <reference>` directive must be at top of file to take effect.

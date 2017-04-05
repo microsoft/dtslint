@@ -129,7 +129,11 @@ async function test(dirPath: string, options: Options, version: TypeScriptVersio
 
 export interface TestError { message: string; }
 
-async function testWithVersion(dirPath: string, options: Options, version: TypeScriptVersion | "next"): Promise<TestError | undefined> {
+async function testWithVersion(
+		dirPath: string,
+		options: Options,
+		version: TypeScriptVersion | "next",
+		): Promise<TestError | undefined> {
 	await install(version);
 	if (options.noLint) {
 		// Special for old DefinitelyTyped packages that aren't linted yet.

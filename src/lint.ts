@@ -32,7 +32,11 @@ export async function lintWithVersion(
 	return result.failures.length ? { message: result.output } : undefined;
 }
 
-async function getLintConfig(configuration: Configuration, configPath: string, options: Options): Promise<IConfigurationFile> {
+async function getLintConfig(
+		configuration: Configuration,
+		configPath: string,
+		options: Options,
+		): Promise<IConfigurationFile> {
 	if (!await exists(configPath)) {
 		if (options.dt) {
 			throw new Error('On DefinitelyTyped, must include `tslint.json` containing `{ "extends": "../tslint.json" }`');
