@@ -1,4 +1,5 @@
 {
+  "rulesDirectory": ["../../bin/rules"],
   "rules": {
     "no-bad-reference": true
   }

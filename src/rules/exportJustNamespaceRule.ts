@@ -16,25 +16,24 @@ export class Rule extends Lint.Rules.AbstractRule {
 	static FAILURE_STRING = "Instead of `export =`-ing a namespace, use the body of the namespace as the module body.";
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+		return this.applyWithFunction(sourceFile, walk);
 	}
 }
 
-class Walker extends Lint.RuleWalker {
-	visitSourceFile(node: ts.SourceFile) {
-		const exportEqualsNode = node.statements.find(isExportEquals) as ts.ExportAssignment | undefined;
-		if (!exportEqualsNode) {
-			return;
-		}
-		const expr = exportEqualsNode.expression;
-		if (!util.isIdentifier(expr)) {
-			return;
-		}
-		const exportEqualsName = expr.text;
+function walk(ctx: Lint.WalkContext<void>): void {
+	const { sourceFile: { statements } } = ctx;
+	const exportEqualsNode = statements.find(isExportEquals) as ts.ExportAssignment | undefined;
+	if (!exportEqualsNode) {
+		return;
+	}
+	const expr = exportEqualsNode.expression;
+	if (!util.isIdentifier(expr)) {
+		return;
+	}
+	const exportEqualsName = expr.text;
 
-		if (exportEqualsName && isJustNamespace(node.statements, exportEqualsName)) {
-			this.addFailureAtNode(exportEqualsNode, Rule.FAILURE_STRING);
-		}
+	if (exportEqualsName && isJustNamespace(statements, exportEqualsName)) {
+		ctx.addFailureAtNode(exportEqualsNode, Rule.FAILURE_STRING);
 	}
 }
 

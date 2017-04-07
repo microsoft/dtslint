@@ -1,0 +1,20 @@
+
+// $ExpectType xxx
+
+~nil [Can not match a node to this assertion.]
+
+// $ExpectType number[]
+[1, 2];
+
+// $ExpectType 1
+1; // $ExpectType 2
+~~~~~~~~~~~~~~~~~~~ [This line has 2 $ExpectType assertions.]
+
+declare function f(
+    one: number,
+    two: [number, number],
+    three: [number, number, number],
+    four: [number, number, number, number]): number;
+
+// Test that we never truncate types.
+f; // $ExpectType (one: number, two: [number, number], three: [number, number, number], four: [number, number, number, number]) => number

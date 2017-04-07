@@ -4,6 +4,6 @@
     "typeCheck": true
   },
   "rules": {
-    "no-relative-import-in-test": true
+    "expect": true
   }
 }
