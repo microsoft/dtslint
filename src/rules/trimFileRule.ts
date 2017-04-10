@@ -13,7 +13,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 	static FAILURE_STRING_LEADING = "File should not begin with a blank line.";
 	static FAILURE_STRING_TRAILING =
-		"File should not end with a blank line. (Ending in '\\n' OK, ending in '\\n\\n' not OK.)";
+		"File should not end with a blank line. (Ending in one newline OK, ending in two newlines not OK.)";
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);
