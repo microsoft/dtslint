@@ -1,0 +1,12 @@
+const x: string = 0; // $ExpectError
+
+// Handles 2 errors on 1 line
+const y: string = 0 / "1"; // $ExpectError
+
+// $ExpectError
+const z: string = "";
+~~~~~~~~~~~~~~~~~~~~~ [Expected an error on this line, but found none.]
+
+// $ExpectError
+"0" / 1; // $ExpectError
+~~~~~~~~~~~~~~~~~~~~~~~~ [This line has 2 $ExpectType assertions.]

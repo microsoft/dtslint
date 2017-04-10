@@ -2,7 +2,7 @@ import * as Lint from "tslint";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
-	public static metadata: Lint.IRuleMetadata = {
+	static metadata: Lint.IRuleMetadata = {
 		ruleName: "prefer-declare-function",
 		description: "Forbids `export const x = () => void`.",
 		optionsDescription: "Not configurable.",
@@ -11,9 +11,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: true,
 	};
 
-	public static FAILURE_STRING = "Use a function declaration instead of a variable of function type.";
+	static FAILURE_STRING = "Use a function declaration instead of a variable of function type.";
 
-	public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);
 	}
 }

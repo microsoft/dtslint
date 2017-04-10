@@ -4,7 +4,7 @@ import * as ts from "typescript";
 // TODO: pull request to update tslint's `no-var-keyword`
 
 export class Rule extends Lint.Rules.AbstractRule {
-	public static metadata: Lint.IRuleMetadata = {
+	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-var",
 		description: "Forbids 'var'.",
 		optionsDescription: "Not configurable.",
@@ -13,9 +13,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: false,
 	};
 
-	public static FAILURE_STRING = "Do not use 'var'.";
+	static FAILURE_STRING = "Do not use 'var'.";
 
-	public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);
 	}
 }

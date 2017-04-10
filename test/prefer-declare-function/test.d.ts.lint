@@ -1,0 +1,10 @@
+export const x: () => void;
+             ~~~~~~~~~~~~~ [0]
+
+namespace N {
+    const x: () => void;
+          ~~~~~~~~~~~~~ [0]
+}
+
+
+[0]: Use a function declaration instead of a variable of function type.

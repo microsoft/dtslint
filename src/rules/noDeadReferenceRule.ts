@@ -20,18 +20,26 @@ export class Rule extends Lint.Rules.AbstractRule {
 }
 
 function walk(ctx: Lint.WalkContext<void>): void {
-	const { sourceFile } = ctx;
-	if (!sourceFile.statements.length) {
+	const { sourceFile: { statements, text } } = ctx;
+	if (!statements.length) {
 		return;
 	}
 
 	// 'm' flag makes it multiline, so `^` matches the beginning of any line.
 	// 'g' flag lets us set rgx.lastIndex
-	const rgx = /^\s*\/\/\/ <reference/mg;
+	const rgx = /^\s*(\/\/\/ <reference)/mg;
+
 	// Start search at the first statement. (`/// <reference>` before that is OK.)
-	rgx.lastIndex =  sourceFile.statements[0].getStart();
-	const match = rgx.exec(sourceFile.text);
-	if (match !== null) {
-		ctx.addFailureAt(match.index, 0, Rule.FAILURE_STRING);
+	rgx.lastIndex = statements[0].getStart();
+
+	while (true) {
+		const match = rgx.exec(text);
+		if (match === null) {
+			break;
+		}
+
+		const length = match[1].length;
+		const start = match.index + match[0].length - length;
+		ctx.addFailureAt(start, length, Rule.FAILURE_STRING);
 	}
 }

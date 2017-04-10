@@ -1,0 +1,5 @@
+import { x } from "./declarationFile.d";
+                  ~~~~~~~~~~~~~~~~~~~~~ [0]
+import { y } from "./testFile";
+
+[0]: Test file should not use a relative import. Use a global import as if this were a user of the package.

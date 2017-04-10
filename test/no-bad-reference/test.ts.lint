@@ -1,0 +1,7 @@
+/// <reference path="../foo" />
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  [0]
+
+/// <reference path="foo" />
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~  [0]
+
+[0]: Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'.

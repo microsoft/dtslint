@@ -2,7 +2,7 @@ import * as Lint from "tslint";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.TypedRule {
-	public static metadata: Lint.IRuleMetadata = {
+	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-relative-import-in-test",
 		description: "Forbids test (non-declaration) files to use relative imports.",
 		optionsDescription: "Not configurable.",

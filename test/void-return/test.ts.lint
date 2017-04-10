@@ -1,0 +1,14 @@
+function f(): void;
+function f(): number | void;
+function f(): Promise<void>;
+function f<T = void>(): T;
+function f(action: () => void): void;
+
+function f(x: void): number;
+              ~~~~ [0]
+function f(x: number | void): number;
+                       ~~~~ [0]
+
+f<void>();
+
+[0]: Use the `void` type for return types only. Otherwise, use `undefined`.

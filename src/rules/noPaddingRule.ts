@@ -2,7 +2,7 @@ import * as Lint from "tslint";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
-	public static metadata: Lint.IRuleMetadata = {
+	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-padding",
 		description: "Forbids unnecessary 'export' or 'declare' modifiers in declaration files.",
 		optionsDescription: "Not configurable.",
