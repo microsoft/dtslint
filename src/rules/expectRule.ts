@@ -17,13 +17,13 @@ export class Rule extends Lint.Rules.TypedRule {
 	};
 	/* tslint:enable:object-literal-sort-keys */
 
-	static FAILURE_STRING(expectedType: string, actualType: string): string {
-		return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
-	}
-
 	static FAILURE_STRING_DUPLICATE_ASSERTION = "This line has 2 $ExpectType assertions.";
 	static FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this assertion.";
 	static FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found none.";
+
+	static FAILURE_STRING(expectedType: string, actualType: string): string {
+		return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
+	}
 
 	applyWithProgram(sourceFile: ts.SourceFile, program: ts.Program): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program));
@@ -85,7 +85,10 @@ function walk(ctx: Lint.WalkContext<void>, program: ts.Program): void {
 
 	function addFailureAtLine(line: number, failure: string): void {
 		const start = sourceFile.getPositionOfLineAndCharacter(line, 0);
-		const end = sourceFile.getPositionOfLineAndCharacter(line + 1, 0) - 1;
+		let end = sourceFile.getPositionOfLineAndCharacter(line + 1, 0) - 1;
+		if (sourceFile.text[end - 1] === "\r") {
+			end--;
+		}
 		ctx.addFailure(start, end, failure);
 	}
 }

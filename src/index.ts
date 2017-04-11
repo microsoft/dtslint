@@ -114,12 +114,12 @@ function getTypeScriptVersion(text: string): TypeScriptVersion {
 async function test(dirPath: string, options: Options, version: TypeScriptVersion | "next"): Promise<void> {
 	const a = await testWithVersion(dirPath, options, version);
 	if (a) {
-		if (version !== TypeScriptVersion.Latest) {
-			const b = await testWithVersion(dirPath, options, TypeScriptVersion.Latest);
+		if (version !== TypeScriptVersion.latest) {
+			const b = await testWithVersion(dirPath, options, TypeScriptVersion.latest);
 			if (!b) {
 				throw new Error(a.message +
-					`Package compiles in TypeScript ${TypeScriptVersion.Latest} but not in ${version}.\n` +
-					`You can add a line '// TypeScript Version: ${TypeScriptVersion.Latest}' to the end of the header ` +
+					`Package compiles in TypeScript ${TypeScriptVersion.latest} but not in ${version}.\n` +
+					`You can add a line '// TypeScript Version: ${TypeScriptVersion.latest}' to the end of the header ` +
 					"to specify a newer compiler version.");
 			}
 		}
