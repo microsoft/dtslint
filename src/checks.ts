@@ -2,7 +2,6 @@ import { exists } from "fs-promise";
 import * as path from "path";
 import { CompilerOptions } from "typescript";
 
-import { Options } from "./index";
 import { readJson } from "./util";
 
 export async function checkPackageJson(dirPath: string): Promise<void> {
@@ -18,7 +17,7 @@ export async function checkPackageJson(dirPath: string): Promise<void> {
 	}
 }
 
-export async function checkTsconfig(dirPath: string, { dt }: Options): Promise<void> {
+export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void> {
 	const tsconfigPath = path.join(dirPath, "tsconfig.json");
 	if (!await exists(tsconfigPath)) {
 		throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
