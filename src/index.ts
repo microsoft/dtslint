@@ -12,16 +12,16 @@ import { checkTslintJson, lintWithVersion } from "./lint";
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
 
-	let clean = false;
 	let noLint = false;
 	let tsNext = false;
-	let cwdSubDir: string | undefined;
+	let dirPath = process.cwd();
 
 	for (const arg of args) {
 		switch (arg) {
 			case "--clean":
-				clean = true;
-				break;
+				console.log("Cleaning installs...");
+				await cleanInstalls();
+				return;
 
 			case "--installAll":
 				console.log("Installing for all TypeScript versions...");
@@ -48,16 +48,10 @@ async function main(): Promise<void> {
 					process.exit(1);
 				}
 
-				cwdSubDir = cwdSubDir === undefined ? arg : joinPaths(cwdSubDir, arg);
+				dirPath = dirPath === undefined ? arg : joinPaths(dirPath, arg);
 		}
 	}
 
-	if (clean) {
-		await cleanInstalls();
-	}
-
-	const cwd = process.cwd();
-	const dirPath = cwdSubDir ? joinPaths(cwd, cwdSubDir) : cwd;
 	await runTests(dirPath, noLint, tsNext);
 }
 
