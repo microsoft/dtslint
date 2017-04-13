@@ -2,6 +2,7 @@ import * as foo from "foo";
 import foo = require("foo");
 export { foo };
 export { foo } from "foo";
+export as namespace Foo;
 
 interface I {}
           ~ [Prefer to explicitly write 'export' for an external module export.]

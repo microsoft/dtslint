@@ -29,7 +29,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			checkInOther(node);
 		}
 
-		if (isModuleDeclaration(node)) {
+		if (isModuleDeclaration(node) && (sourceFile.isDeclarationFile || isDeclare(node))) {
 			checkModule(node);
 		}
 	}
@@ -40,6 +40,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			case ts.SyntaxKind.ImportDeclaration:
 			case ts.SyntaxKind.ImportEqualsDeclaration:
 			case ts.SyntaxKind.ExportDeclaration:
+			case ts.SyntaxKind.NamespaceExportDeclaration:
 				return;
 		}
 
