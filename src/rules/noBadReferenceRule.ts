@@ -14,7 +14,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 	static FAILURE_STRING =
 		"Don't use <reference path> to reference another package. Use an import or <reference types> instead.";
 	static FAILURE_STRING_REFERENCE_IN_TEST =
-		"Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'";
+		"Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'.";
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);
@@ -26,10 +26,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
 	for (const ref of sourceFile.referencedFiles) {
 		if (sourceFile.isDeclarationFile) {
 			if (ref.fileName.startsWith("..")) {
-				ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING);
+				ctx.addFailure(ref.pos, ref.end, Rule.FAILURE_STRING);
 			}
 		} else {
-			ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING_REFERENCE_IN_TEST);
+			ctx.addFailure(ref.pos, ref.end, Rule.FAILURE_STRING_REFERENCE_IN_TEST);
 		}
 	}
 }

@@ -5,9 +5,9 @@ import pm = require("parsimmon");
 
 export type TypeScriptVersion = "2.0" | "2.1" | "2.2";
 export namespace TypeScriptVersion {
-	export const All: TypeScriptVersion[] = ["2.0", "2.1", "2.2"];
+	export const all: TypeScriptVersion[] = ["2.0", "2.1", "2.2"];
 	/** Latest version that may be specified in a `// TypeScript Version:` header. */
-	export const Latest = "2.2";
+	export const latest = "2.2";
 }
 
 interface Header {

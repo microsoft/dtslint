@@ -1,6 +1,6 @@
 {
   "name": "dtslint",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
@@ -20,7 +20,8 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
-    "lint": "tslint --project tsconfig.json --type-check --format stylish"
+    "lint": "tslint --project tsconfig.json --type-check --format stylish",
+    "test": "node test/test.js"
   },
   "dependencies": {
     "fs-promise": "^2.0.0",
@@ -34,8 +35,11 @@
     "@types/node": "^7.0.5",
     "@types/parsimmon": "^1.0.3",
     "@types/strip-json-comments": "0.0.28",
-    "tslint": "^5.0.0",
-    "typescript": "^2.2.1"
+    "tslint": "^5.1.0",
+    "typescript": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=7.0.0"
   },
   "license": "MIT"
 }

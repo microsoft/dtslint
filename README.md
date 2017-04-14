@@ -127,6 +127,11 @@ npm run watch
 
 Note: If changing a lint rule, you will have to `dtslint --clean` because rules are copied into install directories.
 
+## Test
+
+Use `npm run test` to run all tests.
+To run a single test: `node node_modules/tslint/bin/tslint --rulesDirectory bin/rules --test test/expect`.
+
 
 ## Publish
 

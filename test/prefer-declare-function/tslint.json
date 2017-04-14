@@ -1,0 +1,6 @@
+{
+  "rulesDirectory": ["../../bin/rules"],
+  "rules": {
+    "prefer-declare-function": true
+  }
+}

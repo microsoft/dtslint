@@ -1,0 +1,5 @@
+
+~nil [File should not begin with a blank line.]
+0;
+
+~nil [File should not end with a blank line. (Ending in one newline OK, ending in two newlines not OK.)]

@@ -1,0 +1,9 @@
+{
+  "rulesDirectory": ["../../bin/rules"],
+  "linterOptions": {
+    "typeCheck": true
+  },
+  "rules": {
+    "expect": true
+  }
+}

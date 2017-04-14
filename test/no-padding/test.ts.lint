@@ -1,0 +1,27 @@
+function f() {
+             ~ [Don't leave a blank line after '{']
+
+    return [
+           ~ [Don't leave a blank line after '[']
+
+        f(
+         ~ [Don't leave a blank line after '(']
+
+            0
+
+        )
+        ~ [Don't leave a blank line before ')']
+
+    ];
+    ~ [Don't leave a blank line before ']']
+
+}
+~ [Don't leave a blank line before '}']
+
+function f() {
+    return [
+        f(
+            0
+        )
+    ];
+}

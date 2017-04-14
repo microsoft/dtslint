@@ -2,6 +2,9 @@
     "extends": "tslint:latest",
     "rulesDirectory": "./bin/rules",
     "rules": {
+        // Wait on 5.2 release (https://github.com/palantir/tslint/pull/2391)
+        "prefer-const": false,
+
         // Custom rules
         "expect": true,
         "export-just-namespace": true,
@@ -9,7 +12,7 @@
         "no-dead-reference": true,
         "no-padding": true,
         "no-relative-import-in-test": true,
-        "no-redundant-modifiers": true,
+        "strict-export-declare-modifiers": true,
         "no-single-declare-module": true,
 		"no-useless-files": true,
         "prefer-declare-function": true,

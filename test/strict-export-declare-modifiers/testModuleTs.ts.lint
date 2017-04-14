@@ -1,0 +1,15 @@
+export function f() {}
+
+declare interface I {}
+~~~~~~~ ['declare' keyword is redundant here.]
+
+interface J {}
+
+namespace N {
+    export const x: number;
+}
+
+declare namespace M {
+    export const x: number;
+    ~~~~~~ ['export' keyword is redundant here.]
+}

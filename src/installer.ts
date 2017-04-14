@@ -8,7 +8,7 @@ import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 
 export async function installAll() {
-	for (const v of TypeScriptVersion.All) {
+	for (const v of TypeScriptVersion.all) {
 		await install(v);
 	}
 	await install("next");

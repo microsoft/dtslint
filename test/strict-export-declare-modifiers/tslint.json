@@ -1,0 +1,6 @@
+{
+  "rulesDirectory": ["../../bin/rules"],
+  "rules": {
+    "strict-export-declare-modifiers": true
+  }
+}

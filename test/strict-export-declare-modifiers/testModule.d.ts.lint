@@ -1,0 +1,25 @@
+import * as foo from "foo";
+import foo = require("foo");
+export { foo };
+export { foo } from "foo";
+export as namespace Foo;
+
+interface I {}
+          ~ [Prefer to explicitly write 'export' for an external module export.]
+
+export declare function f(): void;
+       ~~~~~~~ ['export declare' is redundant, just use 'export'.]
+
+declare function g(): void;
+~~~~~~~  [prefer-export]
+
+declare namespace N {}
+~~~~~~~ [prefer-export]
+
+export namespace M {
+    export function f(): void;
+    ~~~~~~ ['export' keyword is redundant here.]
+    // TS compiler warns for 'declare' here.
+}
+
+[prefer-export]: Prefer 'export' to 'declare' in an external module.

@@ -1,0 +1,17 @@
+declare function f(): void;
+
+declare type T = number;
+~~~~~~~ [declare]
+
+declare interface I {}
+~~~~~~~ [declare]
+
+declare module "m" {
+    export function f(): void;
+    ~~~~~~ [export]
+    function g(): void;
+}
+
+
+[declare]: 'declare' keyword is redundant here.
+[export]: 'export' keyword is redundant here.

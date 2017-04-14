@@ -1,0 +1,4 @@
+/// <reference path="../foo" />
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  [Don't use <reference path> to reference another package. Use an import or <reference types> instead.]
+
+/// <reference path="foo" />

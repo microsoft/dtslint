@@ -20,14 +20,13 @@ export class Rule extends Lint.Rules.AbstractRule {
 }
 
 function walk(ctx: Lint.WalkContext<void>): void {
-	ts.forEachChild(ctx.sourceFile, recur);
-	function recur(node: ts.Node) {
+	ts.forEachChild(ctx.sourceFile, function cb(node: ts.Node) {
 		if (node.kind === ts.SyntaxKind.VoidKeyword && !mayContainVoid(node.parent!) && !isReturnType(node)) {
 			ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
 		} else {
-			ts.forEachChild(node, recur);
+			ts.forEachChild(node, cb);
 		}
-	}
+	});
 }
 
 function mayContainVoid({ kind }: ts.Node): boolean {
@@ -36,6 +35,7 @@ function mayContainVoid({ kind }: ts.Node): boolean {
 		case ts.SyntaxKind.ExpressionWithTypeArguments:
 		case ts.SyntaxKind.NewExpression:
 		case ts.SyntaxKind.CallExpression:
+		case ts.SyntaxKind.TypeParameter: // Allow f<T = void>
 			return true;
 		default:
 			return false;
