@@ -7,32 +7,21 @@ import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitel
 
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, install, installAll, tscPath } from "./installer";
-import { lintWithVersion } from "./lint";
-
-export interface Options {
-	dt: boolean;
-	noLint: boolean;
-	tsNext: boolean;
-}
+import { checkTslintJson, lintWithVersion } from "./lint";
 
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
 
-	let clean = false;
-	let dt = false;
 	let noLint = false;
 	let tsNext = false;
-	let cwdSubDir: string | undefined;
+	let dirPath = process.cwd();
 
 	for (const arg of args) {
 		switch (arg) {
 			case "--clean":
-				clean = true;
-				break;
-
-			case "--dt":
-				dt = true;
-				break;
+				console.log("Cleaning installs...");
+				await cleanInstalls();
+				return;
 
 			case "--installAll":
 				console.log("Installing for all TypeScript versions...");
@@ -59,42 +48,34 @@ async function main(): Promise<void> {
 					process.exit(1);
 				}
 
-				cwdSubDir = cwdSubDir === undefined ? arg : joinPaths(cwdSubDir, arg);
+				dirPath = dirPath === undefined ? arg : joinPaths(dirPath, arg);
 		}
 	}
 
-	if (clean) {
-		await cleanInstalls();
-	}
-
-	const cwd = process.cwd();
-	const dirPath = cwdSubDir ? joinPaths(cwd, cwdSubDir) : cwd;
-	await runTests(dirPath, { dt, noLint, tsNext });
+	await runTests(dirPath, noLint, tsNext);
 }
 
 function usage(): void {
-	console.log("Usage: dtslint [--dt] [--clean]");
+	console.log("Usage: dtslint [--version] [--clean] [--noLint] [--tsNext] [--installAll]");
 	console.log("Args:");
 	console.log("  --version    Print version and exit.");
-	console.log("  --dt         Run extra checks for DefinitelyTyped packages.");
 	console.log("  --clean      Clean TypeScript installs and install again.");
-	console.log("  --noLint     Just run 'tsc'.");
+	console.log("  --noLint     Just run 'tsc'. (Not recommended.)");
 	console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
 	console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
 
-async function runTests(dirPath: string, options: Options): Promise<void> {
+async function runTests(dirPath: string, noLint: boolean, tsNext: boolean): Promise<void> {
 	const text = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
-	if (text.includes("// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped") && !options.dt) {
-		console.warn("Warning: Text includes DefinitelyTyped link, but '--dt' is not set.");
-	}
-	const version = options.tsNext ? "next" : getTypeScriptVersion(text);
+	const dt = text.includes("// Type definitions for");
+	const version = tsNext ? "next" : getTypeScriptVersion(text);
 
-	if (options.dt) {
+	await checkTslintJson(dirPath, dt);
+	if (dt) {
 		await checkPackageJson(dirPath);
 	}
-	await checkTsconfig(dirPath, options);
-	await test(dirPath, options, version);
+	await checkTsconfig(dirPath, dt);
+	await test(dirPath, noLint, version);
 }
 
 function getTypeScriptVersion(text: string): TypeScriptVersion {
@@ -111,42 +92,38 @@ function getTypeScriptVersion(text: string): TypeScriptVersion {
 	return parseTypeScriptVersionLine(line);
 }
 
-async function test(dirPath: string, options: Options, version: TypeScriptVersion | "next"): Promise<void> {
-	const a = await testWithVersion(dirPath, options, version);
-	if (a) {
-		if (version !== TypeScriptVersion.Latest) {
-			const b = await testWithVersion(dirPath, options, TypeScriptVersion.Latest);
-			if (!b) {
-				throw new Error(a.message +
-					`Package compiles in TypeScript ${TypeScriptVersion.Latest} but not in ${version}.\n` +
-					`You can add a line '// TypeScript Version: ${TypeScriptVersion.Latest}' to the end of the header ` +
-					"to specify a newer compiler version.");
-			}
-		}
-		throw new Error(a.message);
+async function test(dirPath: string, noLint: boolean, version: TypeScriptVersion | "next"): Promise<void> {
+	const errorFromSpecifiedVersion = await testWithVersion(dirPath, noLint, version);
+	if (!errorFromSpecifiedVersion) {
+		return;
 	}
+
+	if (version !== TypeScriptVersion.Latest) {
+		const errorFromLatest = await testWithVersion(dirPath, noLint, TypeScriptVersion.Latest);
+		if (!errorFromLatest) {
+			throw new Error(errorFromSpecifiedVersion +
+				`Package compiles in TypeScript ${TypeScriptVersion.Latest} but not in ${version}.\n` +
+				`You can add a line '// TypeScript Version: ${TypeScriptVersion.Latest}' to the end of the header ` +
+				"to specify a newer compiler version.");
+		}
+	}
+	throw new Error(errorFromSpecifiedVersion);
 }
 
-export interface TestError { message: string; }
-
 async function testWithVersion(
-		dirPath: string,
-		options: Options,
-		version: TypeScriptVersion | "next",
-		): Promise<TestError | undefined> {
+		dirPath: string, noLint: boolean, version: TypeScriptVersion | "next"): Promise<string | undefined> {
 	await install(version);
-	if (options.noLint) {
+	if (noLint) {
 		// Special for old DefinitelyTyped packages that aren't linted yet.
 		return execScript("node " + tscPath(version), dirPath);
 	} else {
-		return lintWithVersion(dirPath, options, version);
+		return lintWithVersion(dirPath, version);
 	}
 }
 
-function execScript(cmd: string, cwd?: string): Promise<TestError | undefined> {
-	return new Promise<TestError>(resolve => {
-		// Resolves with 'err' if it's present.
-		exec(cmd, { encoding: "utf8", cwd }, resolve);
+function execScript(cmd: string, cwd?: string): Promise<string | undefined> {
+	return new Promise<string>(resolve => {
+		exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => resolve(err ? stdout + stderr : undefined));
 	});
 }
 

@@ -59,5 +59,6 @@ function isMainFile(fileName: string) {
 		parent = dirname(parent);
 	}
 
-	return basename(dirname(parent)) === "DefinitelyTyped";
+	// Allow "types/foo/index.d.ts", not "types/foo/utils/index.d.ts"
+	return basename(dirname(parent)) === "types";
 }
