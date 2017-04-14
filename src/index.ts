@@ -70,7 +70,9 @@ async function runTests(dirPath: string, noLint: boolean, tsNext: boolean): Prom
 	const dt = text.includes("// Type definitions for");
 	const version = tsNext ? "next" : getTypeScriptVersion(text);
 
-	await checkTslintJson(dirPath, dt);
+	if (!noLint) {
+		await checkTslintJson(dirPath, dt);
+	}
 	if (dt) {
 		await checkPackageJson(dirPath);
 	}
