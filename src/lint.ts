@@ -13,7 +13,6 @@ export async function lintWithVersion(
 		dirPath: string, version: TypeScriptVersion | "next"): Promise<string | undefined> {
 	const configPath = getConfigPath(dirPath);
 	const tslint = getLinter(version);
-	console.log(configPath);
 	const program = tslint.Linter.createProgram(joinPaths(dirPath, "tsconfig.json"));
 
 	const lintOptions: ILinterOptions = {
