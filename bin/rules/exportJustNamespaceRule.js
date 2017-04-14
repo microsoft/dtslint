@@ -5,7 +5,7 @@ const util = require("tsutils");
 const ts = require("typescript");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
-        return this.applyWithWalker(new Walker(sourceFile, this.getOptions()));
+        return this.applyWithFunction(sourceFile, walk);
     }
 }
 Rule.metadata = {
@@ -18,20 +18,19 @@ Rule.metadata = {
 };
 Rule.FAILURE_STRING = "Instead of `export =`-ing a namespace, use the body of the namespace as the module body.";
 exports.Rule = Rule;
-class Walker extends Lint.RuleWalker {
-    visitSourceFile(node) {
-        const exportEqualsNode = node.statements.find(isExportEquals);
-        if (!exportEqualsNode) {
-            return;
-        }
-        const expr = exportEqualsNode.expression;
-        if (!util.isIdentifier(expr)) {
-            return;
-        }
-        const exportEqualsName = expr.text;
-        if (exportEqualsName && isJustNamespace(node.statements, exportEqualsName)) {
-            this.addFailureAtNode(exportEqualsNode, Rule.FAILURE_STRING);
-        }
+function walk(ctx) {
+    const { sourceFile: { statements } } = ctx;
+    const exportEqualsNode = statements.find(isExportEquals);
+    if (!exportEqualsNode) {
+        return;
+    }
+    const expr = exportEqualsNode.expression;
+    if (!util.isIdentifier(expr)) {
+        return;
+    }
+    const exportEqualsName = expr.text;
+    if (exportEqualsName && isJustNamespace(statements, exportEqualsName)) {
+        ctx.addFailureAtNode(exportEqualsNode, Rule.FAILURE_STRING);
     }
 }
 function isExportEquals(node) {

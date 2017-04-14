@@ -15,15 +15,16 @@ Rule.metadata = {
     typescriptOnly: false,
 };
 Rule.FAILURE_STRING_LEADING = "File should not begin with a blank line.";
-Rule.FAILURE_STRING_TRAILING = "File should not end with a blank line. (Ending in '\\n' OK, ending in '\\n\\n' not OK.)";
+Rule.FAILURE_STRING_TRAILING = "File should not end with a blank line. (Ending in one newline OK, ending in two newlines not OK.)";
 exports.Rule = Rule;
 function walk(ctx) {
     const { sourceFile: { text } } = ctx;
     if (text.startsWith("\r") || text.startsWith("\n")) {
-        ctx.addFailureAt(0, 1, Rule.FAILURE_STRING_LEADING);
+        ctx.addFailureAt(0, 0, Rule.FAILURE_STRING_LEADING);
     }
     if (text.endsWith("\n\n") || text.endsWith("\r\n\r\n")) {
-        ctx.addFailureAt(text.length - 1, 1, Rule.FAILURE_STRING_TRAILING);
+        const start = text.endsWith("\r\n") ? text.length - 2 : text.length - 1;
+        ctx.addFailureAt(start, 0, Rule.FAILURE_STRING_TRAILING);
     }
 }
 //# sourceMappingURL=trimFileRule.js.map

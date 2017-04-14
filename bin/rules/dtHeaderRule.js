@@ -50,6 +50,7 @@ function isMainFile(fileName) {
     if (/^v\d+$/.test(path_1.basename(parent))) {
         parent = path_1.dirname(parent);
     }
-    return path_1.basename(path_1.dirname(parent)) === "DefinitelyTyped";
+    // Allow "types/foo/index.d.ts", not "types/foo/utils/index.d.ts"
+    return path_1.basename(path_1.dirname(parent)) === "types";
 }
 //# sourceMappingURL=dtHeaderRule.js.map

@@ -15,18 +15,18 @@ Rule.metadata = {
     typescriptOnly: true,
 };
 Rule.FAILURE_STRING = "Don't use <reference path> to reference another package. Use an import or <reference types> instead.";
-Rule.FAILURE_STRING_REFERENCE_IN_TEST = "Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'";
+Rule.FAILURE_STRING_REFERENCE_IN_TEST = "Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'.";
 exports.Rule = Rule;
 function walk(ctx) {
     const { sourceFile } = ctx;
     for (const ref of sourceFile.referencedFiles) {
         if (sourceFile.isDeclarationFile) {
             if (ref.fileName.startsWith("..")) {
-                ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING);
+                ctx.addFailure(ref.pos, ref.end, Rule.FAILURE_STRING);
             }
         }
         else {
-            ctx.addFailureAt(ref.pos, ref.end, Rule.FAILURE_STRING_REFERENCE_IN_TEST);
+            ctx.addFailure(ref.pos, ref.end, Rule.FAILURE_STRING_REFERENCE_IN_TEST);
         }
     }
 }

@@ -19,15 +19,14 @@ Rule.metadata = {
 Rule.FAILURE_STRING = "Use the `void` type for return types only. Otherwise, use `undefined`.";
 exports.Rule = Rule;
 function walk(ctx) {
-    ts.forEachChild(ctx.sourceFile, recur);
-    function recur(node) {
+    ts.forEachChild(ctx.sourceFile, function cb(node) {
         if (node.kind === ts.SyntaxKind.VoidKeyword && !mayContainVoid(node.parent) && !isReturnType(node)) {
             ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
         }
         else {
-            ts.forEachChild(node, recur);
+            ts.forEachChild(node, cb);
         }
-    }
+    });
 }
 function mayContainVoid({ kind }) {
     switch (kind) {
@@ -35,6 +34,7 @@ function mayContainVoid({ kind }) {
         case ts.SyntaxKind.ExpressionWithTypeArguments:
         case ts.SyntaxKind.NewExpression:
         case ts.SyntaxKind.CallExpression:
+        case ts.SyntaxKind.TypeParameter:
             return true;
         default:
             return false;

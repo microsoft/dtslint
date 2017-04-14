@@ -25,7 +25,7 @@ function checkPackageJson(dirPath) {
     });
 }
 exports.checkPackageJson = checkPackageJson;
-function checkTsconfig(dirPath, { dt }) {
+function checkTsconfig(dirPath, dt) {
     return __awaiter(this, void 0, void 0, function* () {
         const tsconfigPath = path.join(dirPath, "tsconfig.json");
         if (!(yield fs_promise_1.exists(tsconfigPath))) {

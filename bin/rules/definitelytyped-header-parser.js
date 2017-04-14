@@ -3,9 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const pm = require("parsimmon");
 var TypeScriptVersion;
 (function (TypeScriptVersion) {
-    TypeScriptVersion.All = ["2.0", "2.1", "2.2"];
+    TypeScriptVersion.all = ["2.0", "2.1", "2.2"];
     /** Latest version that may be specified in a `// TypeScript Version:` header. */
-    TypeScriptVersion.Latest = "2.2";
+    TypeScriptVersion.latest = "2.2";
 })(TypeScriptVersion = exports.TypeScriptVersion || (exports.TypeScriptVersion = {}));
 function validate(mainFileContent) {
     const h = parseHeader(mainFileContent, /*strict*/ true);

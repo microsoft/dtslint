@@ -18,7 +18,7 @@ Rule.metadata = {
 Rule.FAILURE_STRING = "Use a function declaration instead of a variable of function type.";
 exports.Rule = Rule;
 function walk(ctx) {
-    eachModuleStatement(ctx.sourceFile, (statement) => {
+    eachModuleStatement(ctx.sourceFile, statement => {
         if (isVariableStatement(statement)) {
             for (const varDecl of statement.declarationList.declarations) {
                 if (varDecl.type !== undefined && varDecl.type.kind === ts.SyntaxKind.FunctionType) {

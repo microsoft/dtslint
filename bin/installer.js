@@ -15,7 +15,7 @@ const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 function installAll() {
     return __awaiter(this, void 0, void 0, function* () {
-        for (const v of definitelytyped_header_parser_1.TypeScriptVersion.All) {
+        for (const v of definitelytyped_header_parser_1.TypeScriptVersion.all) {
             yield install(v);
         }
         yield install("next");

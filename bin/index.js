@@ -19,19 +19,15 @@ const lint_1 = require("./lint");
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const args = process.argv.slice(2);
-        let clean = false;
-        let dt = false;
         let noLint = false;
         let tsNext = false;
-        let cwdSubDir;
+        let dirPath = process.cwd();
         for (const arg of args) {
             switch (arg) {
                 case "--clean":
-                    clean = true;
-                    break;
-                case "--dt":
-                    dt = true;
-                    break;
+                    console.log("Cleaning installs...");
+                    yield installer_1.cleanInstalls();
+                    return;
                 case "--installAll":
                     console.log("Installing for all TypeScript versions...");
                     yield installer_1.cleanInstalls();
@@ -52,39 +48,32 @@ function main() {
                         usage();
                         process.exit(1);
                     }
-                    cwdSubDir = cwdSubDir === undefined ? arg : path_1.join(cwdSubDir, arg);
+                    dirPath = dirPath === undefined ? arg : path_1.join(dirPath, arg);
             }
         }
-        if (clean) {
-            yield installer_1.cleanInstalls();
-        }
-        const cwd = process.cwd();
-        const dirPath = cwdSubDir ? path_1.join(cwd, cwdSubDir) : cwd;
-        yield runTests(dirPath, { dt, noLint, tsNext });
+        yield runTests(dirPath, noLint, tsNext);
     });
 }
 function usage() {
-    console.log("Usage: dtslint [--dt] [--clean]");
+    console.log("Usage: dtslint [--version] [--clean] [--noLint] [--tsNext] [--installAll]");
     console.log("Args:");
     console.log("  --version    Print version and exit.");
-    console.log("  --dt         Run extra checks for DefinitelyTyped packages.");
     console.log("  --clean      Clean TypeScript installs and install again.");
-    console.log("  --noLint     Just run 'tsc'.");
+    console.log("  --noLint     Just run 'tsc'. (Not recommended.)");
     console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
     console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
-function runTests(dirPath, options) {
+function runTests(dirPath, noLint, tsNext) {
     return __awaiter(this, void 0, void 0, function* () {
         const text = yield fs_promise_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
-        if (text.includes("// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped") && !options.dt) {
-            console.warn("Warning: Text includes DefinitelyTyped link, but '--dt' is not set.");
-        }
-        const version = options.tsNext ? "next" : getTypeScriptVersion(text);
-        if (options.dt) {
+        const dt = text.includes("// Type definitions for");
+        const version = tsNext ? "next" : getTypeScriptVersion(text);
+        yield lint_1.checkTslintJson(dirPath, dt);
+        if (dt) {
             yield checks_1.checkPackageJson(dirPath);
         }
-        yield checks_1.checkTsconfig(dirPath, options);
-        yield test(dirPath, options, version);
+        yield checks_1.checkTsconfig(dirPath, dt);
+        yield test(dirPath, noLint, version);
     });
 }
 function getTypeScriptVersion(text) {
@@ -99,39 +88,39 @@ function getTypeScriptVersion(text) {
     }
     return definitelytyped_header_parser_1.parseTypeScriptVersionLine(line);
 }
-function test(dirPath, options, version) {
+function test(dirPath, noLint, version) {
     return __awaiter(this, void 0, void 0, function* () {
-        const a = yield testWithVersion(dirPath, options, version);
-        if (a) {
-            if (version !== definitelytyped_header_parser_1.TypeScriptVersion.Latest) {
-                const b = yield testWithVersion(dirPath, options, definitelytyped_header_parser_1.TypeScriptVersion.Latest);
-                if (!b) {
-                    throw new Error(a.message +
-                        `Package compiles in TypeScript ${definitelytyped_header_parser_1.TypeScriptVersion.Latest} but not in ${version}.\n` +
-                        `You can add a line '// TypeScript Version: ${definitelytyped_header_parser_1.TypeScriptVersion.Latest}' to the end of the header ` +
-                        "to specify a newer compiler version.");
-                }
-            }
-            throw new Error(a.message);
+        const errorFromSpecifiedVersion = yield testWithVersion(dirPath, noLint, version);
+        if (!errorFromSpecifiedVersion) {
+            return;
         }
+        if (version !== definitelytyped_header_parser_1.TypeScriptVersion.latest) {
+            const errorFromLatest = yield testWithVersion(dirPath, noLint, definitelytyped_header_parser_1.TypeScriptVersion.latest);
+            if (!errorFromLatest) {
+                throw new Error(errorFromSpecifiedVersion +
+                    `Package compiles in TypeScript ${definitelytyped_header_parser_1.TypeScriptVersion.latest} but not in ${version}.\n` +
+                    `You can add a line '// TypeScript Version: ${definitelytyped_header_parser_1.TypeScriptVersion.latest}' to the end of the header ` +
+                    "to specify a newer compiler version.");
+            }
+        }
+        throw new Error(errorFromSpecifiedVersion);
     });
 }
-function testWithVersion(dirPath, options, version) {
+function testWithVersion(dirPath, noLint, version) {
     return __awaiter(this, void 0, void 0, function* () {
         yield installer_1.install(version);
-        if (options.noLint) {
+        if (noLint) {
             // Special for old DefinitelyTyped packages that aren't linted yet.
             return execScript("node " + installer_1.tscPath(version), dirPath);
         }
         else {
-            return lint_1.lintWithVersion(dirPath, options, version);
+            return lint_1.lintWithVersion(dirPath, version);
         }
     });
 }
 function execScript(cmd, cwd) {
     return new Promise(resolve => {
-        // Resolves with 'err' if it's present.
-        child_process_1.exec(cmd, { encoding: "utf8", cwd }, resolve);
+        child_process_1.exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => resolve(err ? stdout + stderr : undefined));
     });
 }
 if (!module.parent) {
