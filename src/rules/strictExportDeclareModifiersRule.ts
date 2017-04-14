@@ -4,7 +4,7 @@ import * as ts from "typescript";
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "strict-export-declare-modifiers",
-		description: "Enforces strict rules about where the 'export' and 'declare' modifiers may/must appear.",
+		description: "Enforces strict rules about where the 'export' and 'declare' modifiers may appear.",
 		optionsDescription: "Not configurable.",
 		options: null,
 		type: "style",
