@@ -12,7 +12,7 @@
         "no-dead-reference": true,
         "no-padding": true,
         "no-relative-import-in-test": true,
-        "no-redundant-modifiers": true,
+        "strict-export-declare-modifiers": true,
         "no-single-declare-module": true,
 		"no-useless-files": true,
         "prefer-declare-function": true,

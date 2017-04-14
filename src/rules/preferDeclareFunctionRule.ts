@@ -19,7 +19,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 }
 
 function walk(ctx: Lint.WalkContext<void>): void {
-	eachModuleStatement(ctx.sourceFile, (statement) => {
+	eachModuleStatement(ctx.sourceFile, statement => {
 		if (isVariableStatement(statement)) {
 			for (const varDecl of statement.declarationList.declarations) {
 				if (varDecl.type !== undefined && varDecl.type.kind === ts.SyntaxKind.FunctionType) {

@@ -27,6 +27,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 	}
 
 	if (text.endsWith("\n\n") || text.endsWith("\r\n\r\n")) {
-		ctx.addFailureAt(text.length - 1, 0, Rule.FAILURE_STRING_TRAILING);
+		const start = text.endsWith("\r\n") ? text.length - 2 : text.length - 1;
+		ctx.addFailureAt(start, 0, Rule.FAILURE_STRING_TRAILING);
 	}
 }
