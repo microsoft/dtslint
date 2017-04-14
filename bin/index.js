@@ -68,7 +68,9 @@ function runTests(dirPath, noLint, tsNext) {
         const text = yield fs_promise_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
         const dt = text.includes("// Type definitions for");
         const version = tsNext ? "next" : getTypeScriptVersion(text);
-        yield lint_1.checkTslintJson(dirPath, dt);
+        if (!noLint) {
+            yield lint_1.checkTslintJson(dirPath, dt);
+        }
         if (dt) {
             yield checks_1.checkPackageJson(dirPath);
         }
