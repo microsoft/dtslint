@@ -34,7 +34,8 @@ export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void>
 			forceConsistentCasingInFileNames: true,
 		};
 
-		for (const [key, value] of Object.entries(mustHave)) {
+		for (const key of Object.getOwnPropertyNames(mustHave)) {
+			const value = (mustHave as any)[key];
 			if (options[key] !== value) {
 				throw new Error(`Expected compilerOptions[${JSON.stringify(key)}] === ${value}`);
 			}

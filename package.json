@@ -39,7 +39,7 @@
     "typescript": "^2.3.0"
   },
   "engines": {
-    "node": ">=7.0.0"
+    "node": ">=6.10.0"
   },
   "license": "MIT"
 }
