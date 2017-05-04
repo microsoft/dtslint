@@ -28,6 +28,7 @@
         "member-access": [true, "no-public"],
         "no-consecutive-blank-lines": true,
         "no-unnecessary-callback-wrapper": true,
+        "no-namespace": [true, "allow-declarations"],
         "object-literal-key-quotes": [true, "as-needed"],
         "one-line": [
             true,
@@ -60,7 +61,6 @@
         "no-bitwise": false,
         "no-console": false,
         "no-empty": false,
-        "no-namespace": false,
         "no-reference": false, // But see no-bad-reference
         "no-shadowed-variable": false,
         "no-string-literal": false,
