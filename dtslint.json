@@ -1,5 +1,5 @@
 {
-    "extends": "tslint:latest",
+    "extends": "tslint:recommended",
     "rulesDirectory": "./bin/rules",
     "rules": {
         // Wait on 5.2 release (https://github.com/palantir/tslint/pull/2391)
