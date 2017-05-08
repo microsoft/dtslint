@@ -62,7 +62,7 @@ export async function execAndThrowErrors(cmd: string, cwd?: string): Promise<voi
 	});
 }
 
-const tslintVersion: string = require("../package.json").devDependencies.tslint; // tslint:disable-line:no-var-requires
+const tslintVersion: string = require("../package.json").dependencies.tslint; // tslint:disable-line:no-var-requires
 if (!tslintVersion) {
 	throw new Error("Missing tslint version.");
 }
