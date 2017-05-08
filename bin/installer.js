@@ -74,7 +74,7 @@ function execAndThrowErrors(cmd, cwd) {
     });
 }
 exports.execAndThrowErrors = execAndThrowErrors;
-const tslintVersion = require("../package.json").devDependencies.tslint; // tslint:disable-line:no-var-requires
+const tslintVersion = require("../package.json").dependencies.tslint; // tslint:disable-line:no-var-requires
 if (!tslintVersion) {
     throw new Error("Missing tslint version.");
 }

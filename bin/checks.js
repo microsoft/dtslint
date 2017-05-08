@@ -40,7 +40,8 @@ function checkTsconfig(dirPath, dt) {
                 noEmit: true,
                 forceConsistentCasingInFileNames: true,
             };
-            for (const [key, value] of Object.entries(mustHave)) {
+            for (const key of Object.getOwnPropertyNames(mustHave)) {
+                const value = mustHave[key];
                 if (options[key] !== value) {
                     throw new Error(`Expected compilerOptions[${JSON.stringify(key)}] === ${value}`);
                 }
