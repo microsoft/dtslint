@@ -3,11 +3,11 @@ import pm = require("parsimmon");
 // Code copied from definitelytyped-header-parser
 // Remove when that is published to NPM
 
-export type TypeScriptVersion = "2.0" | "2.1" | "2.2";
+export type TypeScriptVersion = "2.0" | "2.1" | "2.2" | "2.3";
 export namespace TypeScriptVersion {
-	export const all: TypeScriptVersion[] = ["2.0", "2.1", "2.2"];
+	export const all: TypeScriptVersion[] = ["2.0", "2.1", "2.2", "2.3"];
 	/** Latest version that may be specified in a `// TypeScript Version:` header. */
-	export const latest = "2.2";
+	export const latest = "2.3";
 }
 
 interface Header {
@@ -167,6 +167,8 @@ const typeScriptVersionLineParser: pm.Parser<TypeScriptVersion> =
 				return pm.succeed<TypeScriptVersion>("2.1");
 			case "2":
 				return pm.succeed<TypeScriptVersion>("2.2");
+			case "3":
+				return pm.succeed<TypeScriptVersion>("2.3");
 			default:
 				return pm.fail(`TypeScript 2.${d} is not yet supported.`);
 		}
