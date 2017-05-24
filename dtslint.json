@@ -1,5 +1,5 @@
 {
-	"extends": "tslint:latest",
+	"extends": "tslint:recommended",
 	"rulesDirectory": "./bin/rules",
 	"rules": {
 		// Custom rules
