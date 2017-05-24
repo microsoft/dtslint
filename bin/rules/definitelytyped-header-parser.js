@@ -3,9 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const pm = require("parsimmon");
 var TypeScriptVersion;
 (function (TypeScriptVersion) {
-    TypeScriptVersion.all = ["2.0", "2.1", "2.2"];
+    TypeScriptVersion.all = ["2.0", "2.1", "2.2", "2.3"];
     /** Latest version that may be specified in a `// TypeScript Version:` header. */
-    TypeScriptVersion.latest = "2.2";
+    TypeScriptVersion.latest = "2.3";
 })(TypeScriptVersion = exports.TypeScriptVersion || (exports.TypeScriptVersion = {}));
 function validate(mainFileContent) {
     const h = parseHeader(mainFileContent, /*strict*/ true);
@@ -124,6 +124,8 @@ const typeScriptVersionLineParser = pm.regexp(/\/\/ TypeScript Version: 2.(\d)/,
             return pm.succeed("2.1");
         case "2":
             return pm.succeed("2.2");
+        case "3":
+            return pm.succeed("2.3");
         default:
             return pm.fail(`TypeScript 2.${d} is not yet supported.`);
     }
