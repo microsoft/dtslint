@@ -1,7 +1,8 @@
+import assert = require("assert");
 import { exec } from "child_process";
 import * as fsp from "fs-promise";
 import * as path from "path";
-import * as TsLintType from "tslint";
+import * as TsType from "typescript";
 
 import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 
@@ -21,19 +22,15 @@ export async function install(version: TypeScriptVersion | "next"): Promise<void
 		await fsp.mkdirp(dir);
 		await fsp.writeJson(path.join(dir, "package.json"), packageJson(version));
 		await execAndThrowErrors("npm install", dir);
-		// Copy rules so they use the local typescript/tslint
-		await fsp.copy(path.join(__dirname, "rules"), path.join(dir, "rules"));
 		console.log("Installed!");
 	}
 }
 
-export function getLinter(version: TypeScriptVersion | "next"): typeof TsLintType {
-	const tslintPath = path.join(installDir(version), "node_modules", "tslint");
-	return require(tslintPath);
-}
-
-export function rulesDirectory(version: TypeScriptVersion | "next"): string {
-	return path.join(installDir(version), "rules");
+export function getTypeScript(version: TypeScriptVersion | "next"): typeof TsType {
+	const tsPath = path.join(installDir(version), "node_modules", "typescript");
+	const ts = require(tsPath) as typeof TsType;
+	assert(version === "next" || ts.version.startsWith(version));
+	return ts;
 }
 
 export function cleanInstalls(): Promise<void> {
@@ -49,7 +46,7 @@ function installDir(version: TypeScriptVersion | "next"): string {
 }
 
 /** Run a command and return the stdout, or if there was an error, throw. */
-export async function execAndThrowErrors(cmd: string, cwd?: string): Promise<void> {
+async function execAndThrowErrors(cmd: string, cwd?: string): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
 		exec(cmd, { encoding: "utf8", cwd }, (err, _stdout, stderr) => {
 			console.error(stderr);
@@ -62,11 +59,6 @@ export async function execAndThrowErrors(cmd: string, cwd?: string): Promise<voi
 	});
 }
 
-const tslintVersion: string = require("../package.json").dependencies.tslint; // tslint:disable-line:no-var-requires
-if (!tslintVersion) {
-	throw new Error("Missing tslint version.");
-}
-
 function packageJson(version: TypeScriptVersion | "next"): {} {
 	return {
 		description: `Installs typescript@${version}`,
@@ -74,7 +66,6 @@ function packageJson(version: TypeScriptVersion | "next"): {} {
 		license: "MIT",
 		dependencies: {
 			typescript: version,
-			tslint: tslintVersion,
 		},
 	};
 }

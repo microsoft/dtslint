@@ -1,8 +1,5 @@
 {
   "rulesDirectory": ["../../bin/rules"],
-  "linterOptions": {
-    "typeCheck": true
-  },
   "rules": {
     "no-relative-import-in-test": true
   }
