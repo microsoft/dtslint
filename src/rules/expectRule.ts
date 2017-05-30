@@ -1,6 +1,10 @@
+import { existsSync, readFileSync } from "fs";
+import { dirname, resolve as resolvePath } from "path";
 import * as Lint from "tslint";
-import * as util from "tsutils";
-import * as ts from "typescript";
+import * as TsType from "typescript";
+
+import { getTypeScript } from "../installer";
+import { TypeScriptVersion } from "./definitelytyped-header-parser";
 
 // Based on https://github.com/danvk/typings-checker
 
@@ -25,13 +29,39 @@ export class Rule extends Lint.Rules.TypedRule {
 		return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
 	}
 
-	applyWithProgram(sourceFile: ts.SourceFile, program: ts.Program): Lint.RuleFailure[] {
-		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program));
+	applyWithProgram(sourceFile: TsType.SourceFile, program: TsType.Program): Lint.RuleFailure[] {
+		const options = this.ruleArguments[0] as Options | undefined;
+		let ts = TsType;
+		if (options) {
+			ts = getTypeScript(options.typeScriptVersion);
+			program = createProgram(options.tsconfigPath, ts, program);
+		}
+		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts));
 	}
 }
 
-function walk(ctx: Lint.WalkContext<void>, program: ts.Program): void {
-	const { sourceFile } = ctx;
+export interface Options {
+	tsconfigPath: string;
+	typeScriptVersion: TypeScriptVersion | "next";
+}
+
+function createProgram(configFile: string, ts: typeof TsType, _oldProgram: TsType.Program): TsType.Program {
+	const projectDirectory = dirname(configFile);
+	const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
+	const parseConfigHost: TsType.ParseConfigHost = {
+		fileExists: existsSync,
+		readDirectory: ts.sys.readDirectory,
+		readFile: file => readFileSync(file, "utf8"),
+		useCaseSensitiveFileNames: true,
+	};
+	const parsed = ts.parseJsonConfigFileContent(config, parseConfigHost, resolvePath(projectDirectory), {noEmit: true});
+	const host = ts.createCompilerHost(parsed.options, true);
+	return ts.createProgram(parsed.fileNames, parsed.options, host);
+}
+
+function walk(ctx: Lint.WalkContext<void>, program: TsType.Program, ts: typeof TsType): void {
+	const sourceFile = program.getSourceFile(ctx.sourceFile.fileName);
+
 	const checker = program.getTypeChecker();
 	// Don't care about emit errors.
 	const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
@@ -44,7 +74,7 @@ function walk(ctx: Lint.WalkContext<void>, program: ts.Program): void {
 		return;
 	}
 
-	const { errorLines, typeAssertions, duplicates } = parseAssertions(sourceFile);
+	const { errorLines, typeAssertions, duplicates } = parseAssertions(sourceFile, ts);
 
 	for (const line of duplicates) {
 		addFailureAtLine(line, Rule.FAILURE_STRING_DUPLICATE_ASSERTION);
@@ -66,7 +96,7 @@ function walk(ctx: Lint.WalkContext<void>, program: ts.Program): void {
 		}
 	}
 
-	const { unmetExpectations, unusedAssertions } = getExpectTypeFailures(sourceFile, typeAssertions, checker);
+	const { unmetExpectations, unusedAssertions } = getExpectTypeFailures(sourceFile, typeAssertions, checker, ts);
 	for (const { node, expected, actual } of unmetExpectations) {
 		ctx.addFailureAtNode(node, Rule.FAILURE_STRING(expected, actual));
 	}
@@ -74,7 +104,7 @@ function walk(ctx: Lint.WalkContext<void>, program: ts.Program): void {
 		addFailureAtLine(line, Rule.FAILURE_STRING_ASSERTION_MISSING_NODE);
 	}
 
-	function addDiagnosticFailure(diagnostic: ts.Diagnostic): void {
+	function addDiagnosticFailure(diagnostic: TsType.Diagnostic): void {
 		if (diagnostic.file === sourceFile) {
 			ctx.addFailureAt(diagnostic.start, diagnostic.length,
 				"TypeScript compile error: " + ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
@@ -102,7 +132,7 @@ interface Assertions {
 	duplicates: number[];
 }
 
-function parseAssertions(source: ts.SourceFile): Assertions {
+function parseAssertions(source: TsType.SourceFile, ts: typeof TsType): Assertions {
 	const scanner = ts.createScanner(
 		ts.ScriptTarget.Latest, /*skipTrivia*/false, ts.LanguageVariant.Standard, source.text);
 	const errorLines = new Set<number>();
@@ -167,31 +197,33 @@ function parseAssertions(source: ts.SourceFile): Assertions {
 
 interface ExpectTypeFailures {
 	/** Lines with an $ExpectType, but a different type was there. */
-	unmetExpectations: Array<{ node: ts.Node, expected: string, actual: string }>;
+	unmetExpectations: Array<{ node: TsType.Node, expected: string, actual: string }>;
 	/** Lines with an $ExpectType, but no node could be found. */
 	unusedAssertions: Iterable<number>;
 }
 
 function getExpectTypeFailures(
-		sourceFile: ts.SourceFile,
+		sourceFile: TsType.SourceFile,
 		typeAssertions: Map<number, string>,
-		checker: ts.TypeChecker,
+		checker: TsType.TypeChecker,
+		ts: typeof TsType,
 		): ExpectTypeFailures {
-	const unmetExpectations: Array<{ node: ts.Node, expected: string, actual: string }> = [];
+	const unmetExpectations: Array<{ node: TsType.Node, expected: string, actual: string }> = [];
 	// Match assertions to the first node that appears on the line they apply to.
 	ts.forEachChild(sourceFile, iterate);
 	return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
 
-	function iterate(node: ts.Node): void {
+	function iterate(node: TsType.Node): void {
 		const line = lineOfPosition(node.getStart(sourceFile), sourceFile);
 		const expected = typeAssertions.get(line);
 		if (expected !== undefined) {
 			// https://github.com/Microsoft/TypeScript/issues/14077
-			if (util.isExpressionStatement(node)) {
-				node = node.expression;
+			if (node.kind === ts.SyntaxKind.ExpressionStatement) {
+				node = (node as TsType.ExpressionStatement).expression;
 			}
 
 			const type = checker.getTypeAtLocation(node);
+
 			const actual = checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation);
 			if (actual !== expected) {
 				unmetExpectations.push({ node, expected, actual });
@@ -204,6 +236,6 @@ function getExpectTypeFailures(
 	}
 }
 
-function lineOfPosition(pos: number, sourceFile: ts.SourceFile): number {
+function lineOfPosition(pos: number, sourceFile: TsType.SourceFile): number {
 	return sourceFile.getLineAndCharacterOfPosition(pos).line;
 }

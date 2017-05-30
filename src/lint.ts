@@ -1,27 +1,26 @@
 import { exists, readFile } from "fs-promise";
 import { join as joinPaths } from "path";
-import { Configuration, ILinterOptions } from "tslint";
+import { Configuration, ILinterOptions, Linter } from "tslint";
 type Configuration = typeof Configuration;
 type IConfigurationFile = Configuration.IConfigurationFile;
 
 import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
+import { Options as ExpectOptions } from "./rules/expectRule";
 
-import { getLinter, rulesDirectory } from "./installer";
 import { readJson } from "./util";
 
 export async function lintWithVersion(
 		dirPath: string, version: TypeScriptVersion | "next"): Promise<string | undefined> {
-	const configPath = getConfigPath(dirPath);
-	const tslint = getLinter(version);
-	const program = tslint.Linter.createProgram(joinPaths(dirPath, "tsconfig.json"));
+	const lintConfigPath = getConfigPath(dirPath);
+	const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
+	const program = Linter.createProgram(tsconfigPath);
 
 	const lintOptions: ILinterOptions = {
 		fix: false,
 		formatter: "stylish",
-		rulesDirectory: rulesDirectory(version),
 	};
-	const linter = new tslint.Linter(lintOptions, program);
-	const config = await getLintConfig(tslint.Configuration, configPath);
+	const linter = new Linter(lintOptions, program);
+	const config = await getLintConfig(lintConfigPath, tsconfigPath, version);
 
 	for (const filename of program.getRootFileNames()) {
 		const contents = await readFile(filename, "utf-8");
@@ -54,12 +53,18 @@ function getConfigPath(dirPath: string): string {
 	return joinPaths(dirPath, "tslint.json");
 }
 
-async function getLintConfig(configuration: Configuration, expectedConfigPath: string): Promise<IConfigurationFile> {
+async function getLintConfig(
+		expectedConfigPath: string,
+		tsconfigPath: string,
+		typeScriptVersion: TypeScriptVersion | "next",
+		): Promise<IConfigurationFile> {
 	const configPath = await exists(expectedConfigPath) ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
 	// Second param to `findConfiguration` doesn't matter, since config path is provided.
-	const config = configuration.findConfiguration(configPath, "").results;
+	const config = Configuration.findConfiguration(configPath, "").results;
 	if (!config) {
 		throw new Error(`Could not load config at ${configPath}`);
 	}
+	const expectOptions: ExpectOptions = { tsconfigPath, typeScriptVersion };
+	config.rules.get("expect")!.ruleArguments = [expectOptions];
 	return config;
 }
