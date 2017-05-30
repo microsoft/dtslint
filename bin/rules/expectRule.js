@@ -1,15 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+const path_1 = require("path");
 const Lint = require("tslint");
-const util = require("tsutils");
-const ts = require("typescript");
+const TsType = require("typescript");
+const installer_1 = require("../installer");
 // Based on https://github.com/danvk/typings-checker
 class Rule extends Lint.Rules.TypedRule {
     static FAILURE_STRING(expectedType, actualType) {
         return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
     }
     applyWithProgram(sourceFile, program) {
-        return this.applyWithFunction(sourceFile, ctx => walk(ctx, program));
+        const options = this.ruleArguments[0];
+        let ts = TsType;
+        if (options) {
+            ts = installer_1.getTypeScript(options.typeScriptVersion);
+            program = createProgram(options.tsconfigPath, ts, program);
+        }
+        return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts));
     }
 }
 /* tslint:disable:object-literal-sort-keys */
@@ -27,8 +35,21 @@ Rule.FAILURE_STRING_DUPLICATE_ASSERTION = "This line has 2 $ExpectType assertion
 Rule.FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this assertion.";
 Rule.FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found none.";
 exports.Rule = Rule;
-function walk(ctx, program) {
-    const { sourceFile } = ctx;
+function createProgram(configFile, ts, _oldProgram) {
+    const projectDirectory = path_1.dirname(configFile);
+    const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
+    const parseConfigHost = {
+        fileExists: fs_1.existsSync,
+        readDirectory: ts.sys.readDirectory,
+        readFile: file => fs_1.readFileSync(file, "utf8"),
+        useCaseSensitiveFileNames: true,
+    };
+    const parsed = ts.parseJsonConfigFileContent(config, parseConfigHost, path_1.resolve(projectDirectory), { noEmit: true });
+    const host = ts.createCompilerHost(parsed.options, true);
+    return ts.createProgram(parsed.fileNames, parsed.options, host);
+}
+function walk(ctx, program, ts) {
+    const sourceFile = program.getSourceFile(ctx.sourceFile.fileName);
     const checker = program.getTypeChecker();
     // Don't care about emit errors.
     const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
@@ -39,7 +60,7 @@ function walk(ctx, program) {
         }
         return;
     }
-    const { errorLines, typeAssertions, duplicates } = parseAssertions(sourceFile);
+    const { errorLines, typeAssertions, duplicates } = parseAssertions(sourceFile, ts);
     for (const line of duplicates) {
         addFailureAtLine(line, Rule.FAILURE_STRING_DUPLICATE_ASSERTION);
     }
@@ -56,7 +77,7 @@ function walk(ctx, program) {
             addFailureAtLine(line, Rule.FAILURE_STRING_EXPECTED_ERROR);
         }
     }
-    const { unmetExpectations, unusedAssertions } = getExpectTypeFailures(sourceFile, typeAssertions, checker);
+    const { unmetExpectations, unusedAssertions } = getExpectTypeFailures(sourceFile, typeAssertions, checker, ts);
     for (const { node, expected, actual } of unmetExpectations) {
         ctx.addFailureAtNode(node, Rule.FAILURE_STRING(expected, actual));
     }
@@ -80,7 +101,7 @@ function walk(ctx, program) {
         ctx.addFailure(start, end, failure);
     }
 }
-function parseAssertions(source) {
+function parseAssertions(source, ts) {
     const scanner = ts.createScanner(ts.ScriptTarget.Latest, /*skipTrivia*/ false, ts.LanguageVariant.Standard, source.text);
     const errorLines = new Set();
     const typeAssertions = new Map();
@@ -136,7 +157,7 @@ function parseAssertions(source) {
     }
     return { errorLines, typeAssertions, duplicates };
 }
-function getExpectTypeFailures(sourceFile, typeAssertions, checker) {
+function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
     const unmetExpectations = [];
     // Match assertions to the first node that appears on the line they apply to.
     ts.forEachChild(sourceFile, iterate);
@@ -146,7 +167,7 @@ function getExpectTypeFailures(sourceFile, typeAssertions, checker) {
         const expected = typeAssertions.get(line);
         if (expected !== undefined) {
             // https://github.com/Microsoft/TypeScript/issues/14077
-            if (util.isExpressionStatement(node)) {
+            if (node.kind === ts.SyntaxKind.ExpressionStatement) {
                 node = node.expression;
             }
             const type = checker.getTypeAtLocation(node);

@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const assert = require("assert");
 const child_process_1 = require("child_process");
 const fsp = require("fs-promise");
 const path = require("path");
@@ -30,22 +31,18 @@ function install(version) {
             yield fsp.mkdirp(dir);
             yield fsp.writeJson(path.join(dir, "package.json"), packageJson(version));
             yield execAndThrowErrors("npm install", dir);
-            // Copy rules so they use the local typescript/tslint
-            yield fsp.copy(path.join(__dirname, "rules"), path.join(dir, "rules"));
             console.log("Installed!");
         }
     });
 }
 exports.install = install;
-function getLinter(version) {
-    const tslintPath = path.join(installDir(version), "node_modules", "tslint");
-    return require(tslintPath);
+function getTypeScript(version) {
+    const tsPath = path.join(installDir(version), "node_modules", "typescript");
+    const ts = require(tsPath);
+    assert(version === "next" || ts.version.startsWith(version));
+    return ts;
 }
-exports.getLinter = getLinter;
-function rulesDirectory(version) {
-    return path.join(installDir(version), "rules");
-}
-exports.rulesDirectory = rulesDirectory;
+exports.getTypeScript = getTypeScript;
 function cleanInstalls() {
     return fsp.remove(installsDir);
 }
@@ -73,11 +70,6 @@ function execAndThrowErrors(cmd, cwd) {
         });
     });
 }
-exports.execAndThrowErrors = execAndThrowErrors;
-const tslintVersion = require("../package.json").dependencies.tslint; // tslint:disable-line:no-var-requires
-if (!tslintVersion) {
-    throw new Error("Missing tslint version.");
-}
 function packageJson(version) {
     return {
         description: `Installs typescript@${version}`,
@@ -85,7 +77,6 @@ function packageJson(version) {
         license: "MIT",
         dependencies: {
             typescript: version,
-            tslint: tslintVersion,
         },
     };
 }
