@@ -83,7 +83,7 @@ function walk(ctx: Lint.WalkContext<void>, program: TsType.Program, ts: typeof T
 	const seenDiagnosticsOnLine = new Set<number>();
 
 	for (const diagnostic of diagnostics) {
-		const line = lineOfPosition(diagnostic.start, sourceFile);
+		const line = lineOfPosition(diagnostic.start!, sourceFile);
 		seenDiagnosticsOnLine.add(line);
 		if (!errorLines.has(line)) {
 			addDiagnosticFailure(diagnostic);
@@ -106,7 +106,7 @@ function walk(ctx: Lint.WalkContext<void>, program: TsType.Program, ts: typeof T
 
 	function addDiagnosticFailure(diagnostic: TsType.Diagnostic): void {
 		if (diagnostic.file === sourceFile) {
-			ctx.addFailureAt(diagnostic.start, diagnostic.length,
+			ctx.addFailureAt(diagnostic.start!, diagnostic.length!,
 				"TypeScript compile error: " + ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
 		} else {
 			ctx.addFailureAt(0, 0, `TypeScript compile error: ${diagnostic.file}: ${diagnostic.messageText}`);
