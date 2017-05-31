@@ -34,7 +34,7 @@ function mayContainVoid({ kind }) {
         case ts.SyntaxKind.ExpressionWithTypeArguments:
         case ts.SyntaxKind.NewExpression:
         case ts.SyntaxKind.CallExpression:
-        case ts.SyntaxKind.TypeParameter:
+        case ts.SyntaxKind.TypeParameter:// Allow f<T = void>
             return true;
         default:
             return false;

@@ -23,6 +23,13 @@ function lintWithVersion(dirPath, version) {
         };
         const linter = new tslint_1.Linter(lintOptions, program);
         const config = yield getLintConfig(lintConfigPath, tsconfigPath, version);
+        // tslint 5.3 demands that the program has been typechecked.
+        // Kludge to make tslint think the program has been type checked.
+        for (const sf of program.getSourceFiles()) {
+            if (!sf.resolvedModules) {
+                sf.resolvedModules = [];
+            }
+        }
         for (const filename of program.getRootFileNames()) {
             const contents = yield fs_promise_1.readFile(filename, "utf-8");
             linter.lint(filename, contents, config);
