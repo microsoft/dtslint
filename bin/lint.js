@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_promise_1 = require("fs-promise");
 const path_1 = require("path");
 const tslint_1 = require("tslint");
+const installer_1 = require("./installer");
 const util_1 = require("./util");
 function lintWithVersion(dirPath, version) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -68,7 +69,7 @@ function getLintConfig(expectedConfigPath, tsconfigPath, typeScriptVersion) {
         if (!config) {
             throw new Error(`Could not load config at ${configPath}`);
         }
-        const expectOptions = { tsconfigPath, typeScriptVersion };
+        const expectOptions = { tsconfigPath, typeScriptPath: installer_1.typeScriptPath(typeScriptVersion) };
         config.rules.get("expect").ruleArguments = [expectOptions];
         return config;
     });

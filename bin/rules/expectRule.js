@@ -4,7 +4,6 @@ const fs_1 = require("fs");
 const path_1 = require("path");
 const Lint = require("tslint");
 const TsType = require("typescript");
-const installer_1 = require("../installer");
 // Based on https://github.com/danvk/typings-checker
 class Rule extends Lint.Rules.TypedRule {
     static FAILURE_STRING(expectedType, actualType) {
@@ -14,7 +13,7 @@ class Rule extends Lint.Rules.TypedRule {
         const options = this.ruleArguments[0];
         let ts = TsType;
         if (options) {
-            ts = installer_1.getTypeScript(options.typeScriptVersion);
+            ts = require(options.typeScriptPath);
             program = createProgram(options.tsconfigPath, ts, program);
         }
         return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts));

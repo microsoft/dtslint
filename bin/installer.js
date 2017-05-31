@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
 const child_process_1 = require("child_process");
 const fsp = require("fs-promise");
 const path = require("path");
@@ -36,19 +35,16 @@ function install(version) {
     });
 }
 exports.install = install;
-function getTypeScript(version) {
-    const tsPath = path.join(installDir(version), "node_modules", "typescript");
-    const ts = require(tsPath);
-    assert(version === "next" || ts.version.startsWith(version));
-    return ts;
-}
-exports.getTypeScript = getTypeScript;
 function cleanInstalls() {
     return fsp.remove(installsDir);
 }
 exports.cleanInstalls = cleanInstalls;
+function typeScriptPath(version) {
+    return path.join(installDir(version), "node_modules", "typescript");
+}
+exports.typeScriptPath = typeScriptPath;
 function tscPath(version) {
-    return path.join(installDir(version), "node_modules", "typescript", "lib", "tsc.js");
+    return path.join(typeScriptPath(version), "lib", "tsc.js");
 }
 exports.tscPath = tscPath;
 function installDir(version) {
