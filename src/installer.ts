@@ -1,8 +1,6 @@
-import assert = require("assert");
 import { exec } from "child_process";
 import * as fsp from "fs-promise";
 import * as path from "path";
-import * as TsType from "typescript";
 
 import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 
@@ -26,19 +24,16 @@ export async function install(version: TypeScriptVersion | "next"): Promise<void
 	}
 }
 
-export function getTypeScript(version: TypeScriptVersion | "next"): typeof TsType {
-	const tsPath = path.join(installDir(version), "node_modules", "typescript");
-	const ts = require(tsPath) as typeof TsType;
-	assert(version === "next" || ts.version.startsWith(version));
-	return ts;
-}
-
 export function cleanInstalls(): Promise<void> {
 	return fsp.remove(installsDir);
 }
 
+export function typeScriptPath(version: TypeScriptVersion | "next"): string {
+	return path.join(installDir(version), "node_modules", "typescript");
+}
+
 export function tscPath(version: TypeScriptVersion | "next"): string {
-	return path.join(installDir(version), "node_modules", "typescript", "lib", "tsc.js");
+	return path.join(typeScriptPath(version), "lib", "tsc.js");
 }
 
 function installDir(version: TypeScriptVersion | "next"): string {

@@ -3,9 +3,6 @@ import { dirname, resolve as resolvePath } from "path";
 import * as Lint from "tslint";
 import * as TsType from "typescript";
 
-import { getTypeScript } from "../installer";
-import { TypeScriptVersion } from "./definitelytyped-header-parser";
-
 // Based on https://github.com/danvk/typings-checker
 
 export class Rule extends Lint.Rules.TypedRule {
@@ -33,7 +30,7 @@ export class Rule extends Lint.Rules.TypedRule {
 		const options = this.ruleArguments[0] as Options | undefined;
 		let ts = TsType;
 		if (options) {
-			ts = getTypeScript(options.typeScriptVersion);
+			ts = require(options.typeScriptPath);
 			program = createProgram(options.tsconfigPath, ts, program);
 		}
 		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts));
@@ -42,7 +39,7 @@ export class Rule extends Lint.Rules.TypedRule {
 
 export interface Options {
 	tsconfigPath: string;
-	typeScriptVersion: TypeScriptVersion | "next";
+	typeScriptPath: string;
 }
 
 function createProgram(configFile: string, ts: typeof TsType, _oldProgram: TsType.Program): TsType.Program {
