@@ -28,15 +28,15 @@
     "parsimmon": "^1.2.0",
     "strip-json-comments": "^2.0.1",
     "tslint": "^5.1.0",
-    "tsutils": "^1.1.0"
+    "tsutils": "^1.1.0",
+    "typescript": "^2.3.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^2.0.0",
     "@types/mz": "0.0.30",
     "@types/node": "^7.0.5",
     "@types/parsimmon": "^1.0.3",
-    "@types/strip-json-comments": "^0.0.28",
-    "typescript": "^2.3.0"
+    "@types/strip-json-comments": "^0.0.28"
   },
   "engines": {
     "node": ">=6.10.0"
