@@ -7,6 +7,7 @@ type IConfigurationFile = Configuration.IConfigurationFile;
 import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 import { Options as ExpectOptions } from "./rules/expectRule";
 
+import { typeScriptPath } from "./installer";
 import { readJson } from "./util";
 
 export async function lintWithVersion(
@@ -72,7 +73,7 @@ async function getLintConfig(
 	if (!config) {
 		throw new Error(`Could not load config at ${configPath}`);
 	}
-	const expectOptions: ExpectOptions = { tsconfigPath, typeScriptVersion };
+	const expectOptions: ExpectOptions = { tsconfigPath, typeScriptPath: typeScriptPath(typeScriptVersion) };
 	config.rules.get("expect")!.ruleArguments = [expectOptions];
 	return config;
 }
