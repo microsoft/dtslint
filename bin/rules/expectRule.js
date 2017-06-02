@@ -14,7 +14,7 @@ class Rule extends Lint.Rules.TypedRule {
         let ts = TsType;
         if (options) {
             ts = require(options.typeScriptPath);
-            program = createProgram(options.tsconfigPath, ts, program);
+            program = getProgram(options.tsconfigPath, ts, program);
         }
         return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts));
     }
@@ -34,7 +34,18 @@ Rule.FAILURE_STRING_DUPLICATE_ASSERTION = "This line has 2 $ExpectType assertion
 Rule.FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this assertion.";
 Rule.FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found none.";
 exports.Rule = Rule;
-function createProgram(configFile, ts, _oldProgram) {
+const programCache = new WeakMap();
+/** Maps a typescript@next program to one created with the version specified in `options`. */
+function getProgram(configFile, ts, oldProgram) {
+    const program = programCache.get(oldProgram);
+    if (program !== undefined) {
+        return program;
+    }
+    const newProgram = createProgram(configFile, ts);
+    programCache.set(oldProgram, newProgram);
+    return newProgram;
+}
+function createProgram(configFile, ts) {
     const projectDirectory = path_1.dirname(configFile);
     const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
     const parseConfigHost = {

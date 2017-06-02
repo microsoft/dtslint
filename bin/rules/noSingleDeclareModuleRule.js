@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
-const util = require("tsutils");
 const ts = require("typescript");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
@@ -27,7 +26,7 @@ function walk(ctx) {
     }
     let moduleDecl;
     for (const statement of sourceFile.statements) {
-        if (util.isModuleDeclaration(statement) && util.isStringLiteral(statement.name)) {
+        if (ts.isModuleDeclaration(statement) && ts.isStringLiteral(statement.name)) {
             if (moduleDecl === undefined) {
                 moduleDecl = statement;
             }

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
-const util = require("tsutils");
 const ts = require("typescript");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
@@ -25,7 +24,7 @@ function walk(ctx) {
         return;
     }
     const expr = exportEqualsNode.expression;
-    if (!util.isIdentifier(expr)) {
+    if (!ts.isIdentifier(expr)) {
         return;
     }
     const exportEqualsName = expr.text;
@@ -34,7 +33,7 @@ function walk(ctx) {
     }
 }
 function isExportEquals(node) {
-    return util.isExportAssignment(node) && !!node.isExportEquals;
+    return ts.isExportAssignment(node) && !!node.isExportEquals;
 }
 /** Returns true if there is a namespace but there are no functions/classes with the name. */
 function isJustNamespace(statements, exportEqualsName) {
@@ -64,7 +63,7 @@ function isJustNamespace(statements, exportEqualsName) {
     }
     return anyNamespace;
     function nameMatches(nameNode) {
-        return nameNode !== undefined && util.isIdentifier(nameNode) && nameNode.text === exportEqualsName;
+        return nameNode !== undefined && ts.isIdentifier(nameNode) && nameNode.text === exportEqualsName;
     }
 }
 /*
