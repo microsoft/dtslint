@@ -31,7 +31,7 @@ export class Rule extends Lint.Rules.TypedRule {
 		let ts = TsType;
 		if (options) {
 			ts = require(options.typeScriptPath);
-			program = createProgram(options.tsconfigPath, ts, program);
+			program = getProgram(options.tsconfigPath, ts, program);
 		}
 		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts));
 	}
@@ -42,7 +42,20 @@ export interface Options {
 	typeScriptPath: string;
 }
 
-function createProgram(configFile: string, ts: typeof TsType, _oldProgram: TsType.Program): TsType.Program {
+const programCache = new WeakMap<TsType.Program, TsType.Program>();
+/** Maps a typescript@next program to one created with the version specified in `options`. */
+function getProgram(configFile: string, ts: typeof TsType, oldProgram: TsType.Program): TsType.Program {
+	const program = programCache.get(oldProgram);
+	if (program !== undefined) {
+		return program;
+	}
+
+	const newProgram = createProgram(configFile, ts);
+	programCache.set(oldProgram, newProgram);
+	return newProgram;
+}
+
+function createProgram(configFile: string, ts: typeof TsType): TsType.Program {
 	const projectDirectory = dirname(configFile);
 	const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
 	const parseConfigHost: TsType.ParseConfigHost = {

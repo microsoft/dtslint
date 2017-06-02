@@ -23,14 +23,6 @@ export async function lintWithVersion(
 	const linter = new Linter(lintOptions, program);
 	const config = await getLintConfig(lintConfigPath, tsconfigPath, version);
 
-	// tslint 5.3 demands that the program has been typechecked.
-	// Kludge to make tslint think the program has been type checked.
-	for (const sf of program.getSourceFiles()) {
-		if (!(sf as any).resolvedModules) {
-			(sf as any).resolvedModules = [];
-		}
-	}
-
 	for (const filename of program.getRootFileNames()) {
 		const contents = await readFile(filename, "utf-8");
 		linter.lint(filename, contents, config);

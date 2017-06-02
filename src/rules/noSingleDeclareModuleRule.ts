@@ -1,5 +1,4 @@
 import * as Lint from "tslint";
-import * as util from "tsutils";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -30,7 +29,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 
 	let moduleDecl: ts.ModuleDeclaration | undefined;
 	for (const statement of sourceFile.statements) {
-		if (util.isModuleDeclaration(statement) && util.isStringLiteral(statement.name)) {
+		if (ts.isModuleDeclaration(statement) && ts.isStringLiteral(statement.name)) {
 			if (moduleDecl === undefined) {
 				moduleDecl = statement;
 			} else {

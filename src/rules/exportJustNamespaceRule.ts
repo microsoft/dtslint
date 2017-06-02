@@ -1,5 +1,4 @@
 import * as Lint from "tslint";
-import * as util from "tsutils";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
@@ -27,7 +26,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		return;
 	}
 	const expr = exportEqualsNode.expression;
-	if (!util.isIdentifier(expr)) {
+	if (!ts.isIdentifier(expr)) {
 		return;
 	}
 	const exportEqualsName = expr.text;
@@ -38,7 +37,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 }
 
 function isExportEquals(node: ts.Node): boolean {
-	return util.isExportAssignment(node) && !!node.isExportEquals;
+	return ts.isExportAssignment(node) && !!node.isExportEquals;
 }
 
 /** Returns true if there is a namespace but there are no functions/classes with the name. */
@@ -72,7 +71,7 @@ function isJustNamespace(statements: ts.Statement[], exportEqualsName: string): 
 	return anyNamespace;
 
 	function nameMatches(nameNode: ts.Node | undefined): boolean {
-		return nameNode !== undefined && util.isIdentifier(nameNode) && nameNode.text === exportEqualsName;
+		return nameNode !== undefined && ts.isIdentifier(nameNode) && nameNode.text === exportEqualsName;
 	}
 }
 
