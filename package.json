@@ -27,7 +27,7 @@
     "fs-promise": "^2.0.0",
     "parsimmon": "^1.2.0",
     "strip-json-comments": "^2.0.1",
-    "tslint": "^5.1.0",
+    "tslint": "^5.4.2",
     "typescript": "next"
   },
   "devDependencies": {
