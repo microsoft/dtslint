@@ -44,6 +44,6 @@ function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
 
 declare module "typescript" {
 	interface SourceFile {
-		imports: ts.StringLiteral[];
+		imports: ReadonlyArray<ts.StringLiteral>;
 	}
 }

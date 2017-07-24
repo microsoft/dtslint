@@ -38,8 +38,8 @@ export class Rule extends Lint.Rules.TypedRule {
 }
 
 export interface Options {
-	tsconfigPath: string;
-	typeScriptPath: string;
+	readonly tsconfigPath: string;
+	readonly typeScriptPath: string;
 }
 
 const programCache = new WeakMap<TsType.Program, TsType.Program>();
@@ -135,11 +135,11 @@ function walk(ctx: Lint.WalkContext<void>, program: TsType.Program, ts: typeof T
 
 interface Assertions {
 	/** Lines with an $ExpectError. */
-	errorLines: Set<number>;
+	readonly errorLines: ReadonlySet<number>;
 	/** Map from a line number to the expected type at that line. */
-	typeAssertions: Map<number, string>;
+	readonly typeAssertions: Map<number, string>;
 	/** Lines with more than one assertion (these are errors). */
-	duplicates: number[];
+	readonly duplicates: ReadonlyArray<number>;
 }
 
 function parseAssertions(source: TsType.SourceFile, ts: typeof TsType): Assertions {
@@ -207,9 +207,9 @@ function parseAssertions(source: TsType.SourceFile, ts: typeof TsType): Assertio
 
 interface ExpectTypeFailures {
 	/** Lines with an $ExpectType, but a different type was there. */
-	unmetExpectations: Array<{ node: TsType.Node, expected: string, actual: string }>;
+	readonly unmetExpectations: ReadonlyArray<{ node: TsType.Node, expected: string, actual: string }>;
 	/** Lines with an $ExpectType, but no node could be found. */
-	unusedAssertions: Iterable<number>;
+	readonly unusedAssertions: Iterable<number>;
 }
 
 function getExpectTypeFailures(

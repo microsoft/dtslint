@@ -5,27 +5,30 @@ import pm = require("parsimmon");
 
 export type TypeScriptVersion = "2.0" | "2.1" | "2.2" | "2.3" | "2.4";
 export namespace TypeScriptVersion {
-	export const all: TypeScriptVersion[] = ["2.0", "2.1", "2.2", "2.3", "2.4"];
+	export const all: ReadonlyArray<TypeScriptVersion> = ["2.0", "2.1", "2.2", "2.3", "2.4"];
 	/** Latest version that may be specified in a `// TypeScript Version:` header. */
 	export const latest = "2.4";
 }
 
 interface Header {
-	libraryName: string;
-	libraryMajorVersion: number;
-	libraryMinorVersion: number;
-	typeScriptVersion: TypeScriptVersion;
-	projects: string[];
-	contributors: Author[];
+	readonly libraryName: string;
+	readonly libraryMajorVersion: number;
+	readonly libraryMinorVersion: number;
+	readonly typeScriptVersion: TypeScriptVersion;
+	readonly projects: ReadonlyArray<string>;
+	readonly contributors: ReadonlyArray<Author>;
 }
 
-interface Author { name: string; url: string; }
+interface Author {
+	readonly name: string;
+	readonly url: string;
+}
 
 interface ParseError {
-	index: number;
-	line: number;
-	column: number;
-	expected: string[];
+	readonly index: number;
+	readonly line: number;
+	readonly column: number;
+	readonly expected: ReadonlyArray<string>;
 }
 
 export function validate(mainFileContent: string): ParseError | undefined {
@@ -33,7 +36,7 @@ export function validate(mainFileContent: string): ParseError | undefined {
 	return isParseError(h) ? h : undefined;
 }
 
-export function renderExpected(expected: string[]): string {
+export function renderExpected(expected: ReadonlyArray<string>): string {
 	return expected.length === 1 ? expected[0] : `one of\n\t${expected.join("\n\t")}`;
 }
 
@@ -69,7 +72,11 @@ function headerParser(strict: boolean): pm.Parser<Header> {
 		}));
 }
 
-interface Label { name: string; major: number; minor: number; }
+interface Label {
+	readonly name: string;
+	readonly major: number;
+	readonly minor: number;
+}
 
 /*
 Allow any of the following:
