@@ -19,7 +19,7 @@ export async function install(version: TypeScriptVersion | "next"): Promise<void
 		console.log(`Installing to ${dir}...`);
 		await fsp.mkdirp(dir);
 		await fsp.writeJson(path.join(dir, "package.json"), packageJson(version));
-		await execAndThrowErrors("npm install", dir);
+		await execAndThrowErrors("npm install --ignore-scripts --no-shrinkwrap --no-package-lock --no-bin-links", dir);
 		console.log("Installed!");
 	}
 }
