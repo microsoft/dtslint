@@ -6,14 +6,13 @@ import { join as joinPaths } from "path";
 import { parseTypeScriptVersionLine, TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, install, installAll, tscPath } from "./installer";
-import { checkTslintJson, lintWithVersion } from "./lint";
+import { cleanInstalls, installAll, tscPath } from "./installer";
+import { checkTslintJson, lint } from "./lint";
 
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
 
 	let noLint = false;
-	let tsNext = false;
 	let dirPath = process.cwd();
 
 	for (const arg of args) {
@@ -37,10 +36,6 @@ async function main(): Promise<void> {
 				noLint = true;
 				break;
 
-			case "--tsNext":
-				tsNext = true;
-				break;
-
 			default:
 				if (arg.startsWith("--")) {
 					console.error(`Unknown option '${arg}'`);
@@ -57,7 +52,8 @@ async function main(): Promise<void> {
 		}
 	}
 
-	await runTests(dirPath, noLint, tsNext);
+	await installAll();
+	await runTests(dirPath, noLint);
 }
 
 function usage(): void {
@@ -70,10 +66,10 @@ function usage(): void {
 	console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
 
-async function runTests(dirPath: string, noLint: boolean, tsNext: boolean): Promise<void> {
+async function runTests(dirPath: string, noLint: boolean): Promise<void> {
 	const text = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
 	const dt = text.includes("// Type definitions for");
-	const version = tsNext ? "next" : getTypeScriptVersion(text);
+	const minVersion = getTypeScriptVersion(text);
 
 	if (!noLint) {
 		await checkTslintJson(dirPath, dt);
@@ -82,7 +78,10 @@ async function runTests(dirPath: string, noLint: boolean, tsNext: boolean): Prom
 		await checkPackageJson(dirPath);
 	}
 	await checkTsconfig(dirPath, dt);
-	await test(dirPath, noLint, version);
+	const err = await test(dirPath, noLint, minVersion);
+	if (err) {
+		console.error(err);
+	}
 }
 
 function getTypeScriptVersion(text: string): TypeScriptVersion {
@@ -99,38 +98,30 @@ function getTypeScriptVersion(text: string): TypeScriptVersion {
 	return parseTypeScriptVersionLine(line);
 }
 
-async function test(dirPath: string, noLint: boolean, version: TypeScriptVersion | "next"): Promise<void> {
-	const errorFromSpecifiedVersion = await testWithVersion(dirPath, noLint, version);
-	if (!errorFromSpecifiedVersion) {
-		return;
-	}
-
-	if (version !== TypeScriptVersion.latest) {
-		const errorFromLatest = await testWithVersion(dirPath, noLint, TypeScriptVersion.latest);
-		if (!errorFromLatest) {
-			throw new Error(errorFromSpecifiedVersion +
-				`Package compiles in TypeScript ${TypeScriptVersion.latest} but not in ${version}.\n` +
-				`You can add a line '// TypeScript Version: ${TypeScriptVersion.latest}' to the end of the header ` +
-				"to specify a newer compiler version.");
-		}
-	}
-	throw new Error(errorFromSpecifiedVersion);
-}
-
-async function testWithVersion(
-		dirPath: string, noLint: boolean, version: TypeScriptVersion | "next"): Promise<string | undefined> {
-	await install(version);
+async function test(dirPath: string, noLint: boolean, minVersion: TypeScriptVersion): Promise<string | undefined> {
 	if (noLint) {
-		// Special for old DefinitelyTyped packages that aren't linted yet.
-		return execScript("node " + tscPath(version), dirPath);
+		for (const tsVersion of ["next" as "next", minVersion]) {
+			// Special for old DefinitelyTyped packages that aren't linted yet.
+			const err = await execScript("node " + tscPath(tsVersion), dirPath);
+			if (err !== undefined) {
+				return `Error in TypeScript@${tsVersion}: ${err}`;
+			}
+		}
+		return undefined;
 	} else {
-		return lintWithVersion(dirPath, version);
+		return lint(dirPath, minVersion);
 	}
 }
 
-function execScript(cmd: string, cwd?: string): Promise<string | undefined> {
-	return new Promise<string>(resolve => {
-		exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => resolve(err ? stdout + stderr : undefined));
+function execScript(cmd: string, cwd?: string): Promise<void> {
+	return new Promise<void>((resolve, reject) => {
+		exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => {
+			if (err) {
+				reject(stdout + stderr);
+			} else {
+				resolve();
+			}
+		});
 	});
 }
 

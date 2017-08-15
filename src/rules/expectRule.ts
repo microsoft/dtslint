@@ -1,7 +1,11 @@
+import assert = require("assert");
 import { existsSync, readFileSync } from "fs";
 import { dirname, resolve as resolvePath } from "path";
 import * as Lint from "tslint";
 import * as TsType from "typescript";
+
+type Program = TsType.Program;
+type SourceFile = TsType.SourceFile;
 
 // Based on https://github.com/danvk/typings-checker
 
@@ -26,36 +30,75 @@ export class Rule extends Lint.Rules.TypedRule {
 		return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
 	}
 
-	applyWithProgram(sourceFile: TsType.SourceFile, program: TsType.Program): Lint.RuleFailure[] {
+	applyWithProgram(sourceFile: SourceFile, lintProgram: Program): Lint.RuleFailure[] {
 		const options = this.ruleArguments[0] as Options | undefined;
-		let ts = TsType;
-		if (options) {
-			ts = require(options.typeScriptPath);
-			program = getProgram(options.tsconfigPath, ts, program);
+		if (!options) {
+			return this.applyWithFunction(sourceFile, ctx =>
+				walk(ctx, lintProgram, TsType, "next", /*nextHigherVersion*/ undefined));
 		}
-		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts));
+
+		const getFailures = (versionName: string, path: string, nextHigherVersion: string | undefined) => {
+			const ts = require(path);
+			const program = getProgram(options.tsconfigPath, ts, versionName, lintProgram);
+			return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
+		};
+
+		const nextFailures = getFailures("next", options.tsNextPath, /*nextHigherVersion*/ undefined);
+		if (nextFailures.length) {
+			return nextFailures;
+		}
+
+		assert(options.olderInstalls.length);
+
+		// As an optimization, check the earliest version for errors;
+		// assume that if it works on min and next, it works for everything in between.
+		const minInstall = options.olderInstalls[0];
+		const minFailures = getFailures(minInstall.versionName, minInstall.path, undefined);
+		if (!minFailures.length) {
+			return [];
+		}
+
+		// There are no failures in `next`, but there are failures in `min`.
+		// Work backward to find the newest version with failures.
+		for (let i = options.olderInstalls.length - 1; i >= 0; i--) {
+			const { versionName, path } = options.olderInstalls[i];
+			console.log(`Test with ${versionName}`);
+			const nextHigherVersion = i === options.olderInstalls.length - 1 ? "next" : options.olderInstalls[i + 1].versionName;
+			const failures = getFailures(versionName, path, nextHigherVersion);
+			if (failures.length) {
+				return failures;
+			}
+		}
+
+		throw new Error(); // unreachable -- at least the min version should have failures.
 	}
 }
 
 export interface Options {
 	readonly tsconfigPath: string;
-	readonly typeScriptPath: string;
+	readonly tsNextPath: string;
+	// These should be sorted with oldest first.
+	readonly olderInstalls: ReadonlyArray<{ versionName: string, path: string }>;
 }
 
-const programCache = new WeakMap<TsType.Program, TsType.Program>();
-/** Maps a typescript@next program to one created with the version specified in `options`. */
-function getProgram(configFile: string, ts: typeof TsType, oldProgram: TsType.Program): TsType.Program {
-	const program = programCache.get(oldProgram);
-	if (program !== undefined) {
-		return program;
+const programCache = new WeakMap<Program, Map<string, Program>>();
+/** Maps a tslint Program to one created with the version specified in `options`. */
+function getProgram(configFile: string, ts: typeof TsType, versionName: string, oldProgram: Program): Program {
+	let versionToProgram = programCache.get(oldProgram);
+	if (versionToProgram === undefined) {
+		versionToProgram = new Map<string, Program>();
+		programCache.set(oldProgram, versionToProgram);
 	}
 
-	const newProgram = createProgram(configFile, ts);
-	programCache.set(oldProgram, newProgram);
+	let newProgram = versionToProgram.get(versionName);
+	if (newProgram === undefined) {
+		newProgram = createProgram(configFile, ts);
+		versionToProgram.set(versionName, newProgram);
+	}
 	return newProgram;
 }
 
-function createProgram(configFile: string, ts: typeof TsType): TsType.Program {
+function createProgram(configFile: string, ts: typeof TsType): Program {
 	const projectDirectory = dirname(configFile);
 	const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
 	const parseConfigHost: TsType.ParseConfigHost = {
@@ -69,7 +112,12 @@ function createProgram(configFile: string, ts: typeof TsType): TsType.Program {
 	return ts.createProgram(parsed.fileNames, parsed.options, host);
 }
 
-function walk(ctx: Lint.WalkContext<void>, program: TsType.Program, ts: typeof TsType): void {
+function walk(
+		ctx: Lint.WalkContext<void>,
+		program: Program,
+		ts: typeof TsType,
+		versionName: string,
+		nextHigherVersion: string | undefined): void {
 	const sourceFile = program.getSourceFile(ctx.sourceFile.fileName);
 
 	const checker = program.getTypeChecker();
@@ -115,17 +163,31 @@ function walk(ctx: Lint.WalkContext<void>, program: TsType.Program, ts: typeof T
 	}
 
 	function addDiagnosticFailure(diagnostic: TsType.Diagnostic): void {
+		const intro = getIntro();
 		if (diagnostic.file === sourceFile) {
-			ctx.addFailureAt(diagnostic.start!, diagnostic.length!,
-				"TypeScript compile error: " + ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+			const msg = `${intro}\n${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
+			ctx.addFailureAt(diagnostic.start!, diagnostic.length!, msg);
 		} else {
-			ctx.addFailureAt(0, 0, `TypeScript compile error: ${diagnostic.file}: ${diagnostic.messageText}`);
+			const fileName = diagnostic.file ? `${diagnostic.file.fileName}: ` : "";
+			ctx.addFailureAt(0, 0, `${intro}\n${fileName}${diagnostic.messageText}`);
+		}
+	}
+
+	function getIntro(): string {
+		if (nextHigherVersion === undefined) {
+			return `TypeScript@${versionName} compile error: `;
+		} else {
+			const msg = `Compile error in typescript@${versionName} but not in typescript@${nextHigherVersion}.\n`;
+			const explain = nextHigherVersion === "next"
+				? "TypeScript@next features not yet supported."
+				: `Fix with a comment '// TypeScript Version: ${nextHigherVersion}' just under the header.`;
+			return msg + explain;
 		}
 	}
 
 	function addFailureAtLine(line: number, failure: string): void {
 		const start = sourceFile.getPositionOfLineAndCharacter(line, 0);
-		let end = sourceFile.getPositionOfLineAndCharacter(line + 1, 0) - 1;
+		let end = start + sourceFile.text.split("\n")[line].length;
 		if (sourceFile.text[end - 1] === "\r") {
 			end--;
 		}
@@ -142,7 +204,7 @@ interface Assertions {
 	readonly duplicates: ReadonlyArray<number>;
 }
 
-function parseAssertions(source: TsType.SourceFile, ts: typeof TsType): Assertions {
+function parseAssertions(source: SourceFile, ts: typeof TsType): Assertions {
 	const scanner = ts.createScanner(
 		ts.ScriptTarget.Latest, /*skipTrivia*/false, ts.LanguageVariant.Standard, source.text);
 	const errorLines = new Set<number>();
@@ -213,7 +275,7 @@ interface ExpectTypeFailures {
 }
 
 function getExpectTypeFailures(
-		sourceFile: TsType.SourceFile,
+		sourceFile: SourceFile,
 		typeAssertions: Map<number, string>,
 		checker: TsType.TypeChecker,
 		ts: typeof TsType,
@@ -246,6 +308,6 @@ function getExpectTypeFailures(
 	}
 }
 
-function lineOfPosition(pos: number, sourceFile: TsType.SourceFile): number {
+function lineOfPosition(pos: number, sourceFile: SourceFile): number {
 	return sourceFile.getLineAndCharacterOfPosition(pos).line;
 }

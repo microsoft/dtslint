@@ -13,7 +13,7 @@ export async function installAll() {
 	await install("next");
 }
 
-export async function install(version: TypeScriptVersion | "next"): Promise<void> {
+async function install(version: TypeScriptVersion | "next"): Promise<void> {
 	const dir = installDir(version);
 	if (!await fsp.existsSync(dir)) {
 		console.log(`Installing to ${dir}...`);

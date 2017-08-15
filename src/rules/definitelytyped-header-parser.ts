@@ -8,6 +8,9 @@ export namespace TypeScriptVersion {
 	export const all: ReadonlyArray<TypeScriptVersion> = ["2.0", "2.1", "2.2", "2.3", "2.4"];
 	/** Latest version that may be specified in a `// TypeScript Version:` header. */
 	export const latest = "2.4";
+	export function range(min: TypeScriptVersion) {
+		return all.filter(v => v >= min);
+	}
 }
 
 interface Header {
