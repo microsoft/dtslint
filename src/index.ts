@@ -17,13 +17,8 @@ async function main(): Promise<void> {
 
 	for (const arg of args) {
 		switch (arg) {
-			case "--clean":
-				console.log("Cleaning installs...");
-				await cleanInstalls();
-				return;
-
 			case "--installAll":
-				console.log("Installing for all TypeScript versions...");
+				console.log("Cleaning old installs and installing for all TypeScript versions...");
 				await cleanInstalls();
 				await installAll();
 				return;
@@ -57,12 +52,10 @@ async function main(): Promise<void> {
 }
 
 function usage(): void {
-	console.log("Usage: dtslint [--version] [--clean] [--noLint] [--tsNext] [--installAll]");
+	console.log("Usage: dtslint [--version] [--noLint] [--installAll]");
 	console.log("Args:");
 	console.log("  --version    Print version and exit.");
-	console.log("  --clean      Clean TypeScript installs and install again.");
 	console.log("  --noLint     Just run 'tsc'. (Not recommended.)");
-	console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
 	console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
 
