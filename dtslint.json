@@ -1,5 +1,5 @@
 {
-	"extends": "tslint:recommended",
+	"extends": "tslint:all",
 	"rulesDirectory": "./bin/rules",
 	"rules": {
 		// Custom rules
@@ -17,9 +17,7 @@
 		"unified-signatures": true,
 		"void-return": true,
 
-		"no-var-keyword": false,
-		"no-var": true,
-
+		"comment-format": [true, "check-space"], // But not check-uppercase or check-lowercase
 		"interface-name": [true, "never-prefix"],
 		"max-line-length": [true, 200],
 		"member-access": [true, "no-public"],
@@ -35,6 +33,8 @@
 			"check-open-brace",
 			"check-whitespace"
 		],
+		"one-variable-per-declaration": [true, "ignore-for-loop"],
+		"only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
 		"prefer-method-signature": true,
 		"whitespace": [
 			true,
@@ -47,26 +47,69 @@
 			"check-typecast"
 		],
 
+		// TODO?
+		"align": false, // TODO
 		"arrow-parens": false,
+		"arrow-return-shorthand": true, // TODO: "multiline"
+		"linebreak-style": false, // TODO
+		"no-any": false, // TODO
+		"no-floating-promises": false, // TODO: https://github.com/palantir/tslint/issues/2879
+		"no-import-side-effect": false,
+		"no-object-literal-type-assertion": false, // TODO
+		"no-this-assignment": false,
+		"no-unbound-method": false, // TODO?
+		"no-unsafe-any": false, // TODO
+		"number-literal-format": false, // TODO
+		"prefer-object-spread": false, // TODO
+		"prefer-template": false, // TODO
+		"promise-function-async": false,
+		"restrict-plus-operands": false, // TODO
+		"return-undefined": false, // TODO
+		"switch-final-break": false, // TODO
+
+		// Pretty sure we don't want these
+		"binary-expression-operand-order": false,
 		"class-name": false,
+		"completed-docs": false,
 		"curly": false,
+		"cyclomatic-complexity": false,
+		"deprecation": false,
 		"forin": false,
 		"indent": false,
+		"match-default-export-name": false,
 		"max-classes-per-file": false,
+		"max-file-line-count": false,
 		"member-ordering": false,
+		"newline-before-return": false,
 		"no-angle-bracket-type-assertion": false,
 		"no-bitwise": false,
 		"no-console": false,
+		"no-default-export": false,
 		"no-empty": false,
+		"no-inferred-empty-object-type": false,
+		"no-magic-numbers": false,
+		"no-non-null-assertion": false,
+		"no-null-keyword": false,
+		"no-parameter-properties": false,
 		"no-reference": false, // But see no-bad-reference
+		"no-require-imports": false,
 		"no-shadowed-variable": false,
 		"no-string-literal": false,
+		"no-submodule-imports": false,
 		"no-unused-expression": false,
+		"no-unused-variable": false,
+		"no-use-before-declare": false,
 		"object-literal-sort-keys": false,
 		"ordered-imports": false,
+		"prefer-function-over-method": false,
 		"quotemark": false,
+		"strict-boolean-expressions": false,
+		"strict-type-predicates": false,
 		"switch-default": false,
 		"trailing-comma": false,
+		"triple-equals": [true, "allow-null-check"],
+		"typedef": false,
+		"type-literal-delimiter": false,
 		"variable-name": false
 	}
 }
