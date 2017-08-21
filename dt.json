@@ -1,10 +1,6 @@
 {
 	"extends": "./dtslint.json",
 	"rules": {
-		// TODO: enable and fix these
-		"prefer-const": false,
-		"no-object-literal-type-assertion": false,
-
 		"dt-header": true,
 		"no-bad-reference": true
 	}

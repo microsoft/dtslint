@@ -13,13 +13,13 @@ export async function installAll() {
 	await install("next");
 }
 
-export async function install(version: TypeScriptVersion | "next"): Promise<void> {
+async function install(version: TypeScriptVersion | "next"): Promise<void> {
 	const dir = installDir(version);
 	if (!await fsp.existsSync(dir)) {
 		console.log(`Installing to ${dir}...`);
 		await fsp.mkdirp(dir);
 		await fsp.writeJson(path.join(dir, "package.json"), packageJson(version));
-		await execAndThrowErrors("npm install", dir);
+		await execAndThrowErrors("npm install --ignore-scripts --no-shrinkwrap --no-package-lock --no-bin-links", dir);
 		console.log("Installed!");
 	}
 }
