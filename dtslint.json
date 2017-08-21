@@ -36,6 +36,7 @@
 		"one-variable-per-declaration": [true, "ignore-for-loop"],
 		"only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
 		"prefer-method-signature": true,
+		"prefer-template": [true, "allow-single-concat"],
 		"whitespace": [
 			true,
 			"check-branch",
@@ -52,16 +53,14 @@
 		"arrow-parens": false,
 		"arrow-return-shorthand": true, // TODO: "multiline"
 		"linebreak-style": false, // TODO
+		"no-void-expression": [true, "ignore-arrow-function-shorthand"],
 		"no-any": false, // TODO
 		"no-floating-promises": false, // TODO: https://github.com/palantir/tslint/issues/2879
 		"no-import-side-effect": false,
-		"no-object-literal-type-assertion": false, // TODO
 		"no-this-assignment": false,
 		"no-unbound-method": false, // TODO?
 		"no-unsafe-any": false, // TODO
 		"number-literal-format": false, // TODO
-		"prefer-object-spread": false, // TODO
-		"prefer-template": false, // TODO
 		"promise-function-async": false,
 		"restrict-plus-operands": false, // TODO
 		"return-undefined": false, // TODO
