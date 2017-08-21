@@ -20,16 +20,11 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const args = process.argv.slice(2);
         let noLint = false;
-        let tsNext = false;
         let dirPath = process.cwd();
         for (const arg of args) {
             switch (arg) {
-                case "--clean":
-                    console.log("Cleaning installs...");
-                    yield installer_1.cleanInstalls();
-                    return;
                 case "--installAll":
-                    console.log("Installing for all TypeScript versions...");
+                    console.log("Cleaning old installs and installing for all TypeScript versions...");
                     yield installer_1.cleanInstalls();
                     yield installer_1.installAll();
                     return;
@@ -39,35 +34,34 @@ function main() {
                 case "--noLint":
                     noLint = true;
                     break;
-                case "--tsNext":
-                    tsNext = true;
-                    break;
                 default:
                     if (arg.startsWith("--")) {
                         console.error(`Unknown option '${arg}'`);
                         usage();
                         process.exit(1);
                     }
-                    dirPath = dirPath === undefined ? arg : path_1.join(dirPath, arg);
+                    const path = arg.indexOf("@") === 0 && arg.indexOf("/") !== -1
+                        ? arg.substr(1).replace("/", "__")
+                        : arg;
+                    dirPath = dirPath === undefined ? path : path_1.join(dirPath, path);
             }
         }
-        yield runTests(dirPath, noLint, tsNext);
+        yield installer_1.installAll();
+        yield runTests(dirPath, noLint);
     });
 }
 function usage() {
-    console.log("Usage: dtslint [--version] [--clean] [--noLint] [--tsNext] [--installAll]");
+    console.log("Usage: dtslint [--version] [--noLint] [--installAll]");
     console.log("Args:");
     console.log("  --version    Print version and exit.");
-    console.log("  --clean      Clean TypeScript installs and install again.");
     console.log("  --noLint     Just run 'tsc'. (Not recommended.)");
-    console.log("  --tsNext     Run with 'typescript@next' instead of the specified version.");
     console.log("  --installAll Cleans and installs all TypeScript versions.");
 }
-function runTests(dirPath, noLint, tsNext) {
+function runTests(dirPath, noLint) {
     return __awaiter(this, void 0, void 0, function* () {
         const text = yield fs_promise_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
         const dt = text.includes("// Type definitions for");
-        const version = tsNext ? "next" : getTypeScriptVersion(text);
+        const minVersion = getTypeScriptVersion(text);
         if (!noLint) {
             yield lint_1.checkTslintJson(dirPath, dt);
         }
@@ -75,7 +69,10 @@ function runTests(dirPath, noLint, tsNext) {
             yield checks_1.checkPackageJson(dirPath);
         }
         yield checks_1.checkTsconfig(dirPath, dt);
-        yield test(dirPath, noLint, version);
+        const err = yield test(dirPath, noLint, minVersion);
+        if (err) {
+            console.error(err);
+        }
     });
 }
 function getTypeScriptVersion(text) {
@@ -90,39 +87,33 @@ function getTypeScriptVersion(text) {
     }
     return definitelytyped_header_parser_1.parseTypeScriptVersionLine(line);
 }
-function test(dirPath, noLint, version) {
+function test(dirPath, noLint, minVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        const errorFromSpecifiedVersion = yield testWithVersion(dirPath, noLint, version);
-        if (!errorFromSpecifiedVersion) {
-            return;
-        }
-        if (version !== definitelytyped_header_parser_1.TypeScriptVersion.latest) {
-            const errorFromLatest = yield testWithVersion(dirPath, noLint, definitelytyped_header_parser_1.TypeScriptVersion.latest);
-            if (!errorFromLatest) {
-                throw new Error(errorFromSpecifiedVersion +
-                    `Package compiles in TypeScript ${definitelytyped_header_parser_1.TypeScriptVersion.latest} but not in ${version}.\n` +
-                    `You can add a line '// TypeScript Version: ${definitelytyped_header_parser_1.TypeScriptVersion.latest}' to the end of the header ` +
-                    "to specify a newer compiler version.");
-            }
-        }
-        throw new Error(errorFromSpecifiedVersion);
-    });
-}
-function testWithVersion(dirPath, noLint, version) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield installer_1.install(version);
         if (noLint) {
-            // Special for old DefinitelyTyped packages that aren't linted yet.
-            return execScript("node " + installer_1.tscPath(version), dirPath);
+            for (const tsVersion of ["next", minVersion]) {
+                // Special for old DefinitelyTyped packages that aren't linted yet.
+                const err = yield execScript("node " + installer_1.tscPath(tsVersion), dirPath);
+                if (err !== undefined) {
+                    return `Error in TypeScript@${tsVersion}: ${err}`;
+                }
+            }
+            return undefined;
         }
         else {
-            return lint_1.lintWithVersion(dirPath, version);
+            return lint_1.lint(dirPath, minVersion);
         }
     });
 }
 function execScript(cmd, cwd) {
-    return new Promise(resolve => {
-        child_process_1.exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => resolve(err ? stdout + stderr : undefined));
+    return new Promise((resolve, reject) => {
+        child_process_1.exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => {
+            if (err) {
+                reject(stdout + stderr);
+            }
+            else {
+                resolve();
+            }
+        });
     });
 }
 if (!module.parent) {

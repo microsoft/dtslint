@@ -26,14 +26,14 @@ function walk(ctx) {
                 case ts.SyntaxKind.OpenParenToken:
                 case ts.SyntaxKind.OpenBracketToken:
                 case ts.SyntaxKind.OpenBraceToken:
-                    if (blankLineInBetween(child.getEnd(), children[i + 1].getStart())) {
+                    if (i < children.length - 1 && blankLineInBetween(child.getEnd(), children[i + 1].getStart())) {
                         fail("after");
                     }
                     break;
                 case ts.SyntaxKind.CloseParenToken:
                 case ts.SyntaxKind.CloseBracketToken:
                 case ts.SyntaxKind.CloseBraceToken:
-                    if (blankLineInBetween(child.getStart() - 1, children[i - 1].getEnd() - 1)) {
+                    if (i > 0 && blankLineInBetween(child.getStart() - 1, children[i - 1].getEnd() - 1)) {
                         fail("before");
                     }
                     break;

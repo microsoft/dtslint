@@ -11,9 +11,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_promise_1 = require("fs-promise");
 const path_1 = require("path");
 const tslint_1 = require("tslint");
+const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const installer_1 = require("./installer");
 const util_1 = require("./util");
-function lintWithVersion(dirPath, version) {
+function lint(dirPath, minVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         const lintConfigPath = getConfigPath(dirPath);
         const tsconfigPath = path_1.join(dirPath, "tsconfig.json");
@@ -23,7 +24,7 @@ function lintWithVersion(dirPath, version) {
             formatter: "stylish",
         };
         const linter = new tslint_1.Linter(lintOptions, program);
-        const config = yield getLintConfig(lintConfigPath, tsconfigPath, version);
+        const config = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion);
         for (const filename of program.getRootFileNames()) {
             const contents = yield fs_promise_1.readFile(filename, "utf-8");
             linter.lint(filename, contents, config);
@@ -32,7 +33,7 @@ function lintWithVersion(dirPath, version) {
         return result.failures.length ? result.output : undefined;
     });
 }
-exports.lintWithVersion = lintWithVersion;
+exports.lint = lint;
 function checkTslintJson(dirPath, dt) {
     return __awaiter(this, void 0, void 0, function* () {
         const configPath = getConfigPath(dirPath);
@@ -54,7 +55,7 @@ exports.checkTslintJson = checkTslintJson;
 function getConfigPath(dirPath) {
     return path_1.join(dirPath, "tslint.json");
 }
-function getLintConfig(expectedConfigPath, tsconfigPath, typeScriptVersion) {
+function getLintConfig(expectedConfigPath, tsconfigPath, minVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         const configPath = (yield fs_promise_1.exists(expectedConfigPath)) ? expectedConfigPath : path_1.join(__dirname, "..", "dtslint.json");
         // Second param to `findConfiguration` doesn't matter, since config path is provided.
@@ -62,7 +63,11 @@ function getLintConfig(expectedConfigPath, tsconfigPath, typeScriptVersion) {
         if (!config) {
             throw new Error(`Could not load config at ${configPath}`);
         }
-        const expectOptions = { tsconfigPath, typeScriptPath: installer_1.typeScriptPath(typeScriptVersion) };
+        const expectOptions = {
+            tsconfigPath,
+            tsNextPath: installer_1.typeScriptPath("next"),
+            olderInstalls: definitelytyped_header_parser_1.TypeScriptVersion.range(minVersion).map(versionName => ({ versionName, path: installer_1.typeScriptPath(versionName) })),
+        };
         config.rules.get("expect").ruleArguments = [expectOptions];
         return config;
     });

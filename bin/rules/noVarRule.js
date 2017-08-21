@@ -25,6 +25,7 @@ function walk(ctx) {
             case ts.SyntaxKind.VariableStatement:
                 if (!Lint.hasModifier(node.modifiers, ts.SyntaxKind.DeclareKeyword)
                     && !Lint.isBlockScopedVariable(node)
+                    // Global 'var' declaration OK.
                     && !(node.parent.kind === ts.SyntaxKind.ModuleBlock && isDeclareGlobal(node.parent.parent))
                     && !(node.parent === sourceFile && !ts.isExternalModule(sourceFile) && sourceFile.isDeclarationFile)) {
                     ctx.addFailureAtNode(node, Rule.FAILURE_STRING);

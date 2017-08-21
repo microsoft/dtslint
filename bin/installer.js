@@ -29,12 +29,11 @@ function install(version) {
             console.log(`Installing to ${dir}...`);
             yield fsp.mkdirp(dir);
             yield fsp.writeJson(path.join(dir, "package.json"), packageJson(version));
-            yield execAndThrowErrors("npm install", dir);
+            yield execAndThrowErrors("npm install --ignore-scripts --no-shrinkwrap --no-package-lock --no-bin-links", dir);
             console.log("Installed!");
         }
     });
 }
-exports.install = install;
 function cleanInstalls() {
     return fsp.remove(installsDir);
 }

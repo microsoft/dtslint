@@ -1,11 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const usernameRegex = require("github-username-regex");
 const pm = require("parsimmon");
 var TypeScriptVersion;
 (function (TypeScriptVersion) {
     TypeScriptVersion.all = ["2.0", "2.1", "2.2", "2.3", "2.4"];
     /** Latest version that may be specified in a `// TypeScript Version:` header. */
     TypeScriptVersion.latest = "2.4";
+    function range(min) {
+        return TypeScriptVersion.all.filter(v => v >= min);
+    }
+    TypeScriptVersion.range = range;
 })(TypeScriptVersion = exports.TypeScriptVersion || (exports.TypeScriptVersion = {}));
 function validate(mainFileContent) {
     const h = parseHeader(mainFileContent, /*strict*/ true);
@@ -52,7 +57,11 @@ Use `\s\s+` to ensure at least 2 spaces, to  disambiguate from the next line bei
 const separator = pm.regexp(/(, )|(,?\r?\n\/\/\s\s+)/);
 const projectParser = pm.sepBy1(pm.regexp(/[^,\r\n]+/), separator);
 function contributorsParser(strict) {
-    const contributor = pm.seqMap(pm.regexp(/([^<]+) /, 1), pm.regexp(/<([^>]+)>/, 1), (name, url) => ({ name, url }));
+    // Need to remove '^' and '$' from the regex, parsimmon does not expect those.
+    const fixedRegexp = new RegExp(usernameRegex.source.slice(1, usernameRegex.source.length - 1), usernameRegex.flags);
+    const contributor = strict
+        ? pm.seqMap(pm.regexp(/([^<]+) /, 1), pm.string("<https://github.com/"), pm.regexp(fixedRegexp, 1), pm.string(">"), (name, _, username) => ({ name, url: "https://github.com/" + username }))
+        : pm.seqMap(pm.regexp(/([^<]+) /, 1), pm.regexp(/<([^>]+)>/, 1), (name, url) => ({ name, url }));
     const contributors = pm.sepBy1(contributor, separator);
     if (!strict) {
         // Allow trailing whitespace.
