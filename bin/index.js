@@ -51,11 +51,11 @@ function main() {
     });
 }
 function usage() {
-    console.log("Usage: dtslint [--version] [--noLint] [--installAll]");
-    console.log("Args:");
-    console.log("  --version    Print version and exit.");
-    console.log("  --noLint     Just run 'tsc'. (Not recommended.)");
-    console.log("  --installAll Cleans and installs all TypeScript versions.");
+    console.error("Usage: dtslint [--version] [--noLint] [--installAll]");
+    console.error("Args:");
+    console.error("  --version    Print version and exit.");
+    console.error("  --noLint     Just run 'tsc'. (Not recommended.)");
+    console.error("  --installAll Cleans and installs all TypeScript versions.");
 }
 function runTests(dirPath, noLint) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -71,7 +71,7 @@ function runTests(dirPath, noLint) {
         yield checks_1.checkTsconfig(dirPath, dt);
         const err = yield test(dirPath, noLint, minVersion);
         if (err) {
-            console.error(err);
+            throw new Error(err);
         }
     });
 }
@@ -105,13 +105,13 @@ function test(dirPath, noLint, minVersion) {
     });
 }
 function execScript(cmd, cwd) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         child_process_1.exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => {
             if (err) {
-                reject(stdout + stderr);
+                resolve(stdout + stderr);
             }
             else {
-                resolve();
+                resolve(undefined);
             }
         });
     });
