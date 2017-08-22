@@ -18,3 +18,15 @@ declare function f(
 
 // Test that we never truncate types.
 f; // $ExpectType (one: number, two: [number, number], three: [number, number, number], four: [number, number, number, number]) => number
+
+// Test that we order unions alphabetically.
+declare const x: "foo" | "bar";
+x; // $ExpectType "bar" | "foo"
+
+type A = { a: number };
+type B = { b: number };
+type C = { c: number };
+
+// Test that we order intersections too.
+declare const cba: C | B & A;
+cba; // $ExpectType (A & B) | C

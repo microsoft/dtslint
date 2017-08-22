@@ -296,7 +296,7 @@ function getExpectTypeFailures(
 
 			const type = checker.getTypeAtLocation(node);
 
-			const actual = checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation);
+			const actual = fixupUnions(checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation));
 			if (actual !== expected) {
 				unmetExpectations.push({ node, expected, actual });
 			}
@@ -306,6 +306,19 @@ function getExpectTypeFailures(
 
 		ts.forEachChild(node, iterate);
 	}
+}
+
+function fixupUnions(s: string): string {
+	const splitter = " | ";
+	return s.split(splitter).map(fixupIntersections).sort().join(splitter);
+}
+
+function fixupIntersections(s: string): string {
+	if (s.startsWith("(") && s.endsWith(")")) {
+		return `(${fixupIntersections(s.slice(1, s.length - 1))})`;
+	}
+	const splitter = " & ";
+	return s.split(splitter).sort().join(splitter);
 }
 
 function lineOfPosition(pos: number, sourceFile: SourceFile): number {
