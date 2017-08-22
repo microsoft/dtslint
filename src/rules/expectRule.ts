@@ -296,7 +296,8 @@ function getExpectTypeFailures(
 
 			const type = checker.getTypeAtLocation(node);
 
-			const actual = fixupUnions(checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation));
+			const actual = fixupType(
+				checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation));
 			if (actual !== expected) {
 				unmetExpectations.push({ node, expected, actual });
 			}
@@ -306,6 +307,14 @@ function getExpectTypeFailures(
 
 		ts.forEachChild(node, iterate);
 	}
+}
+
+function fixupType(s: string): string {
+	// Don't mess up `{ a: number | string }` into `string } | { a: number`
+	if (s.includes("{")) {
+		return s;
+	}
+	return fixupUnions(s);
 }
 
 function fixupUnions(s: string): string {
