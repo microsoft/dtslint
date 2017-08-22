@@ -52,11 +52,11 @@ async function main(): Promise<void> {
 }
 
 function usage(): void {
-	console.log("Usage: dtslint [--version] [--noLint] [--installAll]");
-	console.log("Args:");
-	console.log("  --version    Print version and exit.");
-	console.log("  --noLint     Just run 'tsc'. (Not recommended.)");
-	console.log("  --installAll Cleans and installs all TypeScript versions.");
+	console.error("Usage: dtslint [--version] [--noLint] [--installAll]");
+	console.error("Args:");
+	console.error("  --version    Print version and exit.");
+	console.error("  --noLint     Just run 'tsc'. (Not recommended.)");
+	console.error("  --installAll Cleans and installs all TypeScript versions.");
 }
 
 async function runTests(dirPath: string, noLint: boolean): Promise<void> {
@@ -73,7 +73,7 @@ async function runTests(dirPath: string, noLint: boolean): Promise<void> {
 	await checkTsconfig(dirPath, dt);
 	const err = await test(dirPath, noLint, minVersion);
 	if (err) {
-		console.error(err);
+		throw new Error(err);
 	}
 }
 
@@ -106,13 +106,13 @@ async function test(dirPath: string, noLint: boolean, minVersion: TypeScriptVers
 	}
 }
 
-function execScript(cmd: string, cwd?: string): Promise<void> {
-	return new Promise<void>((resolve, reject) => {
+function execScript(cmd: string, cwd?: string): Promise<string | undefined> {
+	return new Promise<string | undefined>(resolve => {
 		exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => {
 			if (err) {
-				reject(stdout + stderr);
+				resolve(stdout + stderr);
 			} else {
-				resolve();
+				resolve(undefined);
 			}
 		});
 	});
