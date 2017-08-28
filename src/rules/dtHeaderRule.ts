@@ -1,8 +1,7 @@
+import { renderExpected, validate } from "definitelytyped-header-parser";
 import { basename, dirname } from "path";
 import * as Lint from "tslint";
 import * as ts from "typescript";
-
-import { renderExpected, validate } from "./definitelytyped-header-parser";
 
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
