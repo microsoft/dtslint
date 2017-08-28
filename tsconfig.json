@@ -6,10 +6,6 @@
 		"outDir": "bin",
 		"sourceMap": true,
 		"newLine": "lf",
-		"baseUrl": ".",
-		"paths": {
-			"*": ["src/types/*"]
-		},
 
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitAny": true,
