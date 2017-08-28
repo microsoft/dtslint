@@ -1,4 +1,3 @@
-import usernameRegex = require("github-username-regex");
 import pm = require("parsimmon");
 
 // Code copied from definitelytyped-header-parser
@@ -101,14 +100,11 @@ const projectParser: pm.Parser<string[]> = pm.sepBy1(pm.regexp(/[^,\r\n]+/), sep
 
 function contributorsParser(strict: boolean): pm.Parser<Author[]> {
 	// Need to remove '^' and '$' from the regex, parsimmon does not expect those.
-	const fixedRegexp = new RegExp(usernameRegex.source.slice(1, usernameRegex.source.length - 1), usernameRegex.flags);
 	const contributor = strict
 		? pm.seqMap(
 			pm.regexp(/([^<]+) /, 1),
-			pm.string("<https://github.com/"),
-			pm.regexp(fixedRegexp, 1),
-			pm.string(">"),
-			(name, _, username) => ({ name, url: "https://github.com/" + username }))
+			pm.regexp(/\<https\:\/\/github\.com\/([a-zA-Z\d\-]+)\>/, 1),
+			(name, username) => ({ name, url: "https://github.com/" + username }))
 		: pm.seqMap(pm.regexp(/([^<]+) /, 1), pm.regexp(/<([^>]+)>/, 1), (name, url) => ({ name, url }));
 	const contributors = pm.sepBy1(contributor, separator);
 	if (!strict) {
