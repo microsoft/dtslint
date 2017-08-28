@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const usernameRegex = require("github-username-regex");
 const pm = require("parsimmon");
 var TypeScriptVersion;
 (function (TypeScriptVersion) {
@@ -58,9 +57,8 @@ const separator = pm.regexp(/(, )|(,?\r?\n\/\/\s\s+)/);
 const projectParser = pm.sepBy1(pm.regexp(/[^,\r\n]+/), separator);
 function contributorsParser(strict) {
     // Need to remove '^' and '$' from the regex, parsimmon does not expect those.
-    const fixedRegexp = new RegExp(usernameRegex.source.slice(1, usernameRegex.source.length - 1), usernameRegex.flags);
     const contributor = strict
-        ? pm.seqMap(pm.regexp(/([^<]+) /, 1), pm.string("<https://github.com/"), pm.regexp(fixedRegexp, 1), pm.string(">"), (name, _, username) => ({ name, url: "https://github.com/" + username }))
+        ? pm.seqMap(pm.regexp(/([^<]+) /, 1), pm.regexp(/\<https\:\/\/github\.com\/([a-zA-Z\d\-]+)\>/, 1), (name, username) => ({ name, url: "https://github.com/" + username }))
         : pm.seqMap(pm.regexp(/([^<]+) /, 1), pm.regexp(/<([^>]+)>/, 1), (name, url) => ({ name, url }));
     const contributors = pm.sepBy1(contributor, separator);
     if (!strict) {
