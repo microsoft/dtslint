@@ -296,10 +296,14 @@ function getExpectTypeFailures(
 
 			const type = checker.getTypeAtLocation(node);
 
-			const actual = fixupType(
-				checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation));
+			const actual = checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation);
 			if (actual !== expected) {
-				unmetExpectations.push({ node, expected, actual });
+				console.log("!!!", actual);
+				const actualSorted = fixupType(actual);
+				if (actualSorted !== expected) {
+					console.log("???", actualSorted);
+					unmetExpectations.push({ node, expected, actual });
+				}
 			}
 
 			typeAssertions.delete(line);
@@ -311,7 +315,7 @@ function getExpectTypeFailures(
 
 function fixupType(s: string): string {
 	// Don't mess up `{ a: number | string }` into `string } | { a: number`
-	if (s.includes("{")) {
+	if (/[\<\(\[\{]/.test(s)) {
 		return s;
 	}
 	return fixupUnions(s);

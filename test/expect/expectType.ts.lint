@@ -19,14 +19,16 @@ declare function f(
 // Test that we never truncate types.
 f; // $ExpectType (one: number, two: [number, number], three: [number, number, number], four: [number, number, number, number]) => number
 
-// Test that we order unions alphabetically.
+// Test that a union could be either exactly what tsc output, or a sorted version of that.
 declare const x: "foo" | "bar";
+x; // $ExpectType "foo" | "bar"
 x; // $ExpectType "bar" | "foo"
 
 type A = { a: number };
 type B = { b: number };
 type C = { c: number };
 
-// Test that we order intersections too.
-declare const cba: C | B & A;
-cba; // $ExpectType (A & B) | C
+// Test that we don't try to sort nested unions.
+declare class Generic<T> {}
+declare const generic: Generic<string | number>;
+generic; // $ExpectType Generic<string | number>
