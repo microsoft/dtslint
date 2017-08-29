@@ -1,17 +1,16 @@
 declare function f(): void;
 
 declare type T = number;
-~~~~~~~ [declare]
+~~~~~~~ [0 % ("declare")]
 
 declare interface I {}
-~~~~~~~ [declare]
+~~~~~~~ [0 % ("declare")]
 
 declare module "m" {
     export function f(): void;
-    ~~~~~~ [export]
+    ~~~~~~ [0 % ("export")]
     function g(): void;
 }
 
 
-[declare]: 'declare' keyword is redundant here.
-[export]: 'export' keyword is redundant here.
+[0]: '%s' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md

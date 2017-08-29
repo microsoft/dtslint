@@ -1,5 +1,5 @@
 // Type definitions for dt-header v1.0.3
-                        ~ [Error parsing header. Expected: foo MAJOR.MINOR (patch version not allowed)]
+                        ~ [Error parsing header. Expected: foo MAJOR.MINOR (patch version not allowed). See: https://github.com/Microsoft/dtslint/blob/master/docs/dt-header.md]
 // Project: https://github.com/bobby-headers/dt-header
 // Definitions by: Jane Doe <https://github.com/janedoe>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped

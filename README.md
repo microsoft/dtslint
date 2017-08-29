@@ -1,6 +1,7 @@
 `dtslint` tests a TypeScript declaration file for style and correctness.
 It will install `typescript` and `tslint` for you, so this is the only tool you need to test a type definition.
 
+Lint rules new to dtslint are documented in the [docs](docs) directory.
 
 # Setup
 

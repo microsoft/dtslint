@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-single-declare-module",
@@ -12,7 +14,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: true,
 	};
 
-	static FAILURE_STRING = "File has only 1 module declaration — write it as an external module.";
+	static FAILURE_STRING = failure(
+		Rule.metadata.ruleName,
+		"File has only 1 module declaration — write it as an external module.");
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);

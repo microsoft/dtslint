@@ -1,15 +1,23 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-padding",
-		description: "Forbids unnecessary 'export' or 'declare' modifiers in declaration files.",
+		description: "Forbids a blank line after `(` / `[` / `{`, or before `)` / `]` / `}`.",
 		optionsDescription: "Not configurable.",
 		options: null,
 		type: "style",
 		typescriptOnly: true,
 	};
+
+	static FAILURE_STRING(kind: "before" | "after", token: ts.SyntaxKind) {
+		return failure(
+			Rule.metadata.ruleName,
+			`Don't leave a blank line ${kind} '${ts.tokenToString(token)}'.`);
+	}
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);
@@ -44,7 +52,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			}
 
 			function fail(kind: "before" | "after"): void {
-				ctx.addFailureAtNode(child, `Don't leave a blank line ${kind} '${ts.tokenToString(child.kind)}'`);
+				ctx.addFailureAtNode(child, Rule.FAILURE_STRING(kind, child.kind));
 			}
 		}
 	});

@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-dead-reference",
@@ -12,7 +14,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: true,
 	};
 
-	static FAILURE_STRING = "`/// <reference>` directive must be at top of file to take effect.";
+	static FAILURE_STRING = failure(
+		Rule.metadata.ruleName,
+		"`/// <reference>` directive must be at top of file to take effect.");
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);

@@ -1,5 +1,5 @@
 // Type definitions for dt-header 1.0
 // Project: https://github.com/bobby-headers/dt-header
 // Definitions by: Jane Doe <https://github.com/jane doe>
-                                                    ~ [Error parsing header. Expected: '>']
+                            ~ [Error parsing header. Expected: /\<https\:\/\/github\.com\/([a-zA-Z\d\-]+)\>/. See: https://github.com/Microsoft/dtslint/blob/master/docs/dt-header.md]
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped

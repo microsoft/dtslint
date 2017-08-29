@@ -1,22 +1,22 @@
 function f() {
-             ~ [Don't leave a blank line after '{']
+             ~ [0 % ("after '{'")]
 
     return [
-           ~ [Don't leave a blank line after '[']
+           ~ [0 % ("after '['")]
 
         f(
-         ~ [Don't leave a blank line after '(']
+         ~ [0 % ("after '('")]
 
             0
 
         )
-        ~ [Don't leave a blank line before ')']
+        ~ [0 % ("before ')'")]
 
     ];
-    ~ [Don't leave a blank line before ']']
+    ~ [0 % ("before ']'")]
 
 }
-~ [Don't leave a blank line before '}']
+~ [0 % ("before '}'")]
 
 function f() {
     return [
@@ -25,3 +25,5 @@ function f() {
         )
     ];
 }
+
+[0]: Don't leave a blank line %s. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-padding.md

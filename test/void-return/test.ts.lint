@@ -11,4 +11,4 @@ function f(x: number | void): number;
 
 f<void>();
 
-[0]: Use the `void` type for return types only. Otherwise, use `undefined`.
+[0]: Use the `void` type for return types only. Otherwise, use `undefined`. See: https://github.com/Microsoft/dtslint/blob/master/docs/void-return.md

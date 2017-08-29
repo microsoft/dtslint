@@ -1,4 +1,4 @@
 /// <reference path="../foo" />
-                     ~~~~~~ [Don't use <reference path> to reference another package. Use an import or <reference types> instead.]
+                     ~~~~~~ [Don't use <reference path> to reference another package. Use an import or <reference types> instead. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-bad-reference.md]
 
 /// <reference path="foo" />
