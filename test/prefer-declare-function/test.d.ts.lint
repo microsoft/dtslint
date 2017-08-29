@@ -7,4 +7,4 @@ namespace N {
 }
 
 
-[0]: Use a function declaration instead of a variable of function type.
+[0]: Use a function declaration instead of a variable of function type. See: https://github.com/Microsoft/dtslint/blob/master/docs/prefer-declare-function.md

@@ -1,5 +1,5 @@
 declare module "foo" {}
-~~~~~~~~~~~~~~~~~~~~~~~  [File has only 1 module declaration — write it as an external module.]
+~~~~~~~~~~~~~~~~~~~~~~~  [File has only 1 module declaration — write it as an external module. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-single-declare-module.md]
 
 // Other global declarations don't affect this. They should go in "declare global".
 interface I {}

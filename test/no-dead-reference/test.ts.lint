@@ -5,4 +5,4 @@ import * as bar from "bar";
     /// <reference types="bang" />
     ~~~~~~~~~~~~~~ [0]
 
-[0]: `/// <reference>` directive must be at top of file to take effect.
+[0]: `/// <reference>` directive must be at top of file to take effect. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-dead-reference.md

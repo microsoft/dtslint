@@ -1,7 +1,7 @@
 export function f() {}
 
 declare interface I {}
-~~~~~~~ ['declare' keyword is redundant here.]
+~~~~~~~ [0 % ("declare")]
 
 interface J {}
 
@@ -11,5 +11,7 @@ namespace N {
 
 declare namespace M {
     export const x: number;
-    ~~~~~~ ['export' keyword is redundant here.]
+    ~~~~~~ [0 % ("export")]
 }
+
+[0]: '%s' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md

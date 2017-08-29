@@ -1,5 +1,5 @@
 
-~nil [File should not begin with a blank line.]
+~nil [File should not begin with a blank line. See: https://github.com/Microsoft/dtslint/blob/master/docs/trim-file.md]
 0;
 
-~nil [File should not end with a blank line. (Ending in one newline OK, ending in two newlines not OK.)]
+~nil [File should not end with a blank line. (Ending in one newline OK, ending in two newlines not OK.) See: https://github.com/Microsoft/dtslint/blob/master/docs/trim-file.md]

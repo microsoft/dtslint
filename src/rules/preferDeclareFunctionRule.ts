@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "prefer-declare-function",
@@ -11,7 +13,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: true,
 	};
 
-	static FAILURE_STRING = "Use a function declaration instead of a variable of function type.";
+	static FAILURE_STRING = failure(
+		Rule.metadata.ruleName,
+		"Use a function declaration instead of a variable of function type.");
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);

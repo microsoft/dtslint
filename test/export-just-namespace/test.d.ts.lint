@@ -2,4 +2,4 @@ namespace N {
     export const x: number;
 }
 export = N;
-~~~~~~~~~~~ [Instead of `export =`-ing a namespace, use the body of the namespace as the module body.]
+~~~~~~~~~~~ [Instead of `export =`-ing a namespace, use the body of the namespace as the module body. See: https://github.com/Microsoft/dtslint/blob/master/docs/export-just-namespace.md]

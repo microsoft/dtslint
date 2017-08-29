@@ -5,10 +5,10 @@ export { foo } from "foo";
 export as namespace Foo;
 
 interface I {}
-          ~ [Prefer to explicitly write 'export' for an external module export.]
+          ~ [Prefer to explicitly write 'export' for an external module export. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md]
 
 export declare function f(): void;
-       ~~~~~~~ ['export declare' is redundant, just use 'export'.]
+       ~~~~~~~ ['export declare' is redundant, just use 'export'. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md]
 
 declare function g(): void;
 ~~~~~~~  [prefer-export]
@@ -18,8 +18,8 @@ declare namespace N {}
 
 export namespace M {
     export function f(): void;
-    ~~~~~~ ['export' keyword is redundant here.]
+    ~~~~~~ ['export' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md]
     // TS compiler warns for 'declare' here.
 }
 
-[prefer-export]: Prefer 'export' to 'declare' in an external module.
+[prefer-export]: Prefer 'export' to 'declare' in an external module. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md

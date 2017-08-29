@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "void-return",
@@ -12,7 +14,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: true,
 	};
 
-	static FAILURE_STRING = "Use the `void` type for return types only. Otherwise, use `undefined`.";
+	static FAILURE_STRING = failure(
+		Rule.metadata.ruleName,
+		"Use the `void` type for return types only. Otherwise, use `undefined`.");
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);
