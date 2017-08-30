@@ -210,16 +210,22 @@ function parseAssertions(sourceFile: SourceFile): Assertions {
 	const duplicates: number[] = [];
 
 	const { text } = sourceFile;
-	const rgx = /\/\/ \$Expect((Type (.*))|Error)/g;
+	const commentRegexp = /\/\/(.*)/g;
 	const lineStarts = sourceFile.getLineStarts();
 	let curLine = 0;
 
 	while (true) {
-		const match = rgx.exec(text);
-		if (!match) {
+		const commentMatch = commentRegexp.exec(text);
+		if (commentMatch === null) {
 			break;
 		}
-		const line = getLine(match.index);
+		// Match on the contents of that comment so we do nothing in a commented-out assertion,
+		// i.e. `// foo; // $ExpectType number`
+		const match = /^ \$Expect((Type (.*))|Error)$/.exec(commentMatch[1]);
+		if (match === null) {
+			continue;
+		}
+		const line = getLine(commentMatch.index);
 		if (match[1] === "Error") {
 			if (errorLines.has(line)) {
 				duplicates.push(line);

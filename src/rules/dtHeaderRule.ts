@@ -39,7 +39,9 @@ function walk(ctx: Lint.WalkContext<void>): void {
 
 	const error = validate(text);
 	if (error) {
-		ctx.addFailureAt(error.index, 1, failure(Rule.metadata.ruleName, `Error parsing header. Expected: ${renderExpected(error.expected)}.`));
+		ctx.addFailureAt(error.index, 1, failure(
+			Rule.metadata.ruleName,
+			`Error parsing header. Expected: ${renderExpected(error.expected)}.`));
 	}
 	// Don't recurse, we're done.
 }
