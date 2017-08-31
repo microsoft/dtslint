@@ -26,7 +26,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 function walk(ctx: Lint.WalkContext<void>): void {
 	const { sourceFile } = ctx;
-	ts.forEachChild(sourceFile, function cb(node: ts.Node): void {
+	sourceFile.forEachChild(function cb(node) {
 		const children = node.getChildren();
 		for (let i = 0; i < children.length; i++) {
 			const child = children[i];

@@ -24,11 +24,11 @@ export class Rule extends Lint.Rules.AbstractRule {
 }
 
 function walk(ctx: Lint.WalkContext<void>): void {
-	ts.forEachChild(ctx.sourceFile, function cb(node: ts.Node) {
+	ctx.sourceFile.forEachChild(function cb(node) {
 		if (node.kind === ts.SyntaxKind.VoidKeyword && !mayContainVoid(node.parent!) && !isReturnType(node)) {
 			ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
 		} else {
-			ts.forEachChild(node, cb);
+			node.forEachChild(cb);
 		}
 	});
 }
