@@ -23,10 +23,10 @@ export class Rule extends Lint.Rules.AbstractRule {
 }
 
 function walk(ctx: Lint.WalkContext<void>): void {
-    ctx.sourceFile.forEachChild(function recur(node) {
-        if (node.kind === ts.SyntaxKind.AnyKeyword && ts.isUnionTypeNode(node.parent!)) {
-            ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
-        }
-        node.forEachChild(recur);
-    });
+	ctx.sourceFile.forEachChild(function recur(node) {
+		if (node.kind === ts.SyntaxKind.AnyKeyword && ts.isUnionTypeNode(node.parent!)) {
+			ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
+		}
+		node.forEachChild(recur);
+	});
 }
