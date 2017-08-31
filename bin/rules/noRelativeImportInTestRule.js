@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
 const ts = require("typescript");
+const util_1 = require("../util");
 class Rule extends Lint.Rules.TypedRule {
     applyWithProgram(sourceFile, program) {
         if (sourceFile.isDeclarationFile) {
@@ -19,8 +20,7 @@ Rule.metadata = {
     typescriptOnly: false,
 };
 exports.Rule = Rule;
-const FAILURE_STRING = "Test file should not use a relative import. " +
-    "Use a global import as if this were a user of the package.";
+const FAILURE_STRING = util_1.failure(Rule.metadata.ruleName, "Test file should not use a relative import. Use a global import as if this were a user of the package.");
 function walk(ctx, checker) {
     const { sourceFile } = ctx;
     for (const i of sourceFile.imports) {

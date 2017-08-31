@@ -8,10 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
 const fs_promise_1 = require("fs-promise");
 const path_1 = require("path");
 const tslint_1 = require("tslint");
-const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const installer_1 = require("./installer");
 const util_1 = require("./util");
 function lint(dirPath, minVersion) {

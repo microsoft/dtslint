@@ -101,7 +101,7 @@ function walk(ctx, program, ts, versionName, nextHigherVersion) {
         }
         return;
     }
-    const { errorLines, typeAssertions, duplicates } = parseAssertions(sourceFile, ts);
+    const { errorLines, typeAssertions, duplicates } = parseAssertions(sourceFile);
     for (const line of duplicates) {
         addFailureAtLine(line, Rule.FAILURE_STRING_DUPLICATE_ASSERTION);
     }
@@ -157,61 +157,61 @@ function walk(ctx, program, ts, versionName, nextHigherVersion) {
         ctx.addFailure(start, end, failure);
     }
 }
-function parseAssertions(source, ts) {
-    const scanner = ts.createScanner(ts.ScriptTarget.Latest, /*skipTrivia*/ false, ts.LanguageVariant.Standard, source.text);
+function parseAssertions(sourceFile) {
     const errorLines = new Set();
     const typeAssertions = new Map();
     const duplicates = [];
-    let prevTokenPos = -1;
-    const lineStarts = source.getLineStarts();
+    const { text } = sourceFile;
+    const commentRegexp = /\/\/(.*)/g;
+    const lineStarts = sourceFile.getLineStarts();
     let curLine = 0;
-    const getLine = (pos) => {
+    while (true) {
+        const commentMatch = commentRegexp.exec(text);
+        if (commentMatch === null) {
+            break;
+        }
+        // Match on the contents of that comment so we do nothing in a commented-out assertion,
+        // i.e. `// foo; // $ExpectType number`
+        const match = /^ \$Expect((Type (.*))|Error)$/.exec(commentMatch[1]);
+        if (match === null) {
+            continue;
+        }
+        const line = getLine(commentMatch.index);
+        if (match[1] === "Error") {
+            if (errorLines.has(line)) {
+                duplicates.push(line);
+            }
+            errorLines.add(line);
+        }
+        else {
+            const expectedType = match[3];
+            // Don't bother with the assertion if there are 2 assertions on 1 line. Just fail for the duplicate.
+            if (typeAssertions.delete(line)) {
+                duplicates.push(line);
+            }
+            else {
+                typeAssertions.set(line, expectedType);
+            }
+        }
+    }
+    return { errorLines, typeAssertions, duplicates };
+    function getLine(pos) {
         // advance curLine to be the line preceding 'pos'
         while (lineStarts[curLine + 1] <= pos) {
             curLine++;
         }
-        const isFirstTokenOnLine = lineStarts[curLine] > prevTokenPos;
         // If this is the first token on the line, it applies to the next line.
         // Otherwise, it applies to the text to the left of it.
-        return isFirstTokenOnLine ? curLine + 1 : curLine;
-    };
-    loop: while (true) {
-        const token = scanner.scan();
-        const pos = scanner.getTokenPos();
-        switch (token) {
-            case ts.SyntaxKind.EndOfFileToken:
-                break loop;
-            case ts.SyntaxKind.WhitespaceTrivia:
-                continue loop;
-            case ts.SyntaxKind.SingleLineCommentTrivia:
-                const commentText = scanner.getTokenText();
-                const match = commentText.match(/^\/\/ \$Expect((Type (.*))|Error)/);
-                if (match) {
-                    const line = getLine(pos);
-                    if (match[1] === "Error") {
-                        if (errorLines.has(line)) {
-                            duplicates.push(line);
-                        }
-                        errorLines.add(line);
-                    }
-                    else {
-                        const expectedType = match[3];
-                        // Don't bother with the assertion if there are 2 assertions on 1 line. Just fail for the duplicate.
-                        if (typeAssertions.delete(line)) {
-                            duplicates.push(line);
-                        }
-                        else {
-                            typeAssertions.set(line, expectedType);
-                        }
-                    }
-                }
-                break;
-            default:
-                prevTokenPos = pos;
-                break;
+        return isFirstOnLine(text, lineStarts[curLine], pos) ? curLine + 1 : curLine;
+    }
+}
+function isFirstOnLine(text, lineStart, pos) {
+    for (let i = lineStart; i < pos; i++) {
+        if (text[i] !== " ") {
+            return false;
         }
     }
-    return { errorLines, typeAssertions, duplicates };
+    return true;
 }
 function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
     const unmetExpectations = [];

@@ -10,9 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
+const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
 const fs_promise_1 = require("fs-promise");
 const path_1 = require("path");
-const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const checks_1 = require("./checks");
 const installer_1 = require("./installer");
 const lint_1 = require("./lint");

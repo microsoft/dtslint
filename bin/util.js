@@ -17,4 +17,8 @@ function readJson(path) {
     });
 }
 exports.readJson = readJson;
+function failure(ruleName, s) {
+    return `${s} See: https://github.com/Microsoft/dtslint/blob/master/docs/${ruleName}.md`;
+}
+exports.failure = failure;
 //# sourceMappingURL=util.js.map

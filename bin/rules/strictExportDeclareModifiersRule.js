@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
 const ts = require("typescript");
+const util_1 = require("../util");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
         return this.applyWithFunction(sourceFile, walk);
@@ -44,12 +45,12 @@ function walk(ctx) {
         // `declare global` and `declare module "foo"` OK. `declare namespace N` not OK, should be `export namespace`.
         if (!isDeclareGlobalOrExternalModuleDeclaration(node)) {
             if (isDeclare(node)) {
-                ctx.addFailureAtNode(mod(node, ts.SyntaxKind.DeclareKeyword), isExport(node)
+                fail(mod(node, ts.SyntaxKind.DeclareKeyword), isExport(node)
                     ? "'export declare' is redundant, just use 'export'."
                     : "Prefer 'export' to 'declare' in an external module.");
             }
             else if (!isExport(node)) {
-                ctx.addFailureAtNode(node.name || node, "Prefer to explicitly write 'export' for an external module export.");
+                fail(node.name || node, "Prefer to explicitly write 'export' for an external module export.");
             }
         }
     }
@@ -59,9 +60,12 @@ function walk(ctx) {
             switch (node.kind) {
                 case ts.SyntaxKind.InterfaceDeclaration:
                 case ts.SyntaxKind.TypeAliasDeclaration:
-                    ctx.addFailureAtNode(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
+                    fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
             }
         }
+    }
+    function fail(node, reason) {
+        ctx.addFailureAtNode(node, util_1.failure(Rule.metadata.ruleName, reason));
     }
     function mod(node, kind) {
         return node.modifiers.find(m => m.kind === kind);
@@ -83,7 +87,7 @@ function walk(ctx) {
         for (const s of block.statements) {
             // Compiler will error for 'declare' here anyway, so just check for 'export'.
             if (isExport(s)) {
-                ctx.addFailureAtNode(mod(s, ts.SyntaxKind.ExportKeyword), "'export' keyword is redundant here.");
+                fail(mod(s, ts.SyntaxKind.ExportKeyword), "'export' keyword is redundant here.");
             }
             if (isModuleDeclaration(s)) {
                 checkModule(s);

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
 const ts = require("typescript");
+const util_1 = require("../util");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
         return this.applyWithFunction(sourceFile, walk);
@@ -16,7 +17,7 @@ Rule.metadata = {
     type: "style",
     typescriptOnly: true,
 };
-Rule.FAILURE_STRING = "Use the `void` type for return types only. Otherwise, use `undefined`.";
+Rule.FAILURE_STRING = util_1.failure(Rule.metadata.ruleName, "Use the `void` type for return types only. Otherwise, use `undefined`.");
 exports.Rule = Rule;
 function walk(ctx) {
     ts.forEachChild(ctx.sourceFile, function cb(node) {

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
+const util_1 = require("../util");
 // Same functionality as https://github.com/palantir/tslint/pull/1654, but simpler implementation.
 // Remove when that PR is in.
 class Rule extends Lint.Rules.AbstractRule {
@@ -19,6 +20,6 @@ Rule.metadata = {
     type: "functionality",
     typescriptOnly: false,
 };
-Rule.FAILURE_STRING = "File has no content.";
+Rule.FAILURE_STRING = util_1.failure(Rule.metadata.ruleName, "File has no content.");
 exports.Rule = Rule;
 //# sourceMappingURL=noUselessFilesRule.js.map

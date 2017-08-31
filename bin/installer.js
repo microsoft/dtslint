@@ -9,9 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
+const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
 const fsp = require("fs-promise");
 const path = require("path");
-const definitelytyped_header_parser_1 = require("./rules/definitelytyped-header-parser");
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 function installAll() {
     return __awaiter(this, void 0, void 0, function* () {

@@ -2,14 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
 const ts = require("typescript");
+const util_1 = require("../util");
 class Rule extends Lint.Rules.AbstractRule {
+    static FAILURE_STRING(kind, token) {
+        return util_1.failure(Rule.metadata.ruleName, `Don't leave a blank line ${kind} '${ts.tokenToString(token)}'.`);
+    }
     apply(sourceFile) {
         return this.applyWithFunction(sourceFile, walk);
     }
 }
 Rule.metadata = {
     ruleName: "no-padding",
-    description: "Forbids unnecessary 'export' or 'declare' modifiers in declaration files.",
+    description: "Forbids a blank line after `(` / `[` / `{`, or before `)` / `]` / `}`.",
     optionsDescription: "Not configurable.",
     options: null,
     type: "style",
@@ -41,7 +45,7 @@ function walk(ctx) {
                     cb(child);
             }
             function fail(kind) {
-                ctx.addFailureAtNode(child, `Don't leave a blank line ${kind} '${ts.tokenToString(child.kind)}'`);
+                ctx.addFailureAtNode(child, Rule.FAILURE_STRING(kind, child.kind));
             }
         }
     });

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
 const ts = require("typescript");
+const util_1 = require("../util");
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
         return this.applyWithFunction(sourceFile, walk);
@@ -16,7 +17,7 @@ Rule.metadata = {
     type: "style",
     typescriptOnly: true,
 };
-Rule.FAILURE_STRING = "File has only 1 module declaration — write it as an external module.";
+Rule.FAILURE_STRING = util_1.failure(Rule.metadata.ruleName, "File has only 1 module declaration — write it as an external module.");
 exports.Rule = Rule;
 function walk(ctx) {
     const { sourceFile } = ctx;
