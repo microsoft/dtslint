@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "export-just-namespace",
@@ -12,7 +14,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: true,
 	};
 
-	static FAILURE_STRING = "Instead of `export =`-ing a namespace, use the body of the namespace as the module body.";
+	static FAILURE_STRING = failure(
+		Rule.metadata.ruleName,
+		"Instead of `export =`-ing a namespace, use the body of the namespace as the module body.");
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		return this.applyWithFunction(sourceFile, walk);

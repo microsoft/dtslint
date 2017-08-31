@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "strict-export-declare-modifiers",
@@ -47,11 +49,11 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		// `declare global` and `declare module "foo"` OK. `declare namespace N` not OK, should be `export namespace`.
 		if (!isDeclareGlobalOrExternalModuleDeclaration(node)) {
 			if (isDeclare(node)) {
-				ctx.addFailureAtNode(mod(node, ts.SyntaxKind.DeclareKeyword), isExport(node)
+				fail(mod(node, ts.SyntaxKind.DeclareKeyword), isExport(node)
 					? "'export declare' is redundant, just use 'export'."
 					: "Prefer 'export' to 'declare' in an external module.");
 			} else if (!isExport(node)) {
-				ctx.addFailureAtNode(
+				fail(
 					(node as ts.DeclarationStatement).name || node,
 					"Prefer to explicitly write 'export' for an external module export.");
 			}
@@ -64,9 +66,13 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			switch (node.kind) {
 				case ts.SyntaxKind.InterfaceDeclaration:
 				case ts.SyntaxKind.TypeAliasDeclaration:
-					ctx.addFailureAtNode(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
+					fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
 			}
 		}
+	}
+
+	function fail(node: ts.Node, reason: string): void {
+		ctx.addFailureAtNode(node, failure(Rule.metadata.ruleName, reason));
 	}
 
 	function mod(node: ts.Statement, kind: ts.SyntaxKind): ts.Node {
@@ -92,7 +98,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		for (const s of block.statements) {
 			// Compiler will error for 'declare' here anyway, so just check for 'export'.
 			if (isExport(s)) {
-				ctx.addFailureAtNode(mod(s, ts.SyntaxKind.ExportKeyword), "'export' keyword is redundant here.");
+				fail(mod(s, ts.SyntaxKind.ExportKeyword), "'export' keyword is redundant here.");
 			}
 
 			if (isModuleDeclaration(s)) {

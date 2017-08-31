@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 export class Rule extends Lint.Rules.TypedRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-relative-import-in-test",
@@ -20,8 +22,9 @@ export class Rule extends Lint.Rules.TypedRule {
 	}
 }
 
-const FAILURE_STRING = "Test file should not use a relative import. " +
-	"Use a global import as if this were a user of the package.";
+const FAILURE_STRING = failure(
+	Rule.metadata.ruleName,
+	"Test file should not use a relative import. Use a global import as if this were a user of the package.");
 
 function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
 	const { sourceFile } = ctx;

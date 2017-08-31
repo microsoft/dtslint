@@ -10,6 +10,9 @@
 1; // $ExpectType 2
 ~~~~~~~~~~~~~~~~~~~ [This line has 2 $ExpectType assertions.]
 
+// Do nothing for commented-out comments
+// f; // $ExpectType foo
+
 declare function f(
     one: number,
     two: [number, number],

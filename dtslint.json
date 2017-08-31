@@ -10,6 +10,7 @@
 		"no-padding": true,
 		"no-relative-import-in-test": true,
 		"strict-export-declare-modifiers": true,
+		"no-any-union": true,
 		"no-single-declare-module": true,
 		"no-useless-files": true,
 		"prefer-declare-function": true,

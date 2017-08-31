@@ -1,10 +1,10 @@
+import { TypeScriptVersion } from "definitelytyped-header-parser";
 import { exists, readFile } from "fs-promise";
 import { join as joinPaths } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
 type Configuration = typeof Configuration;
 type IConfigurationFile = Configuration.IConfigurationFile;
 
-import { TypeScriptVersion } from "./rules/definitelytyped-header-parser";
 import { Options as ExpectOptions } from "./rules/expectRule";
 
 import { typeScriptPath } from "./installer";

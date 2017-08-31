@@ -1,0 +1,4 @@
+export const x: any;
+
+export const y: string | any;
+                         ~~~  [Including `any` in a union will override all other members of the union. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-any-union.md]

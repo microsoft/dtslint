@@ -1,6 +1,8 @@
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { failure } from "../util";
+
 // Same functionality as https://github.com/palantir/tslint/pull/1654, but simpler implementation.
 // Remove when that PR is in.
 
@@ -14,7 +16,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 		typescriptOnly: false,
 	};
 
-	static FAILURE_STRING = "File has no content.";
+	static FAILURE_STRING = failure(
+		Rule.metadata.ruleName,
+		"File has no content.");
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
 		if (sourceFile.statements.length) {

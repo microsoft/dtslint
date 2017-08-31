@@ -1,8 +1,9 @@
+import { renderExpected, validate } from "definitelytyped-header-parser";
 import { basename, dirname } from "path";
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
-import { renderExpected, validate } from "./definitelytyped-header-parser";
+import { failure } from "../util";
 
 export class Rule extends Lint.Rules.AbstractRule {
 	static metadata: Lint.IRuleMetadata = {
@@ -27,7 +28,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		const lookFor = (search: string, explanation: string) => {
 			const idx = text.indexOf(search);
 			if (idx !== -1) {
-				ctx.addFailureAt(idx, search.length, explanation);
+				ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
 			}
 		};
 
@@ -38,7 +39,9 @@ function walk(ctx: Lint.WalkContext<void>): void {
 
 	const error = validate(text);
 	if (error) {
-		ctx.addFailureAt(error.index, 1, `Error parsing header. Expected: ${renderExpected(error.expected)}`);
+		ctx.addFailureAt(error.index, 1, failure(
+			Rule.metadata.ruleName,
+			`Error parsing header. Expected: ${renderExpected(error.expected)}.`));
 	}
 	// Don't recurse, we're done.
 }
