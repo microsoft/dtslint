@@ -1,0 +1,29 @@
+interface I {
+    <T>(value: T): void;
+               ~ [0]
+    m<T>(x: T): void;
+            ~ [0]
+}
+
+class C {
+    constructor<T>(x: T) {}
+                      ~ [0]
+}
+
+type Fn = <T>() => T;
+                   ~ [0]
+type Ctr = new<T>() => T;
+                       ~ [0]
+
+function f<T>(): T { }
+                 ~ [0]
+
+const f = function<T>(): T {};
+                         ~ [0]
+const f2 = <T>(): T => {};
+                  ~ [0]
+
+// OK:
+function foo<T>(m: Map<T, T>): void {}
+
+[0]: Type parameter T is used only once. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-unnecessary-generics.md
