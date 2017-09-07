@@ -216,9 +216,8 @@ function isFirstOnLine(text, lineStart, pos) {
 function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
     const unmetExpectations = [];
     // Match assertions to the first node that appears on the line they apply to.
-    ts.forEachChild(sourceFile, iterate);
-    return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
-    function iterate(node) {
+    // `forEachChild` isn't available as a method in older TypeScript versions, so must use `ts.forEachChild` instead.
+    ts.forEachChild(sourceFile, function iterate(node) {
         const line = lineOfPosition(node.getStart(sourceFile), sourceFile);
         const expected = typeAssertions.get(line);
         if (expected !== undefined) {
@@ -234,7 +233,8 @@ function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
             typeAssertions.delete(line);
         }
         ts.forEachChild(node, iterate);
-    }
+    });
+    return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
 }
 function lineOfPosition(pos, sourceFile) {
     return sourceFile.getLineAndCharacterOfPosition(pos).line;

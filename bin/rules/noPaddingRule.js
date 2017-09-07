@@ -22,7 +22,7 @@ Rule.metadata = {
 exports.Rule = Rule;
 function walk(ctx) {
     const { sourceFile } = ctx;
-    ts.forEachChild(sourceFile, function cb(node) {
+    sourceFile.forEachChild(function cb(node) {
         const children = node.getChildren();
         for (let i = 0; i < children.length; i++) {
             const child = children[i];

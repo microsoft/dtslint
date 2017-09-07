@@ -20,12 +20,12 @@ Rule.metadata = {
 Rule.FAILURE_STRING = util_1.failure(Rule.metadata.ruleName, "Use the `void` type for return types only. Otherwise, use `undefined`.");
 exports.Rule = Rule;
 function walk(ctx) {
-    ts.forEachChild(ctx.sourceFile, function cb(node) {
+    ctx.sourceFile.forEachChild(function cb(node) {
         if (node.kind === ts.SyntaxKind.VoidKeyword && !mayContainVoid(node.parent) && !isReturnType(node)) {
             ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
         }
         else {
-            ts.forEachChild(node, cb);
+            node.forEachChild(cb);
         }
     });
 }
