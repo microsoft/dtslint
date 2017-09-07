@@ -279,10 +279,8 @@ function getExpectTypeFailures(
 		): ExpectTypeFailures {
 	const unmetExpectations: Array<{ node: TsType.Node, expected: string, actual: string }> = [];
 	// Match assertions to the first node that appears on the line they apply to.
-	ts.forEachChild(sourceFile, iterate);
-	return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
-
-	function iterate(node: TsType.Node): void {
+	// `forEachChild` isn't available as a method in older TypeScript versions, so must use `ts.forEachChild` instead.
+	ts.forEachChild(sourceFile, function iterate(node) {
 		const line = lineOfPosition(node.getStart(sourceFile), sourceFile);
 		const expected = typeAssertions.get(line);
 		if (expected !== undefined) {
@@ -302,7 +300,9 @@ function getExpectTypeFailures(
 		}
 
 		ts.forEachChild(node, iterate);
-	}
+	});
+	return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
+
 }
 
 function lineOfPosition(pos: number, sourceFile: SourceFile): number {
