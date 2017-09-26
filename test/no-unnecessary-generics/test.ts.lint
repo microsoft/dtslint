@@ -23,7 +23,16 @@ const f = function<T>(): T {};
 const f2 = <T>(): T => {};
                   ~ [0]
 
+function f<T>(): void;
+           ~ [Type parameter T is never used. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-unnecessary-generics.md]
+
+function f<T, U extends T>(u: U): U;
+                        ~ [0]
+
 // OK:
+// Uses type parameter twice
 function foo<T>(m: Map<T, T>): void {}
+// `T` appears in a constraint, so it appears twice.
+function f<T, U extends T>(t: T, u: U): U;
 
 [0]: Type parameter T is used only once. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-unnecessary-generics.md

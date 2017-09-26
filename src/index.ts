@@ -119,7 +119,7 @@ function execScript(cmd: string, cwd?: string): Promise<string | undefined> {
 
 if (!module.parent) {
 	main().catch(err => {
-		console.error(err.message);
+		console.error(err.stack);
 		process.exit(1);
 	});
 }
