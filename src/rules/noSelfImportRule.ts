@@ -1,9 +1,7 @@
-import { basename, dirname } from "path";
-
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
-import { failure } from "../util";
+import { failure, getCommonDirectoryName } from "../util";
 
 export class Rule extends Lint.Rules.TypedRule {
 	static metadata: Lint.IRuleMetadata = {
@@ -20,7 +18,7 @@ export class Rule extends Lint.Rules.TypedRule {
 			return [];
 		}
 
-		const name = getCommonDirectoryName(program.getSourceFiles());
+		const name = getCommonDirectoryName(program.getRootFileNames());
 		return this.applyWithFunction(sourceFile, ctx => walk(ctx, name));
 	}
 }
@@ -28,19 +26,6 @@ export class Rule extends Lint.Rules.TypedRule {
 const FAILURE_STRING = failure(
 	Rule.metadata.ruleName,
 	"Declaration file should not use a global import of itself. Use a relative import.");
-
-function getCommonDirectoryName(files: ReadonlyArray<ts.SourceFile>): string {
-	let minLen = 999;
-	let minDir = "";
-	for (const file of files) {
-		const dir = dirname(file.fileName);
-		if (dir.length < minLen) {
-			minDir = dir;
-			minLen = dir.length;
-		}
-	}
-	return basename(minDir);
-}
 
 function walk(ctx: Lint.WalkContext<void>, packageName: string): void {
 	for (const i of ctx.sourceFile.imports) {
