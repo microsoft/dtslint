@@ -2,6 +2,7 @@
 	"extends": "./dtslint.json",
 	"rules": {
 		"dt-header": true,
-		"no-bad-reference": true
+		"no-bad-reference": true,
+		"no-self-import": true
 	}
 }
