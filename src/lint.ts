@@ -65,12 +65,15 @@ async function getLintConfig(
 		throw new Error(`Could not load config at ${configPath}`);
 	}
 
-	const expectOptions: ExpectOptions = {
-		tsconfigPath,
-		tsNextPath: typeScriptPath("next"),
-		olderInstalls: TypeScriptVersion.range(minVersion).map(versionName =>
-			({ versionName, path: typeScriptPath(versionName) })),
-	};
-	config.rules.get("expect")!.ruleArguments = [expectOptions];
+	const expectRule = config.rules.get("expect");
+	if (expectRule) {
+		const expectOptions: ExpectOptions = {
+			tsconfigPath,
+			tsNextPath: typeScriptPath("next"),
+			olderInstalls: TypeScriptVersion.range(minVersion).map(versionName =>
+				({ versionName, path: typeScriptPath(versionName) })),
+		};
+		expectRule.ruleArguments = [expectOptions];
+	}
 	return config;
 }

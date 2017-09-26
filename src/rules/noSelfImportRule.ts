@@ -36,6 +36,7 @@ function getCommonDirectoryName(files: ReadonlyArray<ts.SourceFile>): string {
 		const dir = dirname(file.fileName);
 		if (dir.length < minLen) {
 			minDir = dir;
+			minLen = dir.length;
 		}
 	}
 	return basename(minDir);
