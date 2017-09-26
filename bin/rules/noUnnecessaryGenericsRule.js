@@ -7,6 +7,9 @@ class Rule extends Lint.Rules.AbstractRule {
     static FAILURE_STRING(typeParameter) {
         return util_1.failure(Rule.metadata.ruleName, `Type parameter ${typeParameter} is used only once.`);
     }
+    static FAILURE_STRING_NEVER(typeParameter) {
+        return util_1.failure(Rule.metadata.ruleName, `Type parameter ${typeParameter} is never used.`);
+    }
     apply(sourceFile) {
         return this.applyWithFunction(sourceFile, walk);
     }
@@ -34,9 +37,18 @@ function walk(ctx) {
         }
         for (const tp of sig.typeParameters) {
             const typeParameter = tp.name.text;
-            const soleUse = getSoleUse(sig, typeParameter);
-            if (soleUse !== undefined) {
-                ctx.addFailureAtNode(soleUse, Rule.FAILURE_STRING(typeParameter));
+            const res = getSoleUse(sig, typeParameter);
+            switch (res.type) {
+                case "ok":
+                    break;
+                case "sole":
+                    ctx.addFailureAtNode(res.soleUse, Rule.FAILURE_STRING(typeParameter));
+                    break;
+                case "never":
+                    ctx.addFailureAtNode(tp, Rule.FAILURE_STRING_NEVER(typeParameter));
+                    break;
+                default:
+                    assertNever(res);
             }
         }
     }
@@ -45,6 +57,13 @@ function getSoleUse(sig, typeParameter) {
     const exit = {};
     let soleUse;
     try {
+        if (sig.typeParameters) {
+            for (const tp of sig.typeParameters) {
+                if (tp.constraint) {
+                    recur(tp.constraint);
+                }
+            }
+        }
         for (const param of sig.parameters) {
             if (param.type) {
                 recur(param.type);
@@ -56,11 +75,11 @@ function getSoleUse(sig, typeParameter) {
     }
     catch (err) {
         if (err === exit) {
-            return undefined;
+            return { type: "ok" };
         }
         throw err;
     }
-    return soleUse;
+    return soleUse ? { type: "sole", soleUse } : { type: "never" };
     function recur(node) {
         if (ts.isIdentifier(node)) {
             if (node.text === typeParameter) {
@@ -76,5 +95,8 @@ function getSoleUse(sig, typeParameter) {
             node.forEachChild(recur);
         }
     }
+}
+function assertNever(_) {
+    throw new Error("unreachable");
 }
 //# sourceMappingURL=noUnnecessaryGenericsRule.js.map

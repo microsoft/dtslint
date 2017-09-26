@@ -63,12 +63,15 @@ function getLintConfig(expectedConfigPath, tsconfigPath, minVersion) {
         if (!config) {
             throw new Error(`Could not load config at ${configPath}`);
         }
-        const expectOptions = {
-            tsconfigPath,
-            tsNextPath: installer_1.typeScriptPath("next"),
-            olderInstalls: definitelytyped_header_parser_1.TypeScriptVersion.range(minVersion).map(versionName => ({ versionName, path: installer_1.typeScriptPath(versionName) })),
-        };
-        config.rules.get("expect").ruleArguments = [expectOptions];
+        const expectRule = config.rules.get("expect");
+        if (expectRule) {
+            const expectOptions = {
+                tsconfigPath,
+                tsNextPath: installer_1.typeScriptPath("next"),
+                olderInstalls: definitelytyped_header_parser_1.TypeScriptVersion.range(minVersion).map(versionName => ({ versionName, path: installer_1.typeScriptPath(versionName) })),
+            };
+            expectRule.ruleArguments = [expectOptions];
+        }
         return config;
     });
 }

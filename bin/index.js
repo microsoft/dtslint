@@ -41,6 +41,8 @@ function main() {
                         process.exit(1);
                     }
                     const path = arg.indexOf("@") === 0 && arg.indexOf("/") !== -1
+                        // we have a scoped module, e.g. @bla/foo
+                        // which should be converted to   bla__foo
                         ? arg.substr(1).replace("/", "__")
                         : arg;
                     dirPath = dirPath === undefined ? path : path_1.join(dirPath, path);
@@ -118,7 +120,7 @@ function execScript(cmd, cwd) {
 }
 if (!module.parent) {
     main().catch(err => {
-        console.error(err.message);
+        console.error(err.stack);
         process.exit(1);
     });
 }
