@@ -95,7 +95,7 @@ async function test(dirPath: string, noLint: boolean, minVersion: TypeScriptVers
 		for (const tsVersion of ["next" as "next", minVersion]) {
 			// Special for old DefinitelyTyped packages that aren't linted yet.
 			const err = await execScript("node " + tscPath(tsVersion), dirPath);
-			if (err !== undefined) {
+			if (err !== undefined && err.trim() !== "error TS5023: Unknown compiler option 'strictFunctionTypes'.") {
 				return `Error in TypeScript@${tsVersion}: ${err}`;
 			}
 		}
