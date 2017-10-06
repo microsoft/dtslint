@@ -62,6 +62,7 @@ export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void>
 				case "noImplicitAny":
 				case "noImplicitThis":
 				case "strictNullChecks":
+				case "strictFunctionTypes":
 					break;
 				case "target":
 				case "paths":
@@ -83,7 +84,7 @@ export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void>
 		throw new Error('Must specify "lib", usually to `"lib": ["es6"]` or `"lib": ["es6", "dom"]`.');
 	}
 
-	for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks"]) {
+	for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
 		if (!(key in options)) {
 			throw new Error(`Expected \`"${key}": true\` or \`"${key}": false\`.`);
 		}
