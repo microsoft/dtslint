@@ -4,6 +4,8 @@
 		"dt-header": true,
 		"no-bad-reference": true,
 		"no-declare-current-package": true,
-		"no-self-import": true
+		"no-self-import": true,
+
+		"no-implicit-dependencies": false
 	}
 }
