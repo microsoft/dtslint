@@ -38,7 +38,6 @@
 		],
 		"one-variable-per-declaration": [true, "ignore-for-loop"],
 		"only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
-		"prefer-method-signature": true,
 		"prefer-template": [true, "allow-single-concat"],
 		"whitespace": [
 			true,
@@ -68,6 +67,7 @@
 		"restrict-plus-operands": false, // TODO
 		"return-undefined": false, // TODO
 		"switch-final-break": false, // TODO
+		"prefer-method-signature": false, // TODO?
 
 		// Pretty sure we don't want these
 		"binary-expression-operand-order": false,
