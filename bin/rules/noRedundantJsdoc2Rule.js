@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const Lint = require("tslint");
-const tsutils_1 = require("tsutils");
+const tsutils_1 = require("tsutils"); // tslint:disable-line no-implicit-dependencies (from tslint)
 const ts = require("typescript");
 class Rule extends Lint.Rules.AbstractRule {
     static FAILURE_STRING_REDUNDANT_TAG(tagName) {
@@ -28,14 +28,21 @@ Rule.metadata = {
 };
 /* tslint:enable:object-literal-sort-keys */
 Rule.FAILURE_STRING_REDUNDANT_TYPE = "Type annotation in JSDoc is redundant in TypeScript code.";
+Rule.FAILURE_STRING_EMPTY = "JSDoc comment is empty.";
 exports.Rule = Rule;
 function walk(ctx) {
     const { sourceFile } = ctx;
     // Intentionally exclude EndOfFileToken: it can have JSDoc, but it is only relevant in JavaScript files
     return sourceFile.statements.forEach(function cb(node) {
         if (tsutils_1.canHaveJsDoc(node)) {
-            for (const { tags } of tsutils_1.getJsDoc(node, sourceFile)) {
-                if (tags !== undefined) {
+            for (const jd of tsutils_1.getJsDoc(node, sourceFile)) {
+                const { tags } = jd;
+                if (tags === undefined || tags.length === 0) {
+                    if (jd.comment === undefined) {
+                        ctx.addFailureAtNode(jd, Rule.FAILURE_STRING_EMPTY, Lint.Replacement.deleteFromTo(jd.getStart(sourceFile), jd.getEnd()));
+                    }
+                }
+                else {
                     for (const tag of tags) {
                         checkTag(tag);
                     }
@@ -55,9 +62,6 @@ function walk(ctx) {
                 }
                 break;
             }
-            case ts.SyntaxKind.JSDocAugmentsTag:
-                // OK
-                break;
             // @ts-ignore (fallthrough)
             case ts.SyntaxKind.JSDocTemplateTag:
                 if (tag.comment !== "") {
@@ -68,6 +72,7 @@ function walk(ctx) {
             case ts.SyntaxKind.JSDocTypeTag:
             case ts.SyntaxKind.JSDocTypedefTag:
             case ts.SyntaxKind.JSDocPropertyTag:
+            case ts.SyntaxKind.JSDocAugmentsTag:
                 // Always redundant
                 ctx.addFailureAtNode(tag.tagName, Rule.FAILURE_STRING_REDUNDANT_TAG(tag.tagName.text), removeTag(tag, sourceFile));
                 break;
@@ -128,6 +133,10 @@ function removeTag(tag, sourceFile) {
         case "memberOf":
         case "method":
         case "type":
+        case "class":
+        case "property":
+        case "function":
+            end--; // Might end with "\n" (test with just `@return` with no comment or type)
             // For some reason, for "@name", "end" is before the start of the comment part of the tag.
             // Also for "param" if the name is optional  as in `@param {number} [x]`
             while (!ts.isLineBreak(text.charCodeAt(end))) {
@@ -170,6 +179,7 @@ const redundantTags = new Set([
     "constructs",
     "default",
     "enum",
+    "export",
     "exports",
     "function",
     "global",
