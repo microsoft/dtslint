@@ -6,7 +6,6 @@
 		"no-declare-current-package": true,
 		"no-self-import": true,
 
-		"no-implicit-dependencies": false,
 		"no-redundant-jsdoc": false,
 		"no-redundant-jsdoc-2": true
 	}
