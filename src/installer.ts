@@ -31,10 +31,6 @@ export function typeScriptPath(version: TypeScriptVersion | "next"): string {
 	return path.join(installDir(version), "node_modules", "typescript");
 }
 
-export function tscPath(version: TypeScriptVersion | "next"): string {
-	return path.join(typeScriptPath(version), "lib", "tsc.js");
-}
-
 function installDir(version: TypeScriptVersion | "next"): string {
 	return path.join(installsDir, version);
 }
