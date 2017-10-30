@@ -5,6 +5,7 @@
 		"no-bad-reference": true,
 		"no-declare-current-package": true,
 		"no-self-import": true,
+		"no-outside-dependencies": true,
 
 		"no-redundant-jsdoc": false,
 		"no-redundant-jsdoc-2": true
