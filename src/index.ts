@@ -10,6 +10,7 @@ import { checkTslintJson, lint } from "./lint";
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
 	let dirPath = process.cwd();
+	let onlyTestTsNext = false;
 
 	for (const arg of args) {
 		switch (arg) {
@@ -22,6 +23,10 @@ async function main(): Promise<void> {
 			case "--version":
 				console.log(require("../package.json").version);
 				return;
+
+			case "--onlyTestTsNext":
+				onlyTestTsNext = true;
+				break;
 
 			default:
 				if (arg.startsWith("--")) {
@@ -40,18 +45,19 @@ async function main(): Promise<void> {
 	}
 
 	await installAll();
-	await runTests(dirPath);
+	await runTests(dirPath, onlyTestTsNext);
 }
 
 function usage(): void {
 	console.error("Usage: dtslint [--version] [--noLint] [--installAll]");
 	console.error("Args:");
-	console.error("  --version    Print version and exit.");
-	console.error("  --noLint     Just run 'tsc'. (Not recommended.)");
-	console.error("  --installAll Cleans and installs all TypeScript versions.");
+	console.error("  --version        Print version and exit.");
+	console.error("  --noLint         Just run 'tsc'. (Not recommended.)");
+	console.error("  --installAll     Cleans and installs all TypeScript versions.");
+	console.error("  --onlyTestTsNext Only run with `typescript@next`, not with the minimum version.");
 }
 
-async function runTests(dirPath: string): Promise<void> {
+async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void> {
 	const text = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
 	const dt = text.includes("// Type definitions for");
 	const minVersion = getTypeScriptVersion(text);
@@ -61,7 +67,7 @@ async function runTests(dirPath: string): Promise<void> {
 		await checkPackageJson(dirPath);
 	}
 	await checkTsconfig(dirPath, dt);
-	const err = await test(dirPath, minVersion);
+	const err = await test(dirPath, minVersion, onlyTestTsNext);
 	if (err) {
 		throw new Error(err);
 	}
@@ -81,8 +87,12 @@ function getTypeScriptVersion(text: string): TypeScriptVersion {
 	return parseTypeScriptVersionLine(line);
 }
 
-async function test(dirPath: string, minVersion: TypeScriptVersion): Promise<string | undefined> {
-	return lint(dirPath, minVersion);
+async function test(
+	dirPath: string,
+	minVersion: TypeScriptVersion,
+	onlyTestTsNext: boolean,
+): Promise<string | undefined> {
+	return lint(dirPath, minVersion, onlyTestTsNext);
 }
 
 if (!module.parent) {
