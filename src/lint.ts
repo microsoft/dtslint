@@ -10,7 +10,11 @@ import { Options as ExpectOptions } from "./rules/expectRule";
 import { typeScriptPath } from "./installer";
 import { readJson } from "./util";
 
-export async function lint(dirPath: string, minVersion: TypeScriptVersion): Promise<string | undefined> {
+export async function lint(
+	dirPath: string,
+	minVersion: TypeScriptVersion,
+	onlyTestTsNext: boolean,
+): Promise<string | undefined> {
 	const lintConfigPath = getConfigPath(dirPath);
 	const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
 	const program = Linter.createProgram(tsconfigPath);
@@ -20,7 +24,7 @@ export async function lint(dirPath: string, minVersion: TypeScriptVersion): Prom
 		formatter: "stylish",
 	};
 	const linter = new Linter(lintOptions, program);
-	const config = await getLintConfig(lintConfigPath, tsconfigPath, minVersion);
+	const config = await getLintConfig(lintConfigPath, tsconfigPath, minVersion, onlyTestTsNext);
 
 	for (const filename of program.getRootFileNames()) {
 		const contents = await readFile(filename, "utf-8");
@@ -54,10 +58,11 @@ function getConfigPath(dirPath: string): string {
 }
 
 async function getLintConfig(
-		expectedConfigPath: string,
-		tsconfigPath: string,
-		minVersion: TypeScriptVersion,
-		): Promise<IConfigurationFile> {
+	expectedConfigPath: string,
+	tsconfigPath: string,
+	minVersion: TypeScriptVersion,
+	onlyTestTsNext: boolean,
+): Promise<IConfigurationFile> {
 	const configPath = await exists(expectedConfigPath) ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
 	// Second param to `findConfiguration` doesn't matter, since config path is provided.
 	const config = Configuration.findConfiguration(configPath, "").results;
@@ -72,6 +77,7 @@ async function getLintConfig(
 			tsNextPath: typeScriptPath("next"),
 			olderInstalls: TypeScriptVersion.range(minVersion).map(versionName =>
 				({ versionName, path: typeScriptPath(versionName) })),
+			onlyTestTsNext,
 		};
 		expectRule.ruleArguments = [expectOptions];
 	}
