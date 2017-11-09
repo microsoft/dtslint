@@ -14,7 +14,7 @@ const path_1 = require("path");
 const tslint_1 = require("tslint");
 const installer_1 = require("./installer");
 const util_1 = require("./util");
-function lint(dirPath, minVersion) {
+function lint(dirPath, minVersion, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
         const lintConfigPath = getConfigPath(dirPath);
         const tsconfigPath = path_1.join(dirPath, "tsconfig.json");
@@ -24,7 +24,7 @@ function lint(dirPath, minVersion) {
             formatter: "stylish",
         };
         const linter = new tslint_1.Linter(lintOptions, program);
-        const config = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion);
+        const config = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion, onlyTestTsNext);
         for (const filename of program.getRootFileNames()) {
             const contents = yield fs_promise_1.readFile(filename, "utf-8");
             linter.lint(filename, contents, config);
@@ -55,7 +55,7 @@ exports.checkTslintJson = checkTslintJson;
 function getConfigPath(dirPath) {
     return path_1.join(dirPath, "tslint.json");
 }
-function getLintConfig(expectedConfigPath, tsconfigPath, minVersion) {
+function getLintConfig(expectedConfigPath, tsconfigPath, minVersion, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
         const configPath = (yield fs_promise_1.exists(expectedConfigPath)) ? expectedConfigPath : path_1.join(__dirname, "..", "dtslint.json");
         // Second param to `findConfiguration` doesn't matter, since config path is provided.
@@ -69,6 +69,7 @@ function getLintConfig(expectedConfigPath, tsconfigPath, minVersion) {
                 tsconfigPath,
                 tsNextPath: installer_1.typeScriptPath("next"),
                 olderInstalls: definitelytyped_header_parser_1.TypeScriptVersion.range(minVersion).map(versionName => ({ versionName, path: installer_1.typeScriptPath(versionName) })),
+                onlyTestTsNext,
             };
             expectRule.ruleArguments = [expectOptions];
         }

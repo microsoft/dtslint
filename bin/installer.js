@@ -42,10 +42,6 @@ function typeScriptPath(version) {
     return path.join(installDir(version), "node_modules", "typescript");
 }
 exports.typeScriptPath = typeScriptPath;
-function tscPath(version) {
-    return path.join(typeScriptPath(version), "lib", "tsc.js");
-}
-exports.tscPath = tscPath;
 function installDir(version) {
     return path.join(installsDir, version);
 }

@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const child_process_1 = require("child_process");
 const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
 const fs_promise_1 = require("fs-promise");
 const path_1 = require("path");
@@ -19,8 +18,8 @@ const lint_1 = require("./lint");
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const args = process.argv.slice(2);
-        let noLint = false;
         let dirPath = process.cwd();
+        let onlyTestTsNext = false;
         for (const arg of args) {
             switch (arg) {
                 case "--installAll":
@@ -31,8 +30,8 @@ function main() {
                 case "--version":
                     console.log(require("../package.json").version);
                     return;
-                case "--noLint":
-                    noLint = true;
+                case "--onlyTestTsNext":
+                    onlyTestTsNext = true;
                     break;
                 default:
                     if (arg.startsWith("--")) {
@@ -49,29 +48,28 @@ function main() {
             }
         }
         yield installer_1.installAll();
-        yield runTests(dirPath, noLint);
+        yield runTests(dirPath, onlyTestTsNext);
     });
 }
 function usage() {
     console.error("Usage: dtslint [--version] [--noLint] [--installAll]");
     console.error("Args:");
-    console.error("  --version    Print version and exit.");
-    console.error("  --noLint     Just run 'tsc'. (Not recommended.)");
-    console.error("  --installAll Cleans and installs all TypeScript versions.");
+    console.error("  --version        Print version and exit.");
+    console.error("  --noLint         Just run 'tsc'. (Not recommended.)");
+    console.error("  --installAll     Cleans and installs all TypeScript versions.");
+    console.error("  --onlyTestTsNext Only run with `typescript@next`, not with the minimum version.");
 }
-function runTests(dirPath, noLint) {
+function runTests(dirPath, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
         const text = yield fs_promise_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
         const dt = text.includes("// Type definitions for");
         const minVersion = getTypeScriptVersion(text);
-        if (!noLint) {
-            yield lint_1.checkTslintJson(dirPath, dt);
-        }
+        yield lint_1.checkTslintJson(dirPath, dt);
         if (dt) {
             yield checks_1.checkPackageJson(dirPath);
         }
         yield checks_1.checkTsconfig(dirPath, dt);
-        const err = yield test(dirPath, noLint, minVersion);
+        const err = yield test(dirPath, minVersion, onlyTestTsNext);
         if (err) {
             throw new Error(err);
         }
@@ -89,33 +87,9 @@ function getTypeScriptVersion(text) {
     }
     return definitelytyped_header_parser_1.parseTypeScriptVersionLine(line);
 }
-function test(dirPath, noLint, minVersion) {
+function test(dirPath, minVersion, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (noLint) {
-            for (const tsVersion of ["next", minVersion]) {
-                // Special for old DefinitelyTyped packages that aren't linted yet.
-                const err = yield execScript("node " + installer_1.tscPath(tsVersion), dirPath);
-                if (err !== undefined && err.trim() !== "error TS5023: Unknown compiler option 'strictFunctionTypes'.") {
-                    return `Error in TypeScript@${tsVersion}: ${err}`;
-                }
-            }
-            return undefined;
-        }
-        else {
-            return lint_1.lint(dirPath, minVersion);
-        }
-    });
-}
-function execScript(cmd, cwd) {
-    return new Promise(resolve => {
-        child_process_1.exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => {
-            if (err) {
-                resolve(stdout + stderr);
-            }
-            else {
-                resolve(undefined);
-            }
-        });
+        return lint_1.lint(dirPath, minVersion, onlyTestTsNext);
     });
 }
 if (!module.parent) {

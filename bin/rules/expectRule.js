@@ -21,7 +21,7 @@ class Rule extends Lint.Rules.TypedRule {
             return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
         };
         const nextFailures = getFailures("next", options.tsNextPath, /*nextHigherVersion*/ undefined);
-        if (nextFailures.length) {
+        if (options.onlyTestTsNext || nextFailures.length) {
             return nextFailures;
         }
         assert(options.olderInstalls.length);
