@@ -88,6 +88,7 @@
 		"no-console": false,
 		"no-default-export": false,
 		"no-empty": false,
+		"no-implicit-dependencies": false, // See https://github.com/palantir/tslint/issues/3364
 		"no-inferred-empty-object-type": false,
 		"no-magic-numbers": false,
 		"no-non-null-assertion": false,

@@ -1,18 +1,16 @@
 #!/usr/bin/env node
-import { exec } from "child_process";
 import { parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
 import { readFile } from "fs-promise";
 import { join as joinPaths } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, installAll, tscPath } from "./installer";
+import { cleanInstalls, installAll } from "./installer";
 import { checkTslintJson, lint } from "./lint";
 
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
-
-	let noLint = false;
 	let dirPath = process.cwd();
+	let onlyTestTsNext = false;
 
 	for (const arg of args) {
 		switch (arg) {
@@ -26,8 +24,8 @@ async function main(): Promise<void> {
 				console.log(require("../package.json").version);
 				return;
 
-			case "--noLint":
-				noLint = true;
+			case "--onlyTestTsNext":
+				onlyTestTsNext = true;
 				break;
 
 			default:
@@ -47,30 +45,29 @@ async function main(): Promise<void> {
 	}
 
 	await installAll();
-	await runTests(dirPath, noLint);
+	await runTests(dirPath, onlyTestTsNext);
 }
 
 function usage(): void {
 	console.error("Usage: dtslint [--version] [--noLint] [--installAll]");
 	console.error("Args:");
-	console.error("  --version    Print version and exit.");
-	console.error("  --noLint     Just run 'tsc'. (Not recommended.)");
-	console.error("  --installAll Cleans and installs all TypeScript versions.");
+	console.error("  --version        Print version and exit.");
+	console.error("  --noLint         Just run 'tsc'. (Not recommended.)");
+	console.error("  --installAll     Cleans and installs all TypeScript versions.");
+	console.error("  --onlyTestTsNext Only run with `typescript@next`, not with the minimum version.");
 }
 
-async function runTests(dirPath: string, noLint: boolean): Promise<void> {
+async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void> {
 	const text = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
 	const dt = text.includes("// Type definitions for");
 	const minVersion = getTypeScriptVersion(text);
 
-	if (!noLint) {
-		await checkTslintJson(dirPath, dt);
-	}
+	await checkTslintJson(dirPath, dt);
 	if (dt) {
 		await checkPackageJson(dirPath);
 	}
 	await checkTsconfig(dirPath, dt);
-	const err = await test(dirPath, noLint, minVersion);
+	const err = await test(dirPath, minVersion, onlyTestTsNext);
 	if (err) {
 		throw new Error(err);
 	}
@@ -90,31 +87,12 @@ function getTypeScriptVersion(text: string): TypeScriptVersion {
 	return parseTypeScriptVersionLine(line);
 }
 
-async function test(dirPath: string, noLint: boolean, minVersion: TypeScriptVersion): Promise<string | undefined> {
-	if (noLint) {
-		for (const tsVersion of ["next" as "next", minVersion]) {
-			// Special for old DefinitelyTyped packages that aren't linted yet.
-			const err = await execScript("node " + tscPath(tsVersion), dirPath);
-			if (err !== undefined && err.trim() !== "error TS5023: Unknown compiler option 'strictFunctionTypes'.") {
-				return `Error in TypeScript@${tsVersion}: ${err}`;
-			}
-		}
-		return undefined;
-	} else {
-		return lint(dirPath, minVersion);
-	}
-}
-
-function execScript(cmd: string, cwd?: string): Promise<string | undefined> {
-	return new Promise<string | undefined>(resolve => {
-		exec(cmd, { encoding: "utf8", cwd }, (err, stdout, stderr) => {
-			if (err) {
-				resolve(stdout + stderr);
-			} else {
-				resolve(undefined);
-			}
-		});
-	});
+async function test(
+	dirPath: string,
+	minVersion: TypeScriptVersion,
+	onlyTestTsNext: boolean,
+): Promise<string | undefined> {
+	return lint(dirPath, minVersion, onlyTestTsNext);
 }
 
 if (!module.parent) {

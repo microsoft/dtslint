@@ -44,7 +44,7 @@ export class Rule extends Lint.Rules.TypedRule {
 		};
 
 		const nextFailures = getFailures("next", options.tsNextPath, /*nextHigherVersion*/ undefined);
-		if (nextFailures.length) {
+		if (options.onlyTestTsNext || nextFailures.length) {
 			return nextFailures;
 		}
 
@@ -79,6 +79,7 @@ export interface Options {
 	readonly tsNextPath: string;
 	// These should be sorted with oldest first.
 	readonly olderInstalls: ReadonlyArray<{ versionName: string, path: string }>;
+	readonly onlyTestTsNext: boolean;
 }
 
 const programCache = new WeakMap<Program, Map<string, Program>>();
