@@ -28,11 +28,40 @@ export async function lint(
 
 	for (const filename of program.getRootFileNames()) {
 		const contents = await readFile(filename, "utf-8");
+		const err = testNoTsIgnore(contents) || testNoTslintDisables(contents);
+		if (err) {
+			const { pos, message } = err;
+			const place = program.getSourceFile(filename).getLineAndCharacterOfPosition(pos);
+			return `At ${filename}:${JSON.stringify(place)}: ${message}`;
+		}
 		linter.lint(filename, contents, config);
 	}
 
 	const result = linter.getResult();
 	return result.failures.length ? result.output : undefined;
+}
+
+interface Err { pos: number; message: string; }
+function testNoTsIgnore(text: string): Err | undefined {
+	const tsIgnore = "ts-ignore";
+	const pos = text.indexOf(tsIgnore);
+	return pos === -1 ? undefined : { pos, message: "'ts-ignore' is forbidden." };
+}
+function testNoTslintDisables(text: string): Err | undefined {
+	const tslintDisable = "tslint:disable";
+	let lastIndex = 0;
+	while (true) {
+		const pos = text.indexOf(tslintDisable, lastIndex);
+		if (pos === -1) {
+			return undefined;
+		}
+		const end = pos + tslintDisable.length;
+		if (text.charAt(end) !== "-") {
+			const message = "'tslint:disable' is forbidden. ('tslint:disable-line' and 'tslint:disable-next-line' are allowed.)";
+			return { pos, message };
+		}
+		lastIndex = end;
+	}
 }
 
 export async function checkTslintJson(dirPath: string, dt: boolean): Promise<void> {
