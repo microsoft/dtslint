@@ -21,3 +21,7 @@ declare function f(
 
 // Test that we never truncate types.
 f; // $ExpectType (one: number, two: [number, number], three: [number, number, number], four: [number, number, number, number]) => number
+
+// Test that we get the type of the initializer on a variable declaration.
+// $ExpectType 1
+const x = 1;
