@@ -225,7 +225,7 @@ function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
             if (node.kind === ts.SyntaxKind.ExpressionStatement) {
                 node = node.expression;
             }
-            const type = checker.getTypeAtLocation(node);
+            const type = checker.getTypeAtLocation(getNodeForExpectType(node, ts));
             const actual = checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation);
             if (actual !== expected) {
                 unmetExpectations.push({ node, expected, actual });
@@ -235,6 +235,18 @@ function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
         ts.forEachChild(node, iterate);
     });
     return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
+}
+function getNodeForExpectType(node, ts) {
+    if (ts.isVariableStatement(node)) {
+        const { declarationList: { declarations } } = node;
+        if (declarations.length === 1) {
+            const { initializer } = declarations[0];
+            if (initializer) {
+                return initializer;
+            }
+        }
+    }
+    return node;
 }
 function lineOfPosition(pos, sourceFile) {
     return sourceFile.getLineAndCharacterOfPosition(pos).line;
