@@ -290,7 +290,7 @@ function getExpectTypeFailures(
 				node = (node as TsType.ExpressionStatement).expression;
 			}
 
-			const type = checker.getTypeAtLocation(node);
+			const type = checker.getTypeAtLocation(getNodeForExpectType(node, ts));
 
 			const actual = checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation);
 			if (actual !== expected) {
@@ -303,7 +303,19 @@ function getExpectTypeFailures(
 		ts.forEachChild(node, iterate);
 	});
 	return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
+}
 
+function getNodeForExpectType(node: TsType.Node, ts: typeof TsType): TsType.Node {
+	if (ts.isVariableStatement(node)) {
+		const { declarationList: { declarations } } = node;
+		if (declarations.length === 1) {
+			const { initializer } = declarations[0];
+			if (initializer) {
+				return initializer;
+			}
+		}
+	}
+	return node;
 }
 
 function lineOfPosition(pos: number, sourceFile: SourceFile): number {
