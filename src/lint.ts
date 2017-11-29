@@ -31,7 +31,7 @@ export async function lint(
 		const err = testNoTsIgnore(contents) || testNoTslintDisables(contents);
 		if (err) {
 			const { pos, message } = err;
-			const place = program.getSourceFile(filename).getLineAndCharacterOfPosition(pos);
+			const place = program.getSourceFile(filename)!.getLineAndCharacterOfPosition(pos);
 			return `At ${filename}:${JSON.stringify(place)}: ${message}`;
 		}
 		linter.lint(filename, contents, config);

@@ -20,7 +20,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
-    "lint": "tslint --project tsconfig.json --type-check --format stylish",
+    "lint": "tslint --project tsconfig.json --format stylish",
     "test": "node test/test.js"
   },
   "dependencies": {
