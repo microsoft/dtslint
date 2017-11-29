@@ -119,7 +119,7 @@ function walk(
 		ts: typeof TsType,
 		versionName: string,
 		nextHigherVersion: string | undefined): void {
-	const sourceFile = program.getSourceFile(ctx.sourceFile.fileName);
+	const sourceFile = program.getSourceFile(ctx.sourceFile.fileName)!;
 
 	const checker = program.getTypeChecker();
 	// Don't care about emit errors.
