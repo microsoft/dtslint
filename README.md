@@ -39,6 +39,7 @@ Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-
         "noImplicitAny": true,
         "noImplicitThis": true,
         "strictNullChecks": true,
+        "noEmit": true,
 
         // If the library is an external module (uses `export`), this allows your test file to import "mylib" instead of "./index".
         // If the library is global (cannot be imported via `import` or `require`), leave this out.
@@ -61,7 +62,7 @@ You can specify new lint [rules](https://palantir.github.io/tslint/rules/), or d
 
 ```json
 {
-    "extends": "dtslint/dtslint.json",
+    "extends": "dtslint/dt.json",
     "rules": {
         "semicolon": false,
         "indent": [true, "tabs"]
