@@ -237,7 +237,7 @@ function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
     return { unmetExpectations, unusedAssertions: typeAssertions.keys() };
 }
 function getNodeForExpectType(node, ts) {
-    if (ts.isVariableStatement(node)) {
+    if (node.kind === ts.SyntaxKind.VariableStatement) {
         const { declarationList: { declarations } } = node;
         if (declarations.length === 1) {
             const { initializer } = declarations[0];
