@@ -62,7 +62,7 @@ You can specify new lint [rules](https://palantir.github.io/tslint/rules/), or d
 
 ```json
 {
-    "extends": "dtslint/dt.json",
+    "extends": "dtslint/dtslint.json", // Or "dtslint/dt.json" if on DefinitelyTyped
     "rules": {
         "semicolon": false,
         "indent": [true, "tabs"]
