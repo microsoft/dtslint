@@ -306,8 +306,8 @@ function getExpectTypeFailures(
 }
 
 function getNodeForExpectType(node: TsType.Node, ts: typeof TsType): TsType.Node {
-	if (ts.isVariableStatement(node)) {
-		const { declarationList: { declarations } } = node;
+	if (node.kind === ts.SyntaxKind.VariableStatement) { // ts2.0 doesn't have `isVariableStatement`
+		const { declarationList: { declarations } } = node as TsType.VariableStatement;
 		if (declarations.length === 1) {
 			const { initializer } = declarations[0];
 			if (initializer) {
