@@ -9,22 +9,7 @@ export async function checkPackageJson(dirPath: string): Promise<void> {
 	if (!await exists(pkgJsonPath)) {
 		return;
 	}
-	const pkgJson = await readJson(pkgJsonPath) as {};
-
-	if ((pkgJson as any).private !== true) {
-		throw new Error(`${pkgJsonPath} should set \`"private": true\``);
-	}
-	for (const key in pkgJson) { // tslint:disable-line forin
-		switch (key) {
-			case "private":
-			case "dependencies":
-			case "license":
-				// "private" checked above, "dependencies" / "license" checked by types-publisher
-				break;
-			default:
-				throw new Error(`${pkgJsonPath} should not include field ${key}`);
-		}
-	}
+	await readJson(pkgJsonPath);
 }
 
 export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void> {
