@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
 import { readFile } from "fs-promise";
-import { join as joinPaths } from "path";
+import { basename, dirname, join as joinPaths } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, installAll } from "./installer";
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
 					// which should be converted to   bla__foo
 					? arg.substr(1).replace("/", "__")
 					: arg;
-				dirPath = dirPath === undefined ? path : joinPaths(dirPath, path);
+				dirPath = joinPaths(dirPath, path);
 		}
 	}
 
@@ -59,7 +59,12 @@ function usage(): void {
 
 async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void> {
 	const text = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
+	// If this *is* on DefinitelyTyped, types-publisher will fail if it can't parse the header.
 	const dt = text.includes("// Type definitions for");
+	if (dt) {
+		// Someone may have copied text from DefinitelyTyped to their type definition and included a header, so assert that we're really on DefinitelyTyped.
+		assertPathIsInDefinitelyTyped(dirPath);
+	}
 	const minVersion = getTypeScriptVersion(text);
 
 	await checkTslintJson(dirPath, dt);
@@ -70,6 +75,15 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 	const err = await test(dirPath, minVersion, onlyTestTsNext);
 	if (err) {
 		throw new Error(err);
+	}
+}
+
+function assertPathIsInDefinitelyTyped(dirPath: string): void {
+	const types = dirname(dirPath);
+	const dt = dirname(types);
+	if (basename(dt) !== "DefinitelyTyped" || basename(types) !== "types") {
+		throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), assumed this was a DefinitelyTyped package.\n" +
+			"But it is not in a `DefinitelyTyped/types/xxx` directory.");
 	}
 }
 
