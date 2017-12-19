@@ -62,7 +62,8 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 	// If this *is* on DefinitelyTyped, types-publisher will fail if it can't parse the header.
 	const dt = text.includes("// Type definitions for");
 	if (dt) {
-		// Someone may have copied text from DefinitelyTyped to their type definition and included a header, so assert that we're really on DefinitelyTyped.
+		// Someone may have copied text from DefinitelyTyped to their type definition and included a header,
+		// so assert that we're really on DefinitelyTyped.
 		assertPathIsInDefinitelyTyped(dirPath);
 	}
 	const minVersion = getTypeScriptVersion(text);
@@ -79,11 +80,13 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 }
 
 function assertPathIsInDefinitelyTyped(dirPath: string): void {
-	const types = dirname(dirPath);
+	const parent = dirname(dirPath);
+	const types = /v\d+/.test(basename(dirPath)) ? dirname(parent) : parent;
 	const dt = dirname(types);
 	if (basename(dt) !== "DefinitelyTyped" || basename(types) !== "types") {
-		throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), assumed this was a DefinitelyTyped package.\n" +
-			"But it is not in a `DefinitelyTyped/types/xxx` directory.");
+		throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), "
+			+ "assumed this was a DefinitelyTyped package.\n"
+			+ "But it is not in a `DefinitelyTyped/types/xxx` directory.");
 	}
 }
 
