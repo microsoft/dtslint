@@ -20,6 +20,7 @@ function main() {
         const args = process.argv.slice(2);
         let dirPath = process.cwd();
         let onlyTestTsNext = false;
+        let shouldListen = false;
         for (const arg of args) {
             switch (arg) {
                 case "--installAll":
@@ -33,6 +34,11 @@ function main() {
                 case "--onlyTestTsNext":
                     onlyTestTsNext = true;
                     break;
+                // Only for use by types-publisher.
+                // Listens for { path, onlyTestTsNext } messages and ouputs { path, status }.
+                case "--listen":
+                    shouldListen = true;
+                    break;
                 default:
                     if (arg.startsWith("--")) {
                         console.error(`Unknown option '${arg}'`);
@@ -44,36 +50,67 @@ function main() {
                         // which should be converted to   bla__foo
                         ? arg.substr(1).replace("/", "__")
                         : arg;
-                    dirPath = dirPath === undefined ? path : path_1.join(dirPath, path);
+                    dirPath = path_1.join(dirPath, path);
             }
         }
         yield installer_1.installAll();
-        yield runTests(dirPath, onlyTestTsNext);
+        if (shouldListen) {
+            listen(dirPath);
+        }
+        else {
+            yield runTests(dirPath, onlyTestTsNext);
+        }
     });
 }
 function usage() {
-    console.error("Usage: dtslint [--version] [--noLint] [--installAll]");
+    console.error("Usage: dtslint [--version] [--installAll]");
     console.error("Args:");
     console.error("  --version        Print version and exit.");
-    console.error("  --noLint         Just run 'tsc'. (Not recommended.)");
     console.error("  --installAll     Cleans and installs all TypeScript versions.");
     console.error("  --onlyTestTsNext Only run with `typescript@next`, not with the minimum version.");
+}
+function listen(dirPath) {
+    process.on("message", (message) => {
+        const { path, onlyTestTsNext } = message;
+        runTests(path_1.join(dirPath, path), onlyTestTsNext)
+            .catch(e => e.stack)
+            .then(maybeError => {
+            process.send({ path, status: maybeError === undefined ? "OK" : maybeError });
+        })
+            .catch(e => console.error(e.stack));
+    });
 }
 function runTests(dirPath, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
         const text = yield fs_promise_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
+        // If this *is* on DefinitelyTyped, types-publisher will fail if it can't parse the header.
         const dt = text.includes("// Type definitions for");
+        if (dt) {
+            // Someone may have copied text from DefinitelyTyped to their type definition and included a header,
+            // so assert that we're really on DefinitelyTyped.
+            assertPathIsInDefinitelyTyped(dirPath);
+        }
         const minVersion = getTypeScriptVersion(text);
         yield lint_1.checkTslintJson(dirPath, dt);
         if (dt) {
             yield checks_1.checkPackageJson(dirPath);
         }
         yield checks_1.checkTsconfig(dirPath, dt);
-        const err = yield test(dirPath, minVersion, onlyTestTsNext);
+        const err = yield lint_1.lint(dirPath, minVersion, onlyTestTsNext);
         if (err) {
             throw new Error(err);
         }
     });
+}
+function assertPathIsInDefinitelyTyped(dirPath) {
+    const parent = path_1.dirname(dirPath);
+    const types = /v\d+/.test(path_1.basename(dirPath)) ? path_1.dirname(parent) : parent;
+    const dt = path_1.dirname(types);
+    if (path_1.basename(dt) !== "DefinitelyTyped" || path_1.basename(types) !== "types") {
+        throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), "
+            + "assumed this was a DefinitelyTyped package.\n"
+            + "But it is not in a `DefinitelyTyped/types/xxx` directory.");
+    }
 }
 function getTypeScriptVersion(text) {
     const searchString = "// TypeScript Version: ";
@@ -86,11 +123,6 @@ function getTypeScriptVersion(text) {
         line = line.slice(0, line.length - 1);
     }
     return definitelytyped_header_parser_1.parseTypeScriptVersionLine(line);
-}
-function test(dirPath, minVersion, onlyTestTsNext) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return lint_1.lint(dirPath, minVersion, onlyTestTsNext);
-    });
 }
 if (!module.parent) {
     main().catch(err => {

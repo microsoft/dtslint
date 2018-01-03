@@ -25,7 +25,8 @@ function checkPackageJson(dirPath) {
             switch (key) {
                 case "private":
                 case "dependencies":
-                    // "private" checked above, "dependencies" checked by types-publisher
+                case "license":
+                    // "private" checked above, "dependencies" / "license" checked by types-publisher
                     break;
                 default:
                     throw new Error(`${pkgJsonPath} should not include field ${key}`);
