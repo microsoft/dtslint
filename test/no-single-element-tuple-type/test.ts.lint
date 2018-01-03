@@ -1,0 +1,5 @@
+const x: [string];
+         ~~~~~~~~ [0]
+const y: [string, number];
+
+[0]: Type [T] is a single-element tuple type. You probably meant T[]. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-single-element-tuple-type.md

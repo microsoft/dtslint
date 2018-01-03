@@ -32,7 +32,7 @@ Checks the format of DefinitelyTyped header comments.
 **Good**:
 
 ```ts
-// Definitions by: My Name <https://github.com/myname>`
+// Definitions by: My Name <https://github.com/myname>
 ```
 
 * Prefer a GitHub username, not a personal web site.
