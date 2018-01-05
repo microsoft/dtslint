@@ -104,7 +104,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 
 function assertPathIsInDefinitelyTyped(dirPath: string): void {
 	const parent = dirname(dirPath);
-	const types = /v\d+/.test(basename(dirPath)) ? dirname(parent) : parent;
+	const types = /^v\d+$/.test(basename(dirPath)) ? dirname(parent) : parent;
 	const dt = dirname(types);
 	if (basename(dt) !== "DefinitelyTyped" || basename(types) !== "types") {
 		throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), "
