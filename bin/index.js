@@ -104,7 +104,7 @@ function runTests(dirPath, onlyTestTsNext) {
 }
 function assertPathIsInDefinitelyTyped(dirPath) {
     const parent = path_1.dirname(dirPath);
-    const types = /v\d+/.test(path_1.basename(dirPath)) ? path_1.dirname(parent) : parent;
+    const types = /^v\d+$/.test(path_1.basename(dirPath)) ? path_1.dirname(parent) : parent;
     const dt = path_1.dirname(types);
     if (path_1.basename(dt) !== "DefinitelyTyped" || path_1.basename(types) !== "types") {
         throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), "
