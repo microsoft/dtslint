@@ -21,7 +21,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 		"File has no content.");
 
 	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		if (sourceFile.statements.length) {
+		if (sourceFile.statements.length + sourceFile.referencedFiles.length + sourceFile.typeReferenceDirectives.length !== 0) {
 			return [];
 		}
 
