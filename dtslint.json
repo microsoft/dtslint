@@ -83,6 +83,7 @@
 		"max-file-line-count": false,
 		"member-ordering": false,
 		"newline-before-return": false,
+		"newline-per-chained-call": false,
 		"no-angle-bracket-type-assertion": false,
 		"no-bitwise": false,
 		"no-console": false,
