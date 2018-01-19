@@ -6,6 +6,7 @@
 		"expect": true,
 		"export-just-namespace": true,
 		"no-bad-reference": true,
+		"no-const-enum": true,
 		"no-dead-reference": true,
 		"no-padding": true,
 		"no-redundant-undefined": true,
