@@ -20,7 +20,7 @@ for (const testName of tests) {
 
 function testSingle(testDirectory) {
     const result = runTest(testDirectory);
-    if (!consoleTestResultHandler(result)) {
+    if (!consoleTestResultHandler(result, /*logger*/ console)) {
         process.exit(1);
     }
 }
