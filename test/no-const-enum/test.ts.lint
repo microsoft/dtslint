@@ -1,0 +1,7 @@
+const enum E {
+           ~ [0]
+}
+
+enum F {}
+
+[0]: Use of `const enum`s is forbidden. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-const-enum.md
