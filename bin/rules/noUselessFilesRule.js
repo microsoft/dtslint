@@ -6,7 +6,8 @@ const util_1 = require("../util");
 // Remove when that PR is in.
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
-        if (sourceFile.statements.length + sourceFile.referencedFiles.length + sourceFile.typeReferenceDirectives.length !== 0) {
+        const { statements, referencedFiles, typeReferenceDirectives } = sourceFile;
+        if (statements.length + referencedFiles.length + typeReferenceDirectives.length !== 0) {
             return [];
         }
         return [new Lint.RuleFailure(sourceFile, 0, 1, Rule.FAILURE_STRING, this.ruleName)];
