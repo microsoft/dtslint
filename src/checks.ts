@@ -44,6 +44,7 @@ export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void>
 			module: "commonjs",
 			noEmit: true,
 			forceConsistentCasingInFileNames: true,
+			esModuleInterop: true,
 			baseUrl,
 			typeRoots: [baseUrl],
 			types: [],
