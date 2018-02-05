@@ -50,6 +50,7 @@ function checkTsconfig(dirPath, dt) {
                 module: "commonjs",
                 noEmit: true,
                 forceConsistentCasingInFileNames: true,
+                esModuleInterop: true,
                 baseUrl,
                 typeRoots: [baseUrl],
                 types: [],
