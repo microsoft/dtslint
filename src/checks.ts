@@ -44,7 +44,6 @@ export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void>
 			module: "commonjs",
 			noEmit: true,
 			forceConsistentCasingInFileNames: true,
-			esModuleInterop: true,
 			baseUrl,
 			typeRoots: [baseUrl],
 			types: [],
@@ -65,6 +64,9 @@ export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void>
 				case "noImplicitThis":
 				case "strictNullChecks":
 				case "strictFunctionTypes":
+				case "esModuleInterop":
+				case "allowSyntheticDefaultImports":
+					// Allow any value
 					break;
 				case "target":
 				case "paths":
