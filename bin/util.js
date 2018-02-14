@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_promise_1 = require("fs-promise");
 const path_1 = require("path");
 const stripJsonComments = require("strip-json-comments");
+const ts = require("typescript");
 function readJson(path) {
     return __awaiter(this, void 0, void 0, function* () {
         const text = yield fs_promise_1.readFile(path, "utf-8");
@@ -35,4 +36,34 @@ function getCommonDirectoryName(files) {
     return path_1.basename(minDir);
 }
 exports.getCommonDirectoryName = getCommonDirectoryName;
+function eachModuleStatement(sourceFile, action) {
+    if (!sourceFile.isDeclarationFile) {
+        return;
+    }
+    for (const node of sourceFile.statements) {
+        if (ts.isModuleDeclaration(node)) {
+            const statements = getModuleDeclarationStatements(node);
+            if (statements) {
+                for (const statement of statements) {
+                    action(statement);
+                }
+            }
+        }
+        else {
+            action(node);
+        }
+    }
+}
+exports.eachModuleStatement = eachModuleStatement;
+function getModuleDeclarationStatements(node) {
+    let { body } = node;
+    if (!body) {
+        return undefined;
+    }
+    while (body.kind === ts.SyntaxKind.ModuleDeclaration) {
+        body = body.body;
+    }
+    return ts.isModuleBlock(body) ? body.statements : undefined;
+}
+exports.getModuleDeclarationStatements = getModuleDeclarationStatements;
 //# sourceMappingURL=util.js.map

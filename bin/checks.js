@@ -50,7 +50,6 @@ function checkTsconfig(dirPath, dt) {
                 module: "commonjs",
                 noEmit: true,
                 forceConsistentCasingInFileNames: true,
-                esModuleInterop: true,
                 baseUrl,
                 typeRoots: [baseUrl],
                 types: [],
@@ -69,6 +68,9 @@ function checkTsconfig(dirPath, dt) {
                     case "noImplicitThis":
                     case "strictNullChecks":
                     case "strictFunctionTypes":
+                    case "esModuleInterop":
+                    case "allowSyntheticDefaultImports":
+                        // Allow any value
                         break;
                     case "target":
                     case "paths":
