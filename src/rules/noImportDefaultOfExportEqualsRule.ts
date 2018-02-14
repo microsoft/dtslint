@@ -26,7 +26,6 @@ export class Rule extends Lint.Rules.TypedRule {
 
 function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
 	eachModuleStatement(ctx.sourceFile, statement => {
-		console.log("!", statement.getText());
 		if (!ts.isImportDeclaration(statement)) {
 			return;
 		}
