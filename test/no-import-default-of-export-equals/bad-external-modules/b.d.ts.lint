@@ -1,0 +1,4 @@
+import D from "./a";
+       ~ [0]
+
+[0]: The module "./a" uses `export = `. Import with `import D = require("./a")`. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-import-default-of-export-equals.md
