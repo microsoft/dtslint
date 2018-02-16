@@ -1,0 +1,6 @@
+{
+  "rulesDirectory": ["../../../bin/rules"],
+  "rules": {
+    "no-import-default-of-export-equals": true
+  }
+}
