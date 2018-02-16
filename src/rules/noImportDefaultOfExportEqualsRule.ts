@@ -36,7 +36,7 @@ function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
 		const sym = checker.getSymbolAtLocation(statement.moduleSpecifier);
 		if (sym && sym.declarations && sym.declarations.some(d => {
 			const statements = getStatements(d);
-			return statements !== undefined && statements.some(ts.isExportAssignment);
+			return statements !== undefined && statements.some(s => ts.isExportAssignment(s) && !!s.isExportEquals);
 		})) {
 			ctx.addFailureAtNode(defaultName, Rule.FAILURE_STRING(defaultName.text, statement.moduleSpecifier.getText()));
 		}
