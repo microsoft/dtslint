@@ -111,6 +111,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
 function removeTag(tag: ts.JSDocTag, sourceFile: ts.SourceFile): Lint.Replacement | undefined {
 	const { text } = sourceFile;
 	const jsdoc = tag.parent;
+	if (jsdoc.kind === ts.SyntaxKind.JSDocTypeLiteral) {
+		return undefined;
+	}
+
 	if (jsdoc.comment === undefined && jsdoc.tags!.length === 1) {
 		// This is the only tag -- remove the whole comment
 		return Lint.Replacement.deleteFromTo(jsdoc.getStart(sourceFile), jsdoc.getEnd());
