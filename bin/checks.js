@@ -21,7 +21,7 @@ function checkPackageJson(dirPath) {
         if (pkgJson.private !== true) {
             throw new Error(`${pkgJsonPath} should set \`"private": true\``);
         }
-        for (const key in pkgJson) {
+        for (const key in pkgJson) { // tslint:disable-line forin
             switch (key) {
                 case "private":
                 case "dependencies":
@@ -61,7 +61,7 @@ function checkTsconfig(dirPath, dt) {
                     throw new Error(`Expected compilerOptions[${JSON.stringify(key)}] === ${JSON.stringify(expected)}`);
                 }
             }
-            for (const key in options) {
+            for (const key in options) { // tslint:disable-line forin
                 switch (key) {
                     case "lib":
                     case "noImplicitAny":
