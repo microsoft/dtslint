@@ -1,4 +1,4 @@
-import { readFile } from "fs-promise";
+import { readFile } from "fs-extra";
 import { basename, dirname } from "path";
 import stripJsonComments = require("strip-json-comments");
 import * as ts from "typescript";
