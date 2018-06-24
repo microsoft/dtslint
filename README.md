@@ -39,6 +39,7 @@ Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-
         "noImplicitAny": true,
         "noImplicitThis": true,
         "strictNullChecks": true,
+        "strictFunctionTypes": true,
         "noEmit": true,
 
         // If the library is an external module (uses `export`), this allows your test file to import "mylib" instead of "./index".
