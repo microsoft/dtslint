@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import { TypeScriptVersion } from "definitelytyped-header-parser";
-import * as fsp from "fs-promise";
+import * as fs from "fs-extra";
 import * as path from "path";
 
 const installsDir = path.join(__dirname, "..", "typescript-installs");
@@ -14,17 +14,17 @@ export async function installAll() {
 
 async function install(version: TypeScriptVersion | "next"): Promise<void> {
 	const dir = installDir(version);
-	if (!await fsp.existsSync(dir)) {
+	if (!await fs.pathExists(dir)) {
 		console.log(`Installing to ${dir}...`);
-		await fsp.mkdirp(dir);
-		await fsp.writeJson(path.join(dir, "package.json"), packageJson(version));
+		await fs.mkdirp(dir);
+		await fs.writeJson(path.join(dir, "package.json"), packageJson(version));
 		await execAndThrowErrors("npm install --ignore-scripts --no-shrinkwrap --no-package-lock --no-bin-links", dir);
 		console.log("Installed!");
 	}
 }
 
 export function cleanInstalls(): Promise<void> {
-	return fsp.remove(installsDir);
+	return fs.remove(installsDir);
 }
 
 export function typeScriptPath(version: TypeScriptVersion | "next"): string {

@@ -1,5 +1,5 @@
 import { TypeScriptVersion } from "definitelytyped-header-parser";
-import { exists, readFile } from "fs-promise";
+import { pathExists, readFile } from "fs-extra";
 import { join as joinPaths } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
 type Configuration = typeof Configuration;
@@ -67,7 +67,7 @@ function testNoTslintDisables(text: string): Err | undefined {
 export async function checkTslintJson(dirPath: string, dt: boolean): Promise<void> {
 	const configPath = getConfigPath(dirPath);
 	const shouldExtend = `dtslint/${dt ? "dt" : "dtslint"}.json`;
-	if (!await exists(configPath)) {
+	if (!await pathExists(configPath)) {
 		if (dt) {
 			throw new Error(
 				`On DefinitelyTyped, must include \`tslint.json\` containing \`{ "extends": "${shouldExtend}" }\`.\n` +
@@ -92,7 +92,8 @@ async function getLintConfig(
 	minVersion: TypeScriptVersion,
 	onlyTestTsNext: boolean,
 ): Promise<IConfigurationFile> {
-	const configPath = await exists(expectedConfigPath) ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
+	const configExists = await pathExists(expectedConfigPath);
+	const configPath = configExists ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
 	// Second param to `findConfiguration` doesn't matter, since config path is provided.
 	const config = Configuration.findConfiguration(configPath, "").results;
 	if (!config) {
