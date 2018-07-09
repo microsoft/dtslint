@@ -8,13 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_promise_1 = require("fs-promise");
+const fs_extra_1 = require("fs-extra");
 const path = require("path");
 const util_1 = require("./util");
 function checkPackageJson(dirPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const pkgJsonPath = path.join(dirPath, "package.json");
-        if (!(yield fs_promise_1.exists(pkgJsonPath))) {
+        if (!(yield fs_extra_1.pathExists(pkgJsonPath))) {
             return;
         }
         const pkgJson = yield util_1.readJson(pkgJsonPath);
@@ -38,7 +38,7 @@ exports.checkPackageJson = checkPackageJson;
 function checkTsconfig(dirPath, dt) {
     return __awaiter(this, void 0, void 0, function* () {
         const tsconfigPath = path.join(dirPath, "tsconfig.json");
-        if (!(yield fs_promise_1.exists(tsconfigPath))) {
+        if (!(yield fs_extra_1.pathExists(tsconfigPath))) {
             throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
         }
         const tsconfig = yield util_1.readJson(tsconfigPath);

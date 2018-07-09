@@ -8,13 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_promise_1 = require("fs-promise");
+const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const stripJsonComments = require("strip-json-comments");
 const ts = require("typescript");
 function readJson(path) {
     return __awaiter(this, void 0, void 0, function* () {
-        const text = yield fs_promise_1.readFile(path, "utf-8");
+        const text = yield fs_extra_1.readFile(path, "utf-8");
         return JSON.parse(stripJsonComments(text));
     });
 }
@@ -57,13 +57,10 @@ function eachModuleStatement(sourceFile, action) {
 exports.eachModuleStatement = eachModuleStatement;
 function getModuleDeclarationStatements(node) {
     let { body } = node;
-    if (!body) {
-        return undefined;
-    }
-    while (body.kind === ts.SyntaxKind.ModuleDeclaration) {
+    while (body && body.kind === ts.SyntaxKind.ModuleDeclaration) {
         body = body.body;
     }
-    return ts.isModuleBlock(body) ? body.statements : undefined;
+    return body && ts.isModuleBlock(body) ? body.statements : undefined;
 }
 exports.getModuleDeclarationStatements = getModuleDeclarationStatements;
 //# sourceMappingURL=util.js.map

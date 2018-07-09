@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
-const fs_promise_1 = require("fs-promise");
+const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const checks_1 = require("./checks");
 const installer_1 = require("./installer");
@@ -82,7 +82,7 @@ function listen(dirPath) {
 }
 function runTests(dirPath, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
-        const text = yield fs_promise_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
+        const text = yield fs_extra_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
         // If this *is* on DefinitelyTyped, types-publisher will fail if it can't parse the header.
         const dt = text.includes("// Type definitions for");
         if (dt) {

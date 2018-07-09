@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
-const fs_promise_1 = require("fs-promise");
+const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const tslint_1 = require("tslint");
 const installer_1 = require("./installer");
@@ -26,7 +26,7 @@ function lint(dirPath, minVersion, onlyTestTsNext) {
         const linter = new tslint_1.Linter(lintOptions, program);
         const config = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion, onlyTestTsNext);
         for (const filename of program.getRootFileNames()) {
-            const contents = yield fs_promise_1.readFile(filename, "utf-8");
+            const contents = yield fs_extra_1.readFile(filename, "utf-8");
             const err = testNoTsIgnore(contents) || testNoTslintDisables(contents);
             if (err) {
                 const { pos, message } = err;
@@ -65,7 +65,7 @@ function checkTslintJson(dirPath, dt) {
     return __awaiter(this, void 0, void 0, function* () {
         const configPath = getConfigPath(dirPath);
         const shouldExtend = `dtslint/${dt ? "dt" : "dtslint"}.json`;
-        if (!(yield fs_promise_1.exists(configPath))) {
+        if (!(yield fs_extra_1.pathExists(configPath))) {
             if (dt) {
                 throw new Error(`On DefinitelyTyped, must include \`tslint.json\` containing \`{ "extends": "${shouldExtend}" }\`.\n` +
                     "This was inferred as a DefinitelyTyped package because it contains a `// Type definitions for` header.");
@@ -84,7 +84,8 @@ function getConfigPath(dirPath) {
 }
 function getLintConfig(expectedConfigPath, tsconfigPath, minVersion, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
-        const configPath = (yield fs_promise_1.exists(expectedConfigPath)) ? expectedConfigPath : path_1.join(__dirname, "..", "dtslint.json");
+        const configExists = yield fs_extra_1.pathExists(expectedConfigPath);
+        const configPath = configExists ? expectedConfigPath : path_1.join(__dirname, "..", "dtslint.json");
         // Second param to `findConfiguration` doesn't matter, since config path is provided.
         const config = tslint_1.Configuration.findConfiguration(configPath, "").results;
         if (!config) {

@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const child_process_1 = require("child_process");
 const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
-const fsp = require("fs-promise");
+const fs = require("fs-extra");
 const path = require("path");
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 function installAll() {
@@ -25,17 +25,17 @@ exports.installAll = installAll;
 function install(version) {
     return __awaiter(this, void 0, void 0, function* () {
         const dir = installDir(version);
-        if (!(yield fsp.existsSync(dir))) {
+        if (!(yield fs.pathExists(dir))) {
             console.log(`Installing to ${dir}...`);
-            yield fsp.mkdirp(dir);
-            yield fsp.writeJson(path.join(dir, "package.json"), packageJson(version));
+            yield fs.mkdirp(dir);
+            yield fs.writeJson(path.join(dir, "package.json"), packageJson(version));
             yield execAndThrowErrors("npm install --ignore-scripts --no-shrinkwrap --no-package-lock --no-bin-links", dir);
             console.log("Installed!");
         }
     });
 }
 function cleanInstalls() {
-    return fsp.remove(installsDir);
+    return fs.remove(installsDir);
 }
 exports.cleanInstalls = cleanInstalls;
 function typeScriptPath(version) {
