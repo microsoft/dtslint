@@ -46,11 +46,8 @@ export function eachModuleStatement(sourceFile: ts.SourceFile, action: (statemen
 
 export function getModuleDeclarationStatements(node: ts.ModuleDeclaration): ReadonlyArray<ts.Statement> | undefined {
 	let { body } = node;
-	if (!body) {
-		return undefined;
-	}
-	while (body.kind === ts.SyntaxKind.ModuleDeclaration) {
+	while (body && body.kind === ts.SyntaxKind.ModuleDeclaration) {
 		body = body.body;
 	}
-	return ts.isModuleBlock(body) ? body.statements : undefined;
+	return body && ts.isModuleBlock(body) ? body.statements : undefined;
 }
