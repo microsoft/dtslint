@@ -292,7 +292,9 @@ function getExpectTypeFailures(
 
 			const type = checker.getTypeAtLocation(getNodeForExpectType(node, ts));
 
-			const actual = type ? checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation) : "";
+			const actual = type
+				? checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation)
+				: "";
 			if (actual !== expected) {
 				unmetExpectations.push({ node, expected, actual });
 			}
