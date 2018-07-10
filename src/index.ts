@@ -51,11 +51,12 @@ async function main(): Promise<void> {
 		}
 	}
 
-	await installAll();
-
 	if (shouldListen) {
 		listen(dirPath);
+		// Do this *after* to ensure messages sent during installation aren't dropped.
+		await installAll();
 	} else {
+		await installAll();
 		await runTests(dirPath, onlyTestTsNext);
 	}
 }
