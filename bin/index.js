@@ -53,11 +53,13 @@ function main() {
                     dirPath = path_1.join(dirPath, path);
             }
         }
-        yield installer_1.installAll();
         if (shouldListen) {
             listen(dirPath);
+            // Do this *after* to ensure messages sent during installation aren't dropped.
+            yield installer_1.installAll();
         }
         else {
+            yield installer_1.installAll();
             yield runTests(dirPath, onlyTestTsNext);
         }
     });
