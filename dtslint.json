@@ -78,6 +78,7 @@
 		"curly": false,
 		"cyclomatic-complexity": false,
 		"deprecation": false,
+		"file-name-casing": false,
 		"forin": false,
 		"indent": false,
 		"match-default-export-name": false,
