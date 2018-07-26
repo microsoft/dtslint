@@ -73,6 +73,7 @@ function walk(ctx) {
             case ts.SyntaxKind.JSDocTypedefTag:
             case ts.SyntaxKind.JSDocPropertyTag:
             case ts.SyntaxKind.JSDocAugmentsTag:
+            case ts.SyntaxKind.JSDocCallbackTag:
                 // Always redundant
                 ctx.addFailureAtNode(tag.tagName, Rule.FAILURE_STRING_REDUNDANT_TAG(tag.tagName.text), removeTag(tag, sourceFile));
                 break;
