@@ -1,8 +1,8 @@
 import assert = require("assert");
-import { existsSync, readFileSync } from "fs";
-import { dirname, resolve as resolvePath } from "path";
 import * as Lint from "tslint";
 import * as TsType from "typescript";
+
+import { readAndParseConfig } from "../util";
 
 type Program = TsType.Program;
 type SourceFile = TsType.SourceFile;
@@ -100,17 +100,9 @@ function getProgram(configFile: string, ts: typeof TsType, versionName: string, 
 }
 
 function createProgram(configFile: string, ts: typeof TsType): Program {
-	const projectDirectory = dirname(configFile);
-	const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
-	const parseConfigHost: TsType.ParseConfigHost = {
-		fileExists: existsSync,
-		readDirectory: ts.sys.readDirectory,
-		readFile: file => readFileSync(file, "utf8"),
-		useCaseSensitiveFileNames: true,
-	};
-	const parsed = ts.parseJsonConfigFileContent(config, parseConfigHost, resolvePath(projectDirectory), {noEmit: true});
-	const host = ts.createCompilerHost(parsed.options, true);
-	return ts.createProgram(parsed.fileNames, parsed.options, host);
+	const { fileNames, options} = readAndParseConfig(configFile, ts);
+	const host = ts.createCompilerHost(options, true);
+	return ts.createProgram(fileNames, options, host);
 }
 
 function walk(

@@ -1,5 +1,5 @@
-import { pathExists, readFile } from "fs-extra";
-import { basename, dirname, join } from "path";
+import { existsSync, pathExistsSync, readFile, readFileSync } from "fs-extra";
+import { basename, dirname, join as joinPath, resolve as resolvePath } from "path";
 import stripJsonComments = require("strip-json-comments");
 import * as ts from "typescript";
 
@@ -52,10 +52,54 @@ export function getModuleDeclarationStatements(node: ts.ModuleDeclaration): Read
 	return body && ts.isModuleBlock(body) ? body.statements : undefined;
 }
 
-export async function getCompilerOptions(dirPath: string): Promise<ts.CompilerOptions> {
-	const tsconfigPath = join(dirPath, "tsconfig.json");
-	if (!await pathExists(tsconfigPath)) {
+/**
+ * @param tsconfigPath
+ * @param tsType an implemention of ts i.e. some version of it
+ * @param formatDiagnosticHost if provided fails with Diagnostics support otherwise might silently ignore errors
+ */
+export function readAndParseConfig(
+	tsconfigPath: string,
+	tsType: typeof ts,
+	formatDiagnosticHost?: ts.FormatDiagnosticsHost,
+) {
+	const dirPath = dirname(tsconfigPath);
+	const { config, error } = tsType.readConfigFile(tsconfigPath, tsType.sys.readFile);
+	if (error != null && formatDiagnosticHost != null) {
+		throw new Error(tsType.formatDiagnostic(error, formatDiagnosticHost));
+	}
+
+	const parseConfigHost: ts.ParseConfigHost = {
+		fileExists: existsSync,
+		readDirectory: tsType.sys.readDirectory,
+		readFile: file => readFileSync(file, "utf8"),
+		useCaseSensitiveFileNames: true,
+	};
+
+	const { errors, ...rest } = tsType.parseJsonConfigFileContent(
+		config,
+		parseConfigHost,
+		resolvePath(dirPath),
+	);
+	if (errors.length > 0 && formatDiagnosticHost) {
+		throw new Error(tsType.formatDiagnostics(errors, formatDiagnosticHost));
+	}
+
+	return rest;
+}
+
+export function getCompilerOptions(dirPath: string): ts.CompilerOptions {
+	const tsconfigPath = joinPath(dirPath, "tsconfig.json");
+
+	const formatDiagnosticHost: ts.FormatDiagnosticsHost = {
+		getCanonicalFileName: (fileName: string) => fileName,
+		getCurrentDirectory: ts.sys.getCurrentDirectory,
+		getNewLine: () => "\n",
+	};
+
+	if (!pathExistsSync(tsconfigPath)) {
 		throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
 	}
-	return (await readJson(tsconfigPath)).compilerOptions;
+
+	const { options } = readAndParseConfig(tsconfigPath, ts, formatDiagnosticHost);
+	return options;
 }

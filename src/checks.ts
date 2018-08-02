@@ -1,5 +1,6 @@
 import { pathExists } from "fs-extra";
 import * as path from "path";
+import * as ts from "typescript";
 
 import { getCompilerOptions, readJson } from "./util";
 
@@ -27,14 +28,14 @@ export async function checkPackageJson(dirPath: string): Promise<void> {
 }
 
 export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void> {
-	const options = await getCompilerOptions(dirPath);
+	const options = getCompilerOptions(dirPath);
 
 	if (dt) {
 		const isOlderVersion = /^v\d+$/.test(path.basename(dirPath));
-		const baseUrl = isOlderVersion ? "../../" : "../";
+		const baseUrl = path.join(dirPath, isOlderVersion ? "../../" : "../");
 
 		const mustHave = {
-			module: "commonjs",
+			module: ts.ModuleKind.CommonJS,
 			noEmit: true,
 			forceConsistentCasingInFileNames: true,
 			baseUrl,
@@ -68,6 +69,10 @@ export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void>
 				case "noUnusedLocals":
 				case "noUnusedParameters":
 					// OK. "paths" checked further by types-publisher
+					break;
+				case "configFilePath":
+					// meta data from typescript, will be rejected by typescript if
+					// actually present in the tsconfig
 					break;
 				default:
 					if (!(key in mustHave)) {
