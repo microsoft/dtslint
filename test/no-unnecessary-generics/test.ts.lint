@@ -23,7 +23,7 @@ const f = function<T>(): T {};
 const f2 = <T>(): T => {};
                   ~ [0]
 
-function f<T>(): void;
+function f<T>(x: { T: number }): void;
            ~ [Type parameter T is never used. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-unnecessary-generics.md]
 
 function f<T, U extends T>(u: U): U;
