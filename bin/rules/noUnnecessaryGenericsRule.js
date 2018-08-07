@@ -3,15 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
 const ts = require("typescript");
 const util_1 = require("../util");
-class Rule extends Lint.Rules.AbstractRule {
+class Rule extends Lint.Rules.TypedRule {
     static FAILURE_STRING(typeParameter) {
         return util_1.failure(Rule.metadata.ruleName, `Type parameter ${typeParameter} is used only once.`);
     }
     static FAILURE_STRING_NEVER(typeParameter) {
         return util_1.failure(Rule.metadata.ruleName, `Type parameter ${typeParameter} is never used.`);
     }
-    apply(sourceFile) {
-        return this.applyWithFunction(sourceFile, walk);
+    applyWithProgram(sourceFile, program) {
+        return this.applyWithFunction(sourceFile, ctx => walk(ctx, program.getTypeChecker()));
     }
 }
 Rule.metadata = {
@@ -23,7 +23,7 @@ Rule.metadata = {
     typescriptOnly: true,
 };
 exports.Rule = Rule;
-function walk(ctx) {
+function walk(ctx, checker) {
     const { sourceFile } = ctx;
     sourceFile.forEachChild(function cb(node) {
         if (ts.isFunctionLike(node)) {
@@ -37,7 +37,7 @@ function walk(ctx) {
         }
         for (const tp of sig.typeParameters) {
             const typeParameter = tp.name.text;
-            const res = getSoleUse(sig, typeParameter);
+            const res = getSoleUse(sig, assertDefined(checker.getSymbolAtLocation(tp.name)), checker);
             switch (res.type) {
                 case "ok":
                     break;
@@ -53,7 +53,7 @@ function walk(ctx) {
         }
     }
 }
-function getSoleUse(sig, typeParameter) {
+function getSoleUse(sig, typeParameterSymbol, checker) {
     const exit = {};
     let soleUse;
     try {
@@ -82,7 +82,7 @@ function getSoleUse(sig, typeParameter) {
     return soleUse ? { type: "sole", soleUse } : { type: "never" };
     function recur(node) {
         if (ts.isIdentifier(node)) {
-            if (node.text === typeParameter) {
+            if (checker.getSymbolAtLocation(node) === typeParameterSymbol) {
                 if (soleUse === undefined) {
                     soleUse = node;
                 }
@@ -95,6 +95,12 @@ function getSoleUse(sig, typeParameter) {
             node.forEachChild(recur);
         }
     }
+}
+function assertDefined(value) {
+    if (value === undefined) {
+        throw new Error("unreachable");
+    }
+    return value;
 }
 function assertNever(_) {
     throw new Error("unreachable");

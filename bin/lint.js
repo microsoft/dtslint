@@ -54,8 +54,10 @@ function testNoTslintDisables(text) {
             return undefined;
         }
         const end = pos + tslintDisable.length;
-        if (text.charAt(end) !== "-") {
-            const message = "'tslint:disable' is forbidden. ('tslint:disable-line' and 'tslint:disable-next-line' are allowed.)";
+        const nextChar = text.charAt(end);
+        if (nextChar !== "-" && nextChar !== ":") {
+            const message = "'tslint:disable' is forbidden. " +
+                "('tslint:disable:rulename', tslint:disable-line' and 'tslint:disable-next-line' are allowed.)";
             return { pos, message };
         }
         lastIndex = end;

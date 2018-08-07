@@ -37,12 +37,7 @@ function checkPackageJson(dirPath) {
 exports.checkPackageJson = checkPackageJson;
 function checkTsconfig(dirPath, dt) {
     return __awaiter(this, void 0, void 0, function* () {
-        const tsconfigPath = path.join(dirPath, "tsconfig.json");
-        if (!(yield fs_extra_1.pathExists(tsconfigPath))) {
-            throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
-        }
-        const tsconfig = yield util_1.readJson(tsconfigPath);
-        const options = tsconfig.compilerOptions;
+        const options = yield util_1.getCompilerOptions(dirPath);
         if (dt) {
             const isOlderVersion = /^v\d+$/.test(path.basename(dirPath));
             const baseUrl = isOlderVersion ? "../../" : "../";

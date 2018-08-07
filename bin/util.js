@@ -63,4 +63,14 @@ function getModuleDeclarationStatements(node) {
     return body && ts.isModuleBlock(body) ? body.statements : undefined;
 }
 exports.getModuleDeclarationStatements = getModuleDeclarationStatements;
+function getCompilerOptions(dirPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tsconfigPath = path_1.join(dirPath, "tsconfig.json");
+        if (!(yield fs_extra_1.pathExists(tsconfigPath))) {
+            throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
+        }
+        return (yield readJson(tsconfigPath)).compilerOptions;
+    });
+}
+exports.getCompilerOptions = getCompilerOptions;
 //# sourceMappingURL=util.js.map
