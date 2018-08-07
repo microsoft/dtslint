@@ -57,22 +57,5 @@ export async function getCompilerOptions(dirPath: string): Promise<ts.CompilerOp
 	if (!await pathExists(tsconfigPath)) {
 		throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
 	}
-
-	const formatDiagnosticHost: ts.FormatDiagnosticsHost = {
-		getCanonicalFileName: (fileName: string) => fileName,
-		getCurrentDirectory: ts.sys.getCurrentDirectory,
-		getNewLine: () => "\n",
-	};
-
-	const { config, error } = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
-	if (error != null) {
-		throw new Error(ts.formatDiagnostic(error, formatDiagnosticHost));
-	}
-
-	const { errors, options } = ts.parseJsonConfigFileContent(config, ts.sys, dirPath);
-	if (errors.length > 0) {
-		throw new Error(ts.formatDiagnostics(errors, formatDiagnosticHost));
-	}
-
-	return options;
+	return (await readJson(tsconfigPath)).compilerOptions;
 }
