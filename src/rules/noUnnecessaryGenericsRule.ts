@@ -3,7 +3,7 @@ import * as ts from "typescript";
 
 import { failure } from "../util";
 
-export class Rule extends Lint.Rules.AbstractRule {
+export class Rule extends Lint.Rules.TypedRule {
 	static metadata: Lint.IRuleMetadata = {
 		ruleName: "no-unnecessary-generics",
 		description: "Forbids signatures using a generic parameter only once.",
@@ -25,12 +25,12 @@ export class Rule extends Lint.Rules.AbstractRule {
 			`Type parameter ${typeParameter} is never used.`);
 	}
 
-	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		return this.applyWithFunction(sourceFile, walk);
+	applyWithProgram(sourceFile: ts.SourceFile, program: ts.Program): Lint.RuleFailure[] {
+		return this.applyWithFunction(sourceFile, ctx => walk(ctx, program.getTypeChecker()));
 	}
 }
 
-function walk(ctx: Lint.WalkContext<void>): void {
+function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
 	const { sourceFile } = ctx;
 	sourceFile.forEachChild(function cb(node) {
 		if (ts.isFunctionLike(node)) {
@@ -46,7 +46,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 
 		for (const tp of sig.typeParameters) {
 			const typeParameter = tp.name.text;
-			const res = getSoleUse(sig, typeParameter);
+			const res = getSoleUse(sig, assertDefined(checker.getSymbolAtLocation(tp.name)), checker);
 			switch (res.type) {
 				case "ok":
 					break;
@@ -66,7 +66,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 type Result =
 	| { type: "ok" | "never" }
 	| { type: "sole", soleUse: ts.Identifier };
-function getSoleUse(sig: ts.SignatureDeclaration, typeParameter: string): Result {
+function getSoleUse(sig: ts.SignatureDeclaration, typeParameterSymbol: ts.Symbol, checker: ts.TypeChecker): Result {
 	const exit = {};
 	let soleUse: ts.Identifier | undefined;
 
@@ -95,9 +95,9 @@ function getSoleUse(sig: ts.SignatureDeclaration, typeParameter: string): Result
 
 	return soleUse ? { type: "sole", soleUse } : { type: "never" };
 
-	function recur(node: ts.TypeNode) {
+	function recur(node: ts.TypeNode): void {
 		if (ts.isIdentifier(node)) {
-			if (node.text === typeParameter) {
+			if (checker.getSymbolAtLocation(node) === typeParameterSymbol) {
 				if (soleUse === undefined) {
 					soleUse = node;
 				} else {
@@ -110,6 +110,12 @@ function getSoleUse(sig: ts.SignatureDeclaration, typeParameter: string): Result
 	}
 }
 
+function assertDefined<T>(value: T | undefined): T {
+	if (value === undefined) {
+		throw new Error("unreachable");
+	}
+	return value;
+}
 function assertNever(_: never) {
 	throw new Error("unreachable");
 }

@@ -1,5 +1,5 @@
-import { readFile } from "fs-extra";
-import { basename, dirname } from "path";
+import { pathExists, readFile } from "fs-extra";
+import { basename, dirname, join } from "path";
 import stripJsonComments = require("strip-json-comments");
 import * as ts from "typescript";
 
@@ -50,4 +50,12 @@ export function getModuleDeclarationStatements(node: ts.ModuleDeclaration): Read
 		body = body.body;
 	}
 	return body && ts.isModuleBlock(body) ? body.statements : undefined;
+}
+
+export async function getCompilerOptions(dirPath: string): Promise<ts.CompilerOptions> {
+	const tsconfigPath = join(dirPath, "tsconfig.json");
+	if (!await pathExists(tsconfigPath)) {
+		throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
+	}
+	return (await readJson(tsconfigPath)).compilerOptions;
 }

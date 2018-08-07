@@ -1,8 +1,7 @@
 import { pathExists } from "fs-extra";
 import * as path from "path";
-import { CompilerOptions } from "typescript";
 
-import { readJson } from "./util";
+import { getCompilerOptions, readJson } from "./util";
 
 export async function checkPackageJson(dirPath: string): Promise<void> {
 	const pkgJsonPath = path.join(dirPath, "package.json");
@@ -28,13 +27,7 @@ export async function checkPackageJson(dirPath: string): Promise<void> {
 }
 
 export async function checkTsconfig(dirPath: string, dt: boolean): Promise<void> {
-	const tsconfigPath = path.join(dirPath, "tsconfig.json");
-	if (!await pathExists(tsconfigPath)) {
-		throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
-	}
-	const tsconfig = await readJson(tsconfigPath);
-
-	const options: CompilerOptions = tsconfig.compilerOptions;
+	const options = await getCompilerOptions(dirPath);
 
 	if (dt) {
 		const isOlderVersion = /^v\d+$/.test(path.basename(dirPath));
