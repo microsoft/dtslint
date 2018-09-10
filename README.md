@@ -61,7 +61,7 @@ If you are using the default rules, this is optional.
 If present, this will override `dtslint`'s [default](https://github.com/Microsoft/dtslint/blob/master/dtslint.json) settings.
 You can specify new lint [rules](https://palantir.github.io/tslint/rules/), or disable some. An example:
 
-```json
+```json5
 {
     "extends": "dtslint/dtslint.json", // Or "dtslint/dt.json" if on DefinitelyTyped
     "rules": {
