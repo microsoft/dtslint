@@ -61,6 +61,16 @@ export { f } from "./subModule";
 export function f(): number;
 ```
 
+`foo/ts3.1/index.d.ts`:
+```ts
+// Type definitions for abs 1.2
+// Project: https://github.com/foo/foo
+// Definitions by: My Name <https://github.com/myname>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+export function f(): number;
+```
+
+
 **Good**:
 
 `foo/index.d.ts`: Same
@@ -70,4 +80,9 @@ export function f(): number;
 export function f(): number;
 ```
 
-Don't use a header twice -- only do it in the index.
+`foo/ts3.1/index.d.ts`:
+```ts
+export function f(): number;
+```
+
+Don't repeat the header -- only do it in the index of the root.
