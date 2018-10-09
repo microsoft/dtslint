@@ -1,16 +1,24 @@
 declare function f(): void;
 
 declare type T = number;
-~~~~~~~ [0 % ("declare")]
+~~~~~~~ [declare-redundant]
 
 declare interface I {}
-~~~~~~~ [0 % ("declare")]
+~~~~~~~ [declare-redundant]
 
 declare module "m" {
     export function f(): void;
-    ~~~~~~ [0 % ("export")]
+    ~~~~~~ [export-redundant]
+    function g(): void;
+    export default function h();
+}
+
+declare module "m2" {
+    export {};
+    export function f(): void;
     function g(): void;
 }
 
 
-[0]: '%s' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md
+[declare-redundant]: 'declare' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md
+[export-redundant]: 'export' keyword is redundant here because all declarations in this module are exported automatically. If you have a good reason to export some declarations and not others, add 'export {}' to the module to shut off automatic exporting. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md

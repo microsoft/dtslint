@@ -26,7 +26,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 
 	for (const node of sourceFile.statements) {
 		if (isExternal) {
-			checkInExternalModule(node);
+			checkInExternalModule(node, isAutomaticExport(sourceFile));
 		} else {
 			checkInOther(node);
 		}
@@ -36,7 +36,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		}
 	}
 
-	function checkInExternalModule(node: ts.Statement) {
+	function checkInExternalModule(node: ts.Statement, autoExportEnabled: boolean) {
 		// Ignore certain node kinds (these can't have 'export' or 'default' modifiers)
 		switch (node.kind) {
 			case ts.SyntaxKind.ImportDeclaration:
@@ -49,13 +49,15 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		// `declare global` and `declare module "foo"` OK. `declare namespace N` not OK, should be `export namespace`.
 		if (!isDeclareGlobalOrExternalModuleDeclaration(node)) {
 			if (isDeclare(node)) {
-				fail(mod(node, ts.SyntaxKind.DeclareKeyword), isExport(node)
-					? "'export declare' is redundant, just use 'export'."
-					: "Prefer 'export' to 'declare' in an external module.");
-			} else if (!isExport(node)) {
+				fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
+			}
+			if (autoExportEnabled && !isExport(node)) {
 				fail(
 					(node as ts.DeclarationStatement).name || node,
-					"Prefer to explicitly write 'export' for an external module export.");
+					"All declarations in this module are exported automatically. " +
+					"Prefer to explicitly write 'export' for clarity. " +
+					"If you have a good reason not to export this declaration, " +
+					"add 'export {}' to the module to shut off automatic exporting.");
 			}
 		}
 	}
@@ -79,7 +81,8 @@ function walk(ctx: Lint.WalkContext<void>): void {
 		return node.modifiers!.find(m => m.kind === kind)!;
 	}
 
-	function checkModule({ body }: ts.ModuleDeclaration): void {
+	function checkModule(moduleDeclaration: ts.ModuleDeclaration): void {
+		const body = moduleDeclaration.body;
 		if (!body) {
 			return;
 		}
@@ -89,16 +92,20 @@ function walk(ctx: Lint.WalkContext<void>): void {
 				checkModule(body);
 				break;
 			case ts.SyntaxKind.ModuleBlock:
-				checkBlock(body);
+				checkBlock(body, isAutomaticExport(moduleDeclaration));
 				break;
 		}
 	}
 
-	function checkBlock(block: ts.ModuleBlock): void {
+	function checkBlock(block: ts.ModuleBlock, autoExportEnabled: boolean): void {
 		for (const s of block.statements) {
 			// Compiler will error for 'declare' here anyway, so just check for 'export'.
-			if (isExport(s)) {
-				fail(mod(s, ts.SyntaxKind.ExportKeyword), "'export' keyword is redundant here.");
+			if (isExport(s) && autoExportEnabled && !isDefault(s)) {
+				fail(mod(s, ts.SyntaxKind.ExportKeyword),
+					"'export' keyword is redundant here because " +
+					"all declarations in this module are exported automatically. " +
+					"If you have a good reason to export some declarations and not others, " +
+					"add 'export {}' to the module to shut off automatic exporting.");
 			}
 
 			if (isModuleDeclaration(s)) {
@@ -124,4 +131,31 @@ function isDeclare(node: ts.Node): boolean {
 
 function isExport(node: ts.Node): boolean {
 	return Lint.hasModifier(node.modifiers, ts.SyntaxKind.ExportKeyword);
+}
+
+function isDefault(node: ts.Node): boolean {
+	return Lint.hasModifier(node.modifiers, ts.SyntaxKind.DefaultKeyword);
+}
+
+// tslint:disable-next-line:max-line-length
+// Copied from https://github.com/Microsoft/TypeScript/blob/dd9b8cab34a3e389e924d768eb656cf50656f582/src/compiler/binder.ts#L1571-L1581
+function hasExportDeclarations(node: ts.SourceFile | ts.ModuleDeclaration): boolean {
+	const body = node.kind === ts.SyntaxKind.SourceFile ? node : node.body;
+	if (body && (body.kind === ts.SyntaxKind.SourceFile || body.kind === ts.SyntaxKind.ModuleBlock)) {
+		for (const stat of (body as ts.BlockLike).statements) {
+			if (stat.kind === ts.SyntaxKind.ExportDeclaration || stat.kind === ts.SyntaxKind.ExportAssignment) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function isAutomaticExport(node: ts.SourceFile | ts.ModuleDeclaration): boolean {
+	// We'd like to just test ts.NodeFlags.ExportContext, but we don't run the
+	// binder, so that flag won't be set, so duplicate the logic instead. :(
+	//
+	// ts.NodeFlags.Ambient is @internal, but all modules that get here should
+	// be ambient.
+	return !hasExportDeclarations(node);
 }
