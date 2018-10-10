@@ -17,6 +17,7 @@ export async function checkPackageJson(dirPath: string): Promise<void> {
 		switch (key) {
 			case "private":
 			case "dependencies":
+			case "devDependencies":
 			case "license":
 				// "private" checked above, "dependencies" / "license" checked by types-publisher
 				break;
