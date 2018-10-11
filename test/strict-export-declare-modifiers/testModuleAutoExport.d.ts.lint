@@ -1,19 +1,20 @@
 import * as foo from "foo";
 import foo = require("foo");
-export { foo };
-export { foo } from "foo";
 export as namespace Foo;
 
 interface I {}
+          ~ [export-preferred]
 
 export declare function f(): void;
-       ~~~~~~~ [declare-redundant]
+       ~~~~~~~ [declare]
 
 declare function g(): void;
-~~~~~~~  [declare-redundant]
+~~~~~~~  [declare]
+                 ~ [export-preferred]
 
 declare namespace N {}
-~~~~~~~ [declare-redundant]
+~~~~~~~ [declare]
+                  ~ [export-preferred]
 
 export namespace M {
     export function f(): void;
@@ -21,5 +22,6 @@ export namespace M {
     // TS compiler warns for 'declare' here.
 }
 
-[declare-redundant]: 'declare' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md
+[declare]: 'declare' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md
+[export-preferred]: All declarations in this module are exported automatically. Prefer to explicitly write 'export' for clarity. If you have a good reason not to export this declaration, add 'export {}' to the module to shut off automatic exporting. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md
 [export-redundant]: 'export' keyword is redundant here because all declarations in this module are exported automatically. If you have a good reason to export some declarations and not others, add 'export {}' to the module to shut off automatic exporting. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md

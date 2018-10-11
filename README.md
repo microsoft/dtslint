@@ -128,8 +128,6 @@ npm link . # Global 'dts-lint' should now refer to this.
 npm run watch
 ```
 
-Note: If changing a lint rule, you will have to `dtslint --clean` because rules are copied into install directories.
-
 ## Test
 
 Use `npm run test` to run all tests.
