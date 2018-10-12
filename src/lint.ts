@@ -1,3 +1,4 @@
+import assert = require("assert");
 import { TypeScriptVersion } from "definitelytyped-header-parser";
 import { pathExists, readFile } from "fs-extra";
 import { join as joinPaths } from "path";
@@ -10,11 +11,7 @@ import { Options as ExpectOptions } from "./rules/expectRule";
 import { typeScriptPath } from "./installer";
 import { readJson } from "./util";
 
-export async function lint(
-	dirPath: string,
-	minVersion: TypeScriptVersion,
-	onlyTestTsNext: boolean,
-): Promise<string | undefined> {
+export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: TsVersion): Promise<string | undefined> {
 	const lintConfigPath = getConfigPath(dirPath);
 	const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
 	const program = Linter.createProgram(tsconfigPath);
@@ -24,7 +21,7 @@ export async function lint(
 		formatter: "stylish",
 	};
 	const linter = new Linter(lintOptions, program);
-	const config = await getLintConfig(lintConfigPath, tsconfigPath, minVersion, onlyTestTsNext);
+	const config = await getLintConfig(lintConfigPath, tsconfigPath, minVersion, maxVersion);
 
 	for (const filename of program.getRootFileNames()) {
 		const contents = await readFile(filename, "utf-8");
@@ -91,8 +88,8 @@ function getConfigPath(dirPath: string): string {
 async function getLintConfig(
 	expectedConfigPath: string,
 	tsconfigPath: string,
-	minVersion: TypeScriptVersion,
-	onlyTestTsNext: boolean,
+	minVersion: TsVersion,
+	maxVersion: TsVersion,
 ): Promise<IConfigurationFile> {
 	const configExists = await pathExists(expectedConfigPath);
 	const configPath = configExists ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
@@ -104,14 +101,29 @@ async function getLintConfig(
 
 	const expectRule = config.rules.get("expect");
 	if (expectRule) {
-		const expectOptions: ExpectOptions = {
-			tsconfigPath,
-			tsNextPath: typeScriptPath("next"),
-			olderInstalls: TypeScriptVersion.range(minVersion).map(versionName =>
-				({ versionName, path: typeScriptPath(versionName) })),
-			onlyTestTsNext,
-		};
+		const versionsToTest = range(minVersion, maxVersion).map(versionName =>
+			({ versionName, path: typeScriptPath(versionName) }));
+		const expectOptions: ExpectOptions = { tsconfigPath, versionsToTest };
 		expectRule.ruleArguments = [expectOptions];
 	}
 	return config;
 }
+
+function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVersion> {
+	if (minVersion === "next") {
+		assert(maxVersion === "next");
+		return ["next"];
+	}
+
+	const minIdx = TypeScriptVersion.all.indexOf(minVersion);
+	assert(minIdx >= 0);
+	if (maxVersion === "next") {
+		return [...TypeScriptVersion.all.slice(minIdx), "next"];
+	}
+
+	const maxIdx = TypeScriptVersion.all.indexOf(maxVersion);
+	assert(maxIdx >= minIdx);
+	return TypeScriptVersion.all.slice(minIdx, maxIdx + 1);
+}
+
+export type TsVersion = TypeScriptVersion | "next";

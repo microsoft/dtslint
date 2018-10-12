@@ -1,2 +1,2 @@
 // Type definitions for
-~~~~~~~~~~~~~~~~~~~~~~~ [Header should only be in `index.d.ts`. See: https://github.com/Microsoft/dtslint/blob/master/docs/dt-header.md]
+~~~~~~~~~~~~~~~~~~~~~~~ [Header should only be in `index.d.ts` of the root. See: https://github.com/Microsoft/dtslint/blob/master/docs/dt-header.md]

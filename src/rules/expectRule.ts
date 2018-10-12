@@ -1,8 +1,8 @@
-import assert = require("assert");
 import { existsSync, readFileSync } from "fs";
 import { dirname, resolve as resolvePath } from "path";
 import * as Lint from "tslint";
 import * as TsType from "typescript";
+import { last } from "../util";
 
 type Program = TsType.Program;
 type SourceFile = TsType.SourceFile;
@@ -37,34 +37,30 @@ export class Rule extends Lint.Rules.TypedRule {
 				walk(ctx, lintProgram, TsType, "next", /*nextHigherVersion*/ undefined));
 		}
 
-		const getFailures = (versionName: string, path: string, nextHigherVersion: string | undefined) => {
+		const { tsconfigPath, versionsToTest } = options;
+
+		const getFailures = ({ versionName, path }: VersionToTest, nextHigherVersion: string | undefined) => {
 			const ts = require(path);
-			const program = getProgram(options.tsconfigPath, ts, versionName, lintProgram);
+			const program = getProgram(tsconfigPath, ts, versionName, lintProgram);
 			return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
 		};
 
-		const nextFailures = getFailures("next", options.tsNextPath, /*nextHigherVersion*/ undefined);
-		if (options.onlyTestTsNext || nextFailures.length) {
-			return nextFailures;
+		const maxFailures = getFailures(last(versionsToTest), undefined);
+		if (maxFailures.length) {
+			return maxFailures;
 		}
 
-		assert(options.olderInstalls.length);
-
 		// As an optimization, check the earliest version for errors;
-		// assume that if it works on min and next, it works for everything in between.
-		const minInstall = options.olderInstalls[0];
-		const minFailures = getFailures(minInstall.versionName, minInstall.path, undefined);
+		// assume that if it works on min and max, it works for everything in between.
+		const minFailures = getFailures(versionsToTest[0], undefined);
 		if (!minFailures.length) {
 			return [];
 		}
 
-		// There are no failures in `next`, but there are failures in `min`.
+		// There are no failures in the max version, but there are failures in the min version.
 		// Work backward to find the newest version with failures.
-		for (let i = options.olderInstalls.length - 1; i >= 0; i--) {
-			const { versionName, path } = options.olderInstalls[i];
-			console.log(`Test with ${versionName}`);
-			const nextHigherVersion = i === options.olderInstalls.length - 1 ? "next" : options.olderInstalls[i + 1].versionName;
-			const failures = getFailures(versionName, path, nextHigherVersion);
+		for (let i = versionsToTest.length - 2; i >= 0; i--) {
+			const failures = getFailures(versionsToTest[i], options.versionsToTest[i + 1].versionName);
 			if (failures.length) {
 				return failures;
 			}
@@ -76,10 +72,12 @@ export class Rule extends Lint.Rules.TypedRule {
 
 export interface Options {
 	readonly tsconfigPath: string;
-	readonly tsNextPath: string;
 	// These should be sorted with oldest first.
-	readonly olderInstalls: ReadonlyArray<{ versionName: string, path: string }>;
-	readonly onlyTestTsNext: boolean;
+	readonly versionsToTest: ReadonlyArray<VersionToTest>;
+}
+export interface VersionToTest {
+	readonly versionName: string;
+	readonly path: string;
 }
 
 const programCache = new WeakMap<Program, Map<string, Program>>();
