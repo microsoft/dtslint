@@ -130,7 +130,7 @@ function runTests(dirPath, onlyTestTsNext) {
                 const version = typesVersions[i];
                 const versionPath = path_1.join(dirPath, `ts${version}`);
                 const versionIndexText = yield fs_extra_1.readFile(path_1.join(versionPath, "index.d.ts"), "utf-8");
-                yield testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText);
+                yield testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText, /*inTypesVersionDirectory*/ true);
             }
             function getTsVersion(i) {
                 return i === typesVersions.length ? "next" : util_1.assertDefined(definitelytyped_header_parser_1.TypeScriptVersion.previous(typesVersions[i]));
@@ -138,10 +138,10 @@ function runTests(dirPath, onlyTestTsNext) {
         }
     });
 }
-function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, indexText) {
+function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, indexText, inTypesVersionDirectory) {
     return __awaiter(this, void 0, void 0, function* () {
         const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
-        if (minVersionFromComment !== undefined && lowVersion !== undefined) {
+        if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
             throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
         }
         if (minVersionFromComment !== undefined && definitelytyped_header_parser_1.TypeScriptVersion.isRedirectable(minVersionFromComment)) {
@@ -150,7 +150,7 @@ function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, i
         const minVersion = lowVersion || minVersionFromComment || definitelytyped_header_parser_1.TypeScriptVersion.lowest;
         yield lint_1.checkTslintJson(dirPath, dt);
         yield checks_1.checkTsconfig(dirPath, dt
-            ? { relativeBaseUrl: path_1.join("..", isOlderVersion ? ".." : "", lowVersion !== undefined ? ".." : "") + "/" }
+            ? { relativeBaseUrl: path_1.join("..", isOlderVersion ? ".." : "", inTypesVersionDirectory ? ".." : "") + "/" }
             : undefined);
         const err = yield lint_1.lint(dirPath, minVersion, maxVersion);
         if (err) {
