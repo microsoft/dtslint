@@ -126,7 +126,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 			const version = typesVersions[i];
 			const versionPath = joinPaths(dirPath, `ts${version}`);
 			const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
-			await testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText);
+			await testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText, /*inTypesVersionDirectory*/ true);
 		}
 
 		function getTsVersion(i: number): TsVersion {
@@ -142,9 +142,10 @@ async function testTypesVersion(
 	isOlderVersion: boolean,
 	dt: boolean,
 	indexText: string,
+	inTypesVersionDirectory?: boolean,
 ): Promise<void> {
 	const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
-	if (minVersionFromComment !== undefined && lowVersion !== undefined) {
+	if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
 		throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
 	}
 	if (minVersionFromComment !== undefined && TypeScriptVersion.isRedirectable(minVersionFromComment)) {
@@ -154,7 +155,7 @@ async function testTypesVersion(
 
 	await checkTslintJson(dirPath, dt);
 	await checkTsconfig(dirPath, dt
-		? { relativeBaseUrl: joinPaths("..", isOlderVersion ? ".." : "", lowVersion !== undefined ? ".." : "") + "/" }
+		? { relativeBaseUrl: joinPaths("..", isOlderVersion ? ".." : "", inTypesVersionDirectory ? ".." : "") + "/" }
 		: undefined);
 	const err = await lint(dirPath, minVersion, maxVersion);
 	if (err) {
