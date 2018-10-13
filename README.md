@@ -31,7 +31,7 @@ Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-
 
 #### `types/tsconfig.json`
 
-```ts
+```json5
 {
     "compilerOptions": {
         "module": "commonjs",
@@ -61,7 +61,7 @@ If you are using the default rules, this is optional.
 If present, this will override `dtslint`'s [default](https://github.com/Microsoft/dtslint/blob/master/dtslint.json) settings.
 You can specify new lint [rules](https://palantir.github.io/tslint/rules/), or disable some. An example:
 
-```json
+```json5
 {
     "extends": "dtslint/dtslint.json", // Or "dtslint/dt.json" if on DefinitelyTyped
     "rules": {
@@ -127,8 +127,6 @@ For bundled typings, this can go on any line (but should be near the top).
 npm link . # Global 'dts-lint' should now refer to this.
 npm run watch
 ```
-
-Note: If changing a lint rule, you will have to `dtslint --clean` because rules are copied into install directories.
 
 ## Test
 

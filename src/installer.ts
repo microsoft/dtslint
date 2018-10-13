@@ -2,6 +2,7 @@ import { exec } from "child_process";
 import { TypeScriptVersion } from "definitelytyped-header-parser";
 import * as fs from "fs-extra";
 import * as path from "path";
+import { TsVersion } from "./lint";
 
 const installsDir = path.join(__dirname, "..", "typescript-installs");
 
@@ -12,7 +13,7 @@ export async function installAll() {
 	await install("next");
 }
 
-async function install(version: TypeScriptVersion | "next"): Promise<void> {
+async function install(version: TsVersion): Promise<void> {
 	const dir = installDir(version);
 	if (!await fs.pathExists(dir)) {
 		console.log(`Installing to ${dir}...`);
@@ -27,11 +28,11 @@ export function cleanInstalls(): Promise<void> {
 	return fs.remove(installsDir);
 }
 
-export function typeScriptPath(version: TypeScriptVersion | "next"): string {
+export function typeScriptPath(version: TsVersion): string {
 	return path.join(installDir(version), "node_modules", "typescript");
 }
 
-function installDir(version: TypeScriptVersion | "next"): string {
+function installDir(version: TsVersion): string {
 	return path.join(installsDir, version);
 }
 
@@ -49,7 +50,7 @@ async function execAndThrowErrors(cmd: string, cwd?: string): Promise<void> {
 	});
 }
 
-function packageJson(version: TypeScriptVersion | "next"): {} {
+function packageJson(version: TsVersion): {} {
 	return {
 		description: `Installs typescript@${version}`,
 		repository: "N/A",

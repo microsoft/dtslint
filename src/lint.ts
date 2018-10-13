@@ -1,5 +1,6 @@
+import assert = require("assert");
 import { TypeScriptVersion } from "definitelytyped-header-parser";
-import { pathExists, readFile } from "fs-extra";
+import { pathExists } from "fs-extra";
 import { join as joinPaths } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
 type Configuration = typeof Configuration;
@@ -10,11 +11,7 @@ import { Options as ExpectOptions } from "./rules/expectRule";
 import { typeScriptPath } from "./installer";
 import { readJson } from "./util";
 
-export async function lint(
-	dirPath: string,
-	minVersion: TypeScriptVersion,
-	onlyTestTsNext: boolean,
-): Promise<string | undefined> {
+export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: TsVersion): Promise<string | undefined> {
 	const lintConfigPath = getConfigPath(dirPath);
 	const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
 	const program = Linter.createProgram(tsconfigPath);
@@ -24,17 +21,20 @@ export async function lint(
 		formatter: "stylish",
 	};
 	const linter = new Linter(lintOptions, program);
-	const config = await getLintConfig(lintConfigPath, tsconfigPath, minVersion, onlyTestTsNext);
+	const { config, expectOnlyConfig } = await getLintConfig(lintConfigPath, tsconfigPath, minVersion, maxVersion);
 
-	for (const filename of program.getRootFileNames()) {
-		const contents = await readFile(filename, "utf-8");
-		const err = testNoTsIgnore(contents) || testNoTslintDisables(contents);
+	for (const file of program.getSourceFiles()) {
+		const { fileName, text } = file;
+		const err = testNoTsIgnore(text) || testNoTslintDisables(text);
 		if (err) {
 			const { pos, message } = err;
-			const place = program.getSourceFile(filename)!.getLineAndCharacterOfPosition(pos);
-			return `At ${filename}:${JSON.stringify(place)}: ${message}`;
+			const place = file.getLineAndCharacterOfPosition(pos);
+			return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
 		}
-		linter.lint(filename, contents, config);
+		if (!program.isSourceFileDefaultLibrary(file)) {
+			linter.lint(fileName, text,
+				!file.fileName.startsWith(dirPath) || program.isSourceFileFromExternalLibrary(file) ? expectOnlyConfig : config);
+		}
 	}
 
 	const result = linter.getResult();
@@ -91,9 +91,9 @@ function getConfigPath(dirPath: string): string {
 async function getLintConfig(
 	expectedConfigPath: string,
 	tsconfigPath: string,
-	minVersion: TypeScriptVersion,
-	onlyTestTsNext: boolean,
-): Promise<IConfigurationFile> {
+	minVersion: TsVersion,
+	maxVersion: TsVersion,
+): Promise<{ readonly config: IConfigurationFile, readonly expectOnlyConfig: IConfigurationFile }> {
 	const configExists = await pathExists(expectedConfigPath);
 	const configPath = configExists ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
 	// Second param to `findConfiguration` doesn't matter, since config path is provided.
@@ -103,15 +103,39 @@ async function getLintConfig(
 	}
 
 	const expectRule = config.rules.get("expect");
+	if (!expectRule || expectRule.ruleSeverity !== "error") {
+		throw new Error("'expect' rule should be enabled, else compile errors are ignored");
+	}
 	if (expectRule) {
-		const expectOptions: ExpectOptions = {
-			tsconfigPath,
-			tsNextPath: typeScriptPath("next"),
-			olderInstalls: TypeScriptVersion.range(minVersion).map(versionName =>
-				({ versionName, path: typeScriptPath(versionName) })),
-			onlyTestTsNext,
-		};
+		const versionsToTest = range(minVersion, maxVersion).map(versionName =>
+			({ versionName, path: typeScriptPath(versionName) }));
+		const expectOptions: ExpectOptions = { tsconfigPath, versionsToTest };
 		expectRule.ruleArguments = [expectOptions];
 	}
-	return config;
+	const expectOnlyConfig: IConfigurationFile = {
+		extends: [],
+		rulesDirectory: config.rulesDirectory,
+		rules: new Map([["expect", expectRule]]),
+		jsRules: new Map(),
+	};
+	return { config, expectOnlyConfig };
 }
+
+function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVersion> {
+	if (minVersion === "next") {
+		assert(maxVersion === "next");
+		return ["next"];
+	}
+
+	const minIdx = TypeScriptVersion.all.indexOf(minVersion);
+	assert(minIdx >= 0);
+	if (maxVersion === "next") {
+		return [...TypeScriptVersion.all.slice(minIdx), "next"];
+	}
+
+	const maxIdx = TypeScriptVersion.all.indexOf(maxVersion);
+	assert(maxIdx >= minIdx);
+	return TypeScriptVersion.all.slice(minIdx, maxIdx + 1);
+}
+
+export type TsVersion = TypeScriptVersion | "next";

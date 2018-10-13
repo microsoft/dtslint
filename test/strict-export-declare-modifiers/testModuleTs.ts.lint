@@ -1,7 +1,7 @@
 export function f() {}
 
 declare interface I {}
-~~~~~~~ [0 % ("declare")]
+~~~~~~~ [declare-redundant]
 
 interface J {}
 
@@ -11,7 +11,8 @@ namespace N {
 
 declare namespace M {
     export const x: number;
-    ~~~~~~ [0 % ("export")]
+    ~~~~~~ [export-redundant]
 }
 
-[0]: '%s' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md
+[declare-redundant]: 'declare' keyword is redundant here. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md
+[export-redundant]: 'export' keyword is redundant here because all declarations in this module are exported automatically. If you have a good reason to export some declarations and not others, add 'export {}' to the module to shut off automatic exporting. See: https://github.com/Microsoft/dtslint/blob/master/docs/strict-export-declare-modifiers.md

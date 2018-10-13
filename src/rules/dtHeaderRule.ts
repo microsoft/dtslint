@@ -32,7 +32,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			}
 		};
 
-		lookFor("// Type definitions for", "Header should only be in `index.d.ts`.");
+		lookFor("// Type definitions for", "Header should only be in `index.d.ts` of the root.");
 		lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
 		return;
 	}
@@ -58,6 +58,7 @@ function isMainFile(fileName: string) {
 
 	let parent = dirname(fileName);
 	// May be a directory for an older version, e.g. `v0`.
+	// Note a types redirect `foo/ts3.1` should not have its own header.
 	if (/^v\d+$/.test(basename(parent))) {
 		parent = dirname(parent);
 	}

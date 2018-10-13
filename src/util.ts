@@ -1,3 +1,4 @@
+import assert = require("assert");
 import { pathExists, readFile } from "fs-extra";
 import { basename, dirname, join } from "path";
 import stripJsonComments = require("strip-json-comments");
@@ -58,4 +59,29 @@ export async function getCompilerOptions(dirPath: string): Promise<ts.CompilerOp
 		throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
 	}
 	return (await readJson(tsconfigPath)).compilerOptions;
+}
+
+export function withoutPrefix(s: string, prefix: string): string | undefined {
+	return s.startsWith(prefix) ? s.slice(prefix.length) : undefined;
+}
+
+export function last<T>(a: ReadonlyArray<T>): T {
+	assert(a.length !== 0);
+	return a[a.length - 1];
+}
+
+export function assertDefined<T>(a: T | undefined): T {
+	if (a === undefined) { throw new Error(); }
+	return a;
+}
+
+export function mapDefined<T, U>(arr: Iterable<T>, mapper: (t: T) => U | undefined): U[] {
+	const out = [];
+	for (const a of arr) {
+		const res = mapper(a);
+		if (res !== undefined) {
+			out.push(res);
+		}
+	}
+	return out;
 }
