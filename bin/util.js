@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const assert = require("assert");
 const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const stripJsonComments = require("strip-json-comments");
@@ -73,4 +74,31 @@ function getCompilerOptions(dirPath) {
     });
 }
 exports.getCompilerOptions = getCompilerOptions;
+function withoutPrefix(s, prefix) {
+    return s.startsWith(prefix) ? s.slice(prefix.length) : undefined;
+}
+exports.withoutPrefix = withoutPrefix;
+function last(a) {
+    assert(a.length !== 0);
+    return a[a.length - 1];
+}
+exports.last = last;
+function assertDefined(a) {
+    if (a === undefined) {
+        throw new Error();
+    }
+    return a;
+}
+exports.assertDefined = assertDefined;
+function mapDefined(arr, mapper) {
+    const out = [];
+    for (const a of arr) {
+        const res = mapper(a);
+        if (res !== undefined) {
+            out.push(res);
+        }
+    }
+    return out;
+}
+exports.mapDefined = mapDefined;
 //# sourceMappingURL=util.js.map

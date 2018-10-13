@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert = require("assert");
 const fs_1 = require("fs");
 const path_1 = require("path");
 const Lint = require("tslint");
 const TsType = require("typescript");
+const util_1 = require("../util");
 // Based on https://github.com/danvk/typings-checker
 class Rule extends Lint.Rules.TypedRule {
     static FAILURE_STRING(expectedType, actualType) {
@@ -15,30 +15,26 @@ class Rule extends Lint.Rules.TypedRule {
         if (!options) {
             return this.applyWithFunction(sourceFile, ctx => walk(ctx, lintProgram, TsType, "next", /*nextHigherVersion*/ undefined));
         }
-        const getFailures = (versionName, path, nextHigherVersion) => {
+        const { tsconfigPath, versionsToTest } = options;
+        const getFailures = ({ versionName, path }, nextHigherVersion) => {
             const ts = require(path);
-            const program = getProgram(options.tsconfigPath, ts, versionName, lintProgram);
+            const program = getProgram(tsconfigPath, ts, versionName, lintProgram);
             return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
         };
-        const nextFailures = getFailures("next", options.tsNextPath, /*nextHigherVersion*/ undefined);
-        if (options.onlyTestTsNext || nextFailures.length) {
-            return nextFailures;
+        const maxFailures = getFailures(util_1.last(versionsToTest), undefined);
+        if (maxFailures.length) {
+            return maxFailures;
         }
-        assert(options.olderInstalls.length);
         // As an optimization, check the earliest version for errors;
-        // assume that if it works on min and next, it works for everything in between.
-        const minInstall = options.olderInstalls[0];
-        const minFailures = getFailures(minInstall.versionName, minInstall.path, undefined);
+        // assume that if it works on min and max, it works for everything in between.
+        const minFailures = getFailures(versionsToTest[0], undefined);
         if (!minFailures.length) {
             return [];
         }
-        // There are no failures in `next`, but there are failures in `min`.
+        // There are no failures in the max version, but there are failures in the min version.
         // Work backward to find the newest version with failures.
-        for (let i = options.olderInstalls.length - 1; i >= 0; i--) {
-            const { versionName, path } = options.olderInstalls[i];
-            console.log(`Test with ${versionName}`);
-            const nextHigherVersion = i === options.olderInstalls.length - 1 ? "next" : options.olderInstalls[i + 1].versionName;
-            const failures = getFailures(versionName, path, nextHigherVersion);
+        for (let i = versionsToTest.length - 2; i >= 0; i--) {
+            const failures = getFailures(versionsToTest[i], options.versionsToTest[i + 1].versionName);
             if (failures.length) {
                 return failures;
             }

@@ -15,6 +15,7 @@ const path_1 = require("path");
 const checks_1 = require("./checks");
 const installer_1 = require("./installer");
 const lint_1 = require("./lint");
+const util_1 = require("./util");
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const args = process.argv.slice(2);
@@ -84,21 +85,74 @@ function listen(dirPath) {
 }
 function runTests(dirPath, onlyTestTsNext) {
     return __awaiter(this, void 0, void 0, function* () {
-        const text = yield fs_extra_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
+        const isOlderVersion = /^v\d+$/.test(path_1.basename(dirPath));
+        const indexText = yield fs_extra_1.readFile(path_1.join(dirPath, "index.d.ts"), "utf-8");
         // If this *is* on DefinitelyTyped, types-publisher will fail if it can't parse the header.
-        const dt = text.includes("// Type definitions for");
+        const dt = indexText.includes("// Type definitions for");
         if (dt) {
             // Someone may have copied text from DefinitelyTyped to their type definition and included a header,
             // so assert that we're really on DefinitelyTyped.
             assertPathIsInDefinitelyTyped(dirPath);
         }
-        const minVersion = getTypeScriptVersion(text);
-        yield lint_1.checkTslintJson(dirPath, dt);
+        const typesVersions = util_1.mapDefined(yield fs_extra_1.readdir(dirPath), name => {
+            if (name === "tsconfig.json" || name === "tslint.json") {
+                return undefined;
+            }
+            const version = util_1.withoutPrefix(name, "ts");
+            if (version === undefined) {
+                return undefined;
+            }
+            if (!definitelytyped_header_parser_1.isTypeScriptVersion(version)) {
+                throw new Error(`There is an entry named ${name}, but ${version} is not a valid TypeScript version.`);
+            }
+            if (!definitelytyped_header_parser_1.TypeScriptVersion.isRedirectable(version)) {
+                throw new Error(`At ${dirPath}/${name}: TypeScript version directories only available starting with ts3.1.`);
+            }
+            return version;
+        });
         if (dt) {
-            yield checks_1.checkPackageJson(dirPath);
+            yield checks_1.checkPackageJson(dirPath, typesVersions);
         }
-        yield checks_1.checkTsconfig(dirPath, dt);
-        const err = yield lint_1.lint(dirPath, minVersion, onlyTestTsNext);
+        if (onlyTestTsNext) {
+            if (typesVersions.length === 0) {
+                yield testTypesVersion(dirPath, "next", "next", isOlderVersion, dt, indexText);
+            }
+            else {
+                const latestTypesVersion = util_1.last(typesVersions);
+                const versionPath = path_1.join(dirPath, `ts${latestTypesVersion}`);
+                const versionIndexText = yield fs_extra_1.readFile(path_1.join(versionPath, "index.d.ts"), "utf-8");
+                yield testTypesVersion(versionPath, "next", "next", isOlderVersion, dt, versionIndexText);
+            }
+        }
+        else {
+            yield testTypesVersion(dirPath, undefined, getTsVersion(0), isOlderVersion, dt, indexText);
+            for (let i = 0; i < typesVersions.length; i++) {
+                const version = typesVersions[i];
+                const versionPath = path_1.join(dirPath, `ts${version}`);
+                const versionIndexText = yield fs_extra_1.readFile(path_1.join(versionPath, "index.d.ts"), "utf-8");
+                yield testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText);
+            }
+            function getTsVersion(i) {
+                return i === typesVersions.length ? "next" : util_1.assertDefined(definitelytyped_header_parser_1.TypeScriptVersion.previous(typesVersions[i]));
+            }
+        }
+    });
+}
+function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, indexText) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
+        if (minVersionFromComment !== undefined && lowVersion !== undefined) {
+            throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
+        }
+        if (minVersionFromComment !== undefined && definitelytyped_header_parser_1.TypeScriptVersion.isRedirectable(minVersionFromComment)) {
+            throw new Error(`Don't use \`// TypeScript Version\` for newer TS versions, use typesVerisons instead.`);
+        }
+        const minVersion = lowVersion || minVersionFromComment || definitelytyped_header_parser_1.TypeScriptVersion.lowest;
+        yield lint_1.checkTslintJson(dirPath, dt);
+        yield checks_1.checkTsconfig(dirPath, dt
+            ? { relativeBaseUrl: path_1.join("..", isOlderVersion ? ".." : "", lowVersion !== undefined ? ".." : "") + "/" }
+            : undefined);
+        const err = yield lint_1.lint(dirPath, minVersion, maxVersion);
         if (err) {
             throw new Error(err);
         }
@@ -114,11 +168,11 @@ function assertPathIsInDefinitelyTyped(dirPath) {
             + "But it is not in a `DefinitelyTyped/types/xxx` directory.");
     }
 }
-function getTypeScriptVersion(text) {
+function getTypeScriptVersionFromComment(text) {
     const searchString = "// TypeScript Version: ";
     const x = text.indexOf(searchString);
     if (x === -1) {
-        return "2.0";
+        return undefined;
     }
     let line = text.slice(x, text.indexOf("\n", x));
     if (line.endsWith("\r")) {

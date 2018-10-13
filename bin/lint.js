@@ -8,13 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const assert = require("assert");
 const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
 const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const tslint_1 = require("tslint");
 const installer_1 = require("./installer");
 const util_1 = require("./util");
-function lint(dirPath, minVersion, onlyTestTsNext) {
+function lint(dirPath, minVersion, maxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         const lintConfigPath = getConfigPath(dirPath);
         const tsconfigPath = path_1.join(dirPath, "tsconfig.json");
@@ -24,16 +25,18 @@ function lint(dirPath, minVersion, onlyTestTsNext) {
             formatter: "stylish",
         };
         const linter = new tslint_1.Linter(lintOptions, program);
-        const config = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion, onlyTestTsNext);
-        for (const filename of program.getRootFileNames()) {
-            const contents = yield fs_extra_1.readFile(filename, "utf-8");
-            const err = testNoTsIgnore(contents) || testNoTslintDisables(contents);
+        const { config, expectOnlyConfig } = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion, maxVersion);
+        for (const file of program.getSourceFiles()) {
+            const { fileName, text } = file;
+            const err = testNoTsIgnore(text) || testNoTslintDisables(text);
             if (err) {
                 const { pos, message } = err;
-                const place = program.getSourceFile(filename).getLineAndCharacterOfPosition(pos);
-                return `At ${filename}:${JSON.stringify(place)}: ${message}`;
+                const place = file.getLineAndCharacterOfPosition(pos);
+                return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
             }
-            linter.lint(filename, contents, config);
+            if (!program.isSourceFileDefaultLibrary(file)) {
+                linter.lint(fileName, text, !file.fileName.startsWith(dirPath) || program.isSourceFileFromExternalLibrary(file) ? expectOnlyConfig : config);
+            }
         }
         const result = linter.getResult();
         return result.failures.length ? result.output : undefined;
@@ -84,7 +87,7 @@ exports.checkTslintJson = checkTslintJson;
 function getConfigPath(dirPath) {
     return path_1.join(dirPath, "tslint.json");
 }
-function getLintConfig(expectedConfigPath, tsconfigPath, minVersion, onlyTestTsNext) {
+function getLintConfig(expectedConfigPath, tsconfigPath, minVersion, maxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
         const configExists = yield fs_extra_1.pathExists(expectedConfigPath);
         const configPath = configExists ? expectedConfigPath : path_1.join(__dirname, "..", "dtslint.json");
@@ -94,16 +97,35 @@ function getLintConfig(expectedConfigPath, tsconfigPath, minVersion, onlyTestTsN
             throw new Error(`Could not load config at ${configPath}`);
         }
         const expectRule = config.rules.get("expect");
+        if (!expectRule || expectRule.ruleSeverity !== "error") {
+            throw new Error("'expect' rule should be enabled, else compile errors are ignored");
+        }
         if (expectRule) {
-            const expectOptions = {
-                tsconfigPath,
-                tsNextPath: installer_1.typeScriptPath("next"),
-                olderInstalls: definitelytyped_header_parser_1.TypeScriptVersion.range(minVersion).map(versionName => ({ versionName, path: installer_1.typeScriptPath(versionName) })),
-                onlyTestTsNext,
-            };
+            const versionsToTest = range(minVersion, maxVersion).map(versionName => ({ versionName, path: installer_1.typeScriptPath(versionName) }));
+            const expectOptions = { tsconfigPath, versionsToTest };
             expectRule.ruleArguments = [expectOptions];
         }
-        return config;
+        const expectOnlyConfig = {
+            extends: [],
+            rulesDirectory: config.rulesDirectory,
+            rules: new Map([["expect", expectRule]]),
+            jsRules: new Map(),
+        };
+        return { config, expectOnlyConfig };
     });
+}
+function range(minVersion, maxVersion) {
+    if (minVersion === "next") {
+        assert(maxVersion === "next");
+        return ["next"];
+    }
+    const minIdx = definitelytyped_header_parser_1.TypeScriptVersion.all.indexOf(minVersion);
+    assert(minIdx >= 0);
+    if (maxVersion === "next") {
+        return [...definitelytyped_header_parser_1.TypeScriptVersion.all.slice(minIdx), "next"];
+    }
+    const maxIdx = definitelytyped_header_parser_1.TypeScriptVersion.all.indexOf(maxVersion);
+    assert(maxIdx >= minIdx);
+    return definitelytyped_header_parser_1.TypeScriptVersion.all.slice(minIdx, maxIdx + 1);
 }
 //# sourceMappingURL=lint.js.map

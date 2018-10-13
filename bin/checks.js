@@ -8,25 +8,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const assert = require("assert");
+const definitelytyped_header_parser_1 = require("definitelytyped-header-parser");
 const fs_extra_1 = require("fs-extra");
-const path = require("path");
+const path_1 = require("path");
 const util_1 = require("./util");
-function checkPackageJson(dirPath) {
+function checkPackageJson(dirPath, typesVersions) {
     return __awaiter(this, void 0, void 0, function* () {
-        const pkgJsonPath = path.join(dirPath, "package.json");
+        const pkgJsonPath = path_1.join(dirPath, "package.json");
+        const needsTypesVersions = typesVersions.length !== 0;
         if (!(yield fs_extra_1.pathExists(pkgJsonPath))) {
+            if (needsTypesVersions) {
+                throw new Error(`${dirPath}: Must have 'package.json' for "typesVersions"`);
+            }
             return;
         }
         const pkgJson = yield util_1.readJson(pkgJsonPath);
         if (pkgJson.private !== true) {
             throw new Error(`${pkgJsonPath} should set \`"private": true\``);
         }
+        if (needsTypesVersions) {
+            assert.strictEqual(pkgJson.types, "index", `"types" in '${pkgJsonPath}' should be "index".`);
+            const expected = definitelytyped_header_parser_1.makeTypesVersionsForPackageJson(typesVersions);
+            assert.deepEqual(pkgJson.typesVersions, expected, `"typesVersions" in '${pkgJsonPath}' is not set right. Should be: ${JSON.stringify(expected, undefined, 4)}`);
+        }
         for (const key in pkgJson) { // tslint:disable-line forin
             switch (key) {
                 case "private":
                 case "dependencies":
                 case "license":
-                    // "private" checked above, "dependencies" / "license" checked by types-publisher
+                    // "private"/"typesVersions"/"types" checked above, "dependencies" / "license" checked by types-publisher,
+                    break;
+                case "typesVersions":
+                case "types":
+                    if (!needsTypesVersions) {
+                        throw new Error(`${pkgJsonPath} doesn't need to set "${key}" when no 'ts3.x' directories exist.`);
+                    }
                     break;
                 default:
                     throw new Error(`${pkgJsonPath} should not include field ${key}`);
@@ -39,14 +56,13 @@ function checkTsconfig(dirPath, dt) {
     return __awaiter(this, void 0, void 0, function* () {
         const options = yield util_1.getCompilerOptions(dirPath);
         if (dt) {
-            const isOlderVersion = /^v\d+$/.test(path.basename(dirPath));
-            const baseUrl = isOlderVersion ? "../../" : "../";
+            const { relativeBaseUrl } = dt;
             const mustHave = {
                 module: "commonjs",
                 noEmit: true,
                 forceConsistentCasingInFileNames: true,
-                baseUrl,
-                typeRoots: [baseUrl],
+                baseUrl: relativeBaseUrl,
+                typeRoots: [relativeBaseUrl],
                 types: [],
             };
             for (const key of Object.getOwnPropertyNames(mustHave)) {
