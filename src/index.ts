@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
-import { readdir, readFile } from "fs-extra";
+import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, installAll } from "./installer";
 import { checkTslintJson, lint, TsVersion } from "./lint";
-import { assertDefined, last, mapDefined, withoutPrefix } from "./util";
+import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
 
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
@@ -94,10 +94,11 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 		assertPathIsInDefinitelyTyped(dirPath);
 	}
 
-	const typesVersions = mapDefined(await readdir(dirPath), name => {
+	const typesVersions = await mapDefinedAsync(await readdir(dirPath), async name => {
 		if (name === "tsconfig.json" || name === "tslint.json") { return undefined; }
 		const version = withoutPrefix(name, "ts");
-		if (version === undefined) { return undefined; }
+		if (version === undefined || !(await stat(joinPaths(dirPath, name))).isDirectory()) { return undefined; }
+
 		if (!isTypeScriptVersion(version)) {
 			throw new Error(`There is an entry named ${name}, but ${version} is not a valid TypeScript version.`);
 		}
