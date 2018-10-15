@@ -126,7 +126,9 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 			const version = typesVersions[i];
 			const versionPath = joinPaths(dirPath, `ts${version}`);
 			const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
-			await testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText, /*inTypesVersionDirectory*/ true);
+			await testTypesVersion(
+				versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText,
+				/*inTypesVersionDirectory*/ true);
 		}
 
 		function getTsVersion(i: number): TsVersion {

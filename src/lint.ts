@@ -24,6 +24,8 @@ export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: T
 	const { config, expectOnlyConfig } = await getLintConfig(lintConfigPath, tsconfigPath, minVersion, maxVersion);
 
 	for (const file of program.getSourceFiles()) {
+		if (program.isSourceFileDefaultLibrary(file)) { continue; }
+
 		const { fileName, text } = file;
 		const err = testNoTsIgnore(text) || testNoTslintDisables(text);
 		if (err) {
@@ -31,14 +33,17 @@ export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: T
 			const place = file.getLineAndCharacterOfPosition(pos);
 			return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
 		}
-		if (!program.isSourceFileDefaultLibrary(file)) {
-			linter.lint(fileName, text,
-				!file.fileName.startsWith(dirPath) || program.isSourceFileFromExternalLibrary(file) ? expectOnlyConfig : config);
-		}
+		const isExternal = !startsWithDirectory(fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
+		linter.lint(fileName, text, isExternal ? expectOnlyConfig : config);
 	}
 
 	const result = linter.getResult();
 	return result.failures.length ? result.output : undefined;
+}
+
+function startsWithDirectory(filePath: string, dirPath: string): boolean {
+	assert(!dirPath.endsWith("/"));
+	return filePath.startsWith(dirPath + "/");
 }
 
 interface Err { pos: number; message: string; }
