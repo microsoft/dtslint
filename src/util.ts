@@ -75,10 +75,10 @@ export function assertDefined<T>(a: T | undefined): T {
 	return a;
 }
 
-export function mapDefined<T, U>(arr: Iterable<T>, mapper: (t: T) => U | undefined): U[] {
+export async function mapDefinedAsync<T, U>(arr: Iterable<T>, mapper: (t: T) => Promise<U | undefined>): Promise<U[]> {
 	const out = [];
 	for (const a of arr) {
-		const res = mapper(a);
+		const res = await mapper(a);
 		if (res !== undefined) {
 			out.push(res);
 		}

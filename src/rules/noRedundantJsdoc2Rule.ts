@@ -84,6 +84,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
 			case ts.SyntaxKind.JSDocAugmentsTag:
 			case ts.SyntaxKind.JSDocCallbackTag:
 			case ts.SyntaxKind.JSDocThisTag:
+			case ts.SyntaxKind.JSDocEnumTag:
 				// Always redundant
 				ctx.addFailureAtNode(tag.tagName, Rule.FAILURE_STRING_REDUNDANT_TAG(tag.tagName.text), removeTag(tag, sourceFile));
 				break;
