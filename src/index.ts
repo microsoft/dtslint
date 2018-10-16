@@ -95,7 +95,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 	}
 
 	const typesVersions = await mapDefinedAsync(await readdir(dirPath), async name => {
-		if (name === "tsconfig.json" || name === "tslint.json") { return undefined; }
+		if (name === "tsconfig.json" || name === "tslint.json" || name === "tsutils") { return undefined; }
 		const version = withoutPrefix(name, "ts");
 		if (version === undefined || !(await stat(joinPaths(dirPath, name))).isDirectory()) { return undefined; }
 
