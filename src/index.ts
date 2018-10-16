@@ -158,7 +158,7 @@ async function testTypesVersion(
 
 	await checkTslintJson(dirPath, dt);
 	await checkTsconfig(dirPath, dt
-		? { relativeBaseUrl: joinPaths("..", isOlderVersion ? ".." : "", inTypesVersionDirectory ? ".." : "") + "/" }
+		? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
 		: undefined);
 	const err = await lint(dirPath, minVersion, maxVersion);
 	if (err) {

@@ -50,7 +50,7 @@ export async function checkPackageJson(
 }
 
 export interface DefinitelyTypedInfo {
-	/** "../" or "../../" or "../../../" */
+	/** "../" or "../../" or "../../../". This should use '/' even on windows. */
 	readonly relativeBaseUrl: string;
 }
 export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | undefined): Promise<void> {
