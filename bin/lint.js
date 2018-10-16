@@ -27,6 +27,9 @@ function lint(dirPath, minVersion, maxVersion) {
         const linter = new tslint_1.Linter(lintOptions, program);
         const { config, expectOnlyConfig } = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion, maxVersion);
         for (const file of program.getSourceFiles()) {
+            if (program.isSourceFileDefaultLibrary(file)) {
+                continue;
+            }
             const { fileName, text } = file;
             const err = testNoTsIgnore(text) || testNoTslintDisables(text);
             if (err) {
@@ -34,15 +37,18 @@ function lint(dirPath, minVersion, maxVersion) {
                 const place = file.getLineAndCharacterOfPosition(pos);
                 return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
             }
-            if (!program.isSourceFileDefaultLibrary(file)) {
-                linter.lint(fileName, text, !file.fileName.startsWith(dirPath) || program.isSourceFileFromExternalLibrary(file) ? expectOnlyConfig : config);
-            }
+            const isExternal = !startsWithDirectory(fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
+            linter.lint(fileName, text, isExternal ? expectOnlyConfig : config);
         }
         const result = linter.getResult();
         return result.failures.length ? result.output : undefined;
     });
 }
 exports.lint = lint;
+function startsWithDirectory(filePath, dirPath) {
+    assert(!dirPath.endsWith("/"));
+    return filePath.startsWith(dirPath + "/");
+}
 function testNoTsIgnore(text) {
     const tsIgnore = "ts-ignore";
     const pos = text.indexOf(tsIgnore);

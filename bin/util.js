@@ -90,15 +90,17 @@ function assertDefined(a) {
     return a;
 }
 exports.assertDefined = assertDefined;
-function mapDefined(arr, mapper) {
-    const out = [];
-    for (const a of arr) {
-        const res = mapper(a);
-        if (res !== undefined) {
-            out.push(res);
+function mapDefinedAsync(arr, mapper) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const out = [];
+        for (const a of arr) {
+            const res = yield mapper(a);
+            if (res !== undefined) {
+                out.push(res);
+            }
         }
-    }
-    return out;
+        return out;
+    });
 }
-exports.mapDefined = mapDefined;
+exports.mapDefinedAsync = mapDefinedAsync;
 //# sourceMappingURL=util.js.map

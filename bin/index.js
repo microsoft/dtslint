@@ -94,12 +94,12 @@ function runTests(dirPath, onlyTestTsNext) {
             // so assert that we're really on DefinitelyTyped.
             assertPathIsInDefinitelyTyped(dirPath);
         }
-        const typesVersions = util_1.mapDefined(yield fs_extra_1.readdir(dirPath), name => {
-            if (name === "tsconfig.json" || name === "tslint.json") {
+        const typesVersions = yield util_1.mapDefinedAsync(yield fs_extra_1.readdir(dirPath), (name) => __awaiter(this, void 0, void 0, function* () {
+            if (name === "tsconfig.json" || name === "tslint.json" || name === "tsutils") {
                 return undefined;
             }
             const version = util_1.withoutPrefix(name, "ts");
-            if (version === undefined) {
+            if (version === undefined || !(yield fs_extra_1.stat(path_1.join(dirPath, name))).isDirectory()) {
                 return undefined;
             }
             if (!definitelytyped_header_parser_1.isTypeScriptVersion(version)) {
@@ -109,7 +109,7 @@ function runTests(dirPath, onlyTestTsNext) {
                 throw new Error(`At ${dirPath}/${name}: TypeScript version directories only available starting with ts3.1.`);
             }
             return version;
-        });
+        }));
         if (dt) {
             yield checks_1.checkPackageJson(dirPath, typesVersions);
         }
@@ -130,7 +130,8 @@ function runTests(dirPath, onlyTestTsNext) {
                 const version = typesVersions[i];
                 const versionPath = path_1.join(dirPath, `ts${version}`);
                 const versionIndexText = yield fs_extra_1.readFile(path_1.join(versionPath, "index.d.ts"), "utf-8");
-                yield testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText, /*inTypesVersionDirectory*/ true);
+                yield testTypesVersion(versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText, 
+                /*inTypesVersionDirectory*/ true);
             }
             function getTsVersion(i) {
                 return i === typesVersions.length ? "next" : util_1.assertDefined(definitelytyped_header_parser_1.TypeScriptVersion.previous(typesVersions[i]));
