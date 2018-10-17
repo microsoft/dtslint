@@ -151,7 +151,7 @@ function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, i
         const minVersion = lowVersion || minVersionFromComment || definitelytyped_header_parser_1.TypeScriptVersion.lowest;
         yield lint_1.checkTslintJson(dirPath, dt);
         yield checks_1.checkTsconfig(dirPath, dt
-            ? { relativeBaseUrl: path_1.join("..", isOlderVersion ? ".." : "", inTypesVersionDirectory ? ".." : "") + "/" }
+            ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
             : undefined);
         const err = yield lint_1.lint(dirPath, minVersion, maxVersion);
         if (err) {
