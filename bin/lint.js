@@ -46,8 +46,10 @@ function lint(dirPath, minVersion, maxVersion) {
 }
 exports.lint = lint;
 function startsWithDirectory(filePath, dirPath) {
-    assert(!dirPath.endsWith("/"));
-    return filePath.startsWith(dirPath + "/");
+    const normalFilePath = path_1.normalize(filePath);
+    const normalDirPath = path_1.normalize(dirPath);
+    assert(!normalDirPath.endsWith("/") && !normalDirPath.endsWith("\\"));
+    return normalFilePath.startsWith(normalDirPath + "/") || normalFilePath.startsWith(normalDirPath + "\\");
 }
 function testNoTsIgnore(text) {
     const tsIgnore = "ts-ignore";
