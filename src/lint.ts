@@ -1,7 +1,7 @@
 import assert = require("assert");
 import { TypeScriptVersion } from "definitelytyped-header-parser";
 import { pathExists } from "fs-extra";
-import { join as joinPaths } from "path";
+import { join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
 type Configuration = typeof Configuration;
 type IConfigurationFile = Configuration.IConfigurationFile;
@@ -42,8 +42,10 @@ export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: T
 }
 
 function startsWithDirectory(filePath: string, dirPath: string): boolean {
-	assert(!dirPath.endsWith("/"));
-	return filePath.startsWith(dirPath + "/");
+	const normalFilePath = normalize(filePath);
+	const normalDirPath = normalize(dirPath);
+	assert(!normalDirPath.endsWith("/") && !normalDirPath.endsWith("\\"));
+	return normalFilePath.startsWith(normalDirPath + "/") || normalFilePath.startsWith(normalDirPath + "\\");
 }
 
 interface Err { pos: number; message: string; }
