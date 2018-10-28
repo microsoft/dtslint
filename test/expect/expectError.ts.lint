@@ -5,8 +5,8 @@ const y: string = 0 / "1"; // $ExpectError
 
 // $ExpectError
 const z: string = "";
-~~~~~~~~~~~~~~~~~~~~~ [Expected an error on this line, but found none.]
+~~~~~~~~~~~~~~~~~~~~~ [TypeScript@next: Expected an error on this line, but found none.]
 
 // $ExpectError
 "0" / 1; // $ExpectError
-~~~~~~~~~~~~~~~~~~~~~~~~ [This line has 2 $ExpectType assertions.]
+~~~~~~~~~~~~~~~~~~~~~~~~ [TypeScript@next: This line has 2 $ExpectType assertions.]
