@@ -4,4 +4,4 @@
 /// <reference path="foo" />
                      ~~~ [0]
 
-[0]: Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-bad-reference.md
+[0]: Don't use <reference path> in test files. Use <reference types> for external dependencies. To reference a file in this package, include it in 'tsconfig.json'. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-bad-reference.md
