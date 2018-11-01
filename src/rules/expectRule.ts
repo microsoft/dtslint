@@ -190,7 +190,7 @@ function walk(
 		if (sourceFile.text[end - 1] === "\r") {
 			end--;
 		}
-		ctx.addFailure(start, end, failure);
+		ctx.addFailure(start, end, `TypeScript@${versionName}: ${failure}`);
 	}
 }
 
