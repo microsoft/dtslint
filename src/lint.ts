@@ -3,28 +3,33 @@ import { TypeScriptVersion } from "definitelytyped-header-parser";
 import { pathExists } from "fs-extra";
 import { join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
+import * as TsType from "typescript";
 type Configuration = typeof Configuration;
 type IConfigurationFile = Configuration.IConfigurationFile;
 
-import { Options as ExpectOptions } from "./rules/expectRule";
+import { getProgram, Options as ExpectOptions } from "./rules/expectRule";
 
 import { typeScriptPath } from "./installer";
 import { readJson } from "./util";
 
 export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: TsVersion): Promise<string | undefined> {
-	const lintConfigPath = getConfigPath(dirPath);
 	const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
-	const program = Linter.createProgram(tsconfigPath);
+	const lintProgram = Linter.createProgram(tsconfigPath);
+
+	for (const version of [maxVersion, minVersion]) {
+		const errors = testDependencies(version, dirPath, lintProgram);
+		if (errors) { return errors; }
+	}
 
 	const lintOptions: ILinterOptions = {
 		fix: false,
 		formatter: "stylish",
 	};
-	const linter = new Linter(lintOptions, program);
-	const { config, expectOnlyConfig } = await getLintConfig(lintConfigPath, tsconfigPath, minVersion, maxVersion);
+	const linter = new Linter(lintOptions, lintProgram);
+	const config = await getLintConfig(getConfigPath(dirPath), tsconfigPath, minVersion, maxVersion);
 
-	for (const file of program.getSourceFiles()) {
-		if (program.isSourceFileDefaultLibrary(file)) { continue; }
+	for (const file of lintProgram.getSourceFiles()) {
+		if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
 
 		const { fileName, text } = file;
 		const err = testNoTsIgnore(text) || testNoTslintDisables(text);
@@ -33,12 +38,34 @@ export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: T
 			const place = file.getLineAndCharacterOfPosition(pos);
 			return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
 		}
-		const isExternal = !startsWithDirectory(fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
-		linter.lint(fileName, text, isExternal ? expectOnlyConfig : config);
+
+		// External dependencies should have been handled by `testDependencies`.
+		if (!isExternalDependency(file, dirPath, lintProgram)) {
+			linter.lint(fileName, text, config);
+		}
 	}
 
 	const result = linter.getResult();
 	return result.failures.length ? result.output : undefined;
+}
+
+function testDependencies(version: TsVersion, dirPath: string, lintProgram: TsType.Program): string | undefined {
+	const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
+	const ts: typeof TsType = require(typeScriptPath(version));
+	const program = getProgram(tsconfigPath, ts, version, lintProgram);
+	const diagnostics = ts.getPreEmitDiagnostics(program).filter(d => !d.file || isExternalDependency(d.file, dirPath, program));
+	if (!diagnostics.length) { return undefined; }
+
+	const showDiags = ts.formatDiagnostics(diagnostics, {
+		getCanonicalFileName: f => f,
+		getCurrentDirectory: () => dirPath,
+		getNewLine: () => "\n",
+	});
+	return `Errors in typescript@${version} for external dependencies:\n${showDiags}`;
+}
+
+function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
+	return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
 }
 
 function startsWithDirectory(filePath: string, dirPath: string): boolean {
@@ -100,7 +127,7 @@ async function getLintConfig(
 	tsconfigPath: string,
 	minVersion: TsVersion,
 	maxVersion: TsVersion,
-): Promise<{ readonly config: IConfigurationFile, readonly expectOnlyConfig: IConfigurationFile }> {
+): Promise<IConfigurationFile> {
 	const configExists = await pathExists(expectedConfigPath);
 	const configPath = configExists ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
 	// Second param to `findConfiguration` doesn't matter, since config path is provided.
@@ -119,13 +146,7 @@ async function getLintConfig(
 		const expectOptions: ExpectOptions = { tsconfigPath, versionsToTest };
 		expectRule.ruleArguments = [expectOptions];
 	}
-	const expectOnlyConfig: IConfigurationFile = {
-		extends: [],
-		rulesDirectory: config.rulesDirectory,
-		rules: new Map([["expect", expectRule]]),
-		jsRules: new Map(),
-	};
-	return { config, expectOnlyConfig };
+	return config;
 }
 
 function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVersion> {
