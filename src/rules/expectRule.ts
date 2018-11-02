@@ -82,11 +82,11 @@ export interface VersionToTest {
 
 const programCache = new WeakMap<Program, Map<string, Program>>();
 /** Maps a tslint Program to one created with the version specified in `options`. */
-function getProgram(configFile: string, ts: typeof TsType, versionName: string, oldProgram: Program): Program {
-	let versionToProgram = programCache.get(oldProgram);
+export function getProgram(configFile: string, ts: typeof TsType, versionName: string, lintProgram: Program): Program {
+	let versionToProgram = programCache.get(lintProgram);
 	if (versionToProgram === undefined) {
 		versionToProgram = new Map<string, Program>();
-		programCache.set(oldProgram, versionToProgram);
+		programCache.set(lintProgram, versionToProgram);
 	}
 
 	let newProgram = versionToProgram.get(versionName);
@@ -117,7 +117,14 @@ function walk(
 		ts: typeof TsType,
 		versionName: string,
 		nextHigherVersion: string | undefined): void {
-	const sourceFile = program.getSourceFile(ctx.sourceFile.fileName)!;
+	const { fileName } = ctx.sourceFile;
+	const sourceFile = program.getSourceFile(fileName)!;
+	if (!sourceFile) {
+		ctx.addFailure(0, 0,
+			`Program source files differ between TypeScript versions. This may be a dtslint bug.\n` +
+			`Expected to find a file '${fileName}' present in ${TsType.version}, but did not find it in ts@${versionName}.`);
+		return;
+	}
 
 	const checker = program.getTypeChecker();
 	// Don't care about emit errors.
@@ -167,7 +174,6 @@ function walk(
 			const msg = `${intro}\n${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
 			ctx.addFailureAt(diagnostic.start!, diagnostic.length!, msg);
 		} else {
-			const fileName = diagnostic.file ? `${diagnostic.file.fileName}: ` : "";
 			ctx.addFailureAt(0, 0, `${intro}\n${fileName}${diagnostic.messageText}`);
 		}
 	}
