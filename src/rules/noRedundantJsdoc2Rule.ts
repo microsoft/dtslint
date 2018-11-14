@@ -213,6 +213,7 @@ const redundantTags = new Set([
 	"function",
 	"global",
 	"implements",
+	"inherits",
 	"interface",
 	"instance",
 	"member",
