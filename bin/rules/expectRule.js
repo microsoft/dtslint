@@ -59,11 +59,11 @@ Rule.FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found 
 exports.Rule = Rule;
 const programCache = new WeakMap();
 /** Maps a tslint Program to one created with the version specified in `options`. */
-function getProgram(configFile, ts, versionName, oldProgram) {
-    let versionToProgram = programCache.get(oldProgram);
+function getProgram(configFile, ts, versionName, lintProgram) {
+    let versionToProgram = programCache.get(lintProgram);
     if (versionToProgram === undefined) {
         versionToProgram = new Map();
-        programCache.set(oldProgram, versionToProgram);
+        programCache.set(lintProgram, versionToProgram);
     }
     let newProgram = versionToProgram.get(versionName);
     if (newProgram === undefined) {
@@ -72,6 +72,7 @@ function getProgram(configFile, ts, versionName, oldProgram) {
     }
     return newProgram;
 }
+exports.getProgram = getProgram;
 function createProgram(configFile, ts) {
     const projectDirectory = path_1.dirname(configFile);
     const { config } = ts.readConfigFile(configFile, ts.sys.readFile);
@@ -86,7 +87,13 @@ function createProgram(configFile, ts) {
     return ts.createProgram(parsed.fileNames, parsed.options, host);
 }
 function walk(ctx, program, ts, versionName, nextHigherVersion) {
-    const sourceFile = program.getSourceFile(ctx.sourceFile.fileName);
+    const { fileName } = ctx.sourceFile;
+    const sourceFile = program.getSourceFile(fileName);
+    if (!sourceFile) {
+        ctx.addFailure(0, 0, `Program source files differ between TypeScript versions. This may be a dtslint bug.\n` +
+            `Expected to find a file '${fileName}' present in ${TsType.version}, but did not find it in ts@${versionName}.`);
+        return;
+    }
     const checker = program.getTypeChecker();
     // Don't care about emit errors.
     const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
@@ -128,7 +135,6 @@ function walk(ctx, program, ts, versionName, nextHigherVersion) {
             ctx.addFailureAt(diagnostic.start, diagnostic.length, msg);
         }
         else {
-            const fileName = diagnostic.file ? `${diagnostic.file.fileName}: ` : "";
             ctx.addFailureAt(0, 0, `${intro}\n${fileName}${diagnostic.messageText}`);
         }
     }
@@ -150,7 +156,7 @@ function walk(ctx, program, ts, versionName, nextHigherVersion) {
         if (sourceFile.text[end - 1] === "\r") {
             end--;
         }
-        ctx.addFailure(start, end, failure);
+        ctx.addFailure(start, end, `TypeScript@${versionName}: ${failure}`);
     }
 }
 function parseAssertions(sourceFile) {

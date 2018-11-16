@@ -1,14 +1,14 @@
 
 // $ExpectType xxx
 
-~nil [Can not match a node to this assertion.]
+~nil [TypeScript@next: Can not match a node to this assertion.]
 
 // $ExpectType number[]
 [1, 2];
 
 // $ExpectType 1
 1; // $ExpectType 2
-~~~~~~~~~~~~~~~~~~~ [This line has 2 $ExpectType assertions.]
+~~~~~~~~~~~~~~~~~~~ [TypeScript@next: This line has 2 $ExpectType assertions.]
 
 // Do nothing for commented-out comments
 // f; // $ExpectType foo

@@ -13,21 +13,27 @@ const definitelytyped_header_parser_1 = require("definitelytyped-header-parser")
 const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const tslint_1 = require("tslint");
+const expectRule_1 = require("./rules/expectRule");
 const installer_1 = require("./installer");
 const util_1 = require("./util");
 function lint(dirPath, minVersion, maxVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        const lintConfigPath = getConfigPath(dirPath);
         const tsconfigPath = path_1.join(dirPath, "tsconfig.json");
-        const program = tslint_1.Linter.createProgram(tsconfigPath);
+        const lintProgram = tslint_1.Linter.createProgram(tsconfigPath);
+        for (const version of [maxVersion, minVersion]) {
+            const errors = testDependencies(version, dirPath, lintProgram);
+            if (errors) {
+                return errors;
+            }
+        }
         const lintOptions = {
             fix: false,
             formatter: "stylish",
         };
-        const linter = new tslint_1.Linter(lintOptions, program);
-        const { config, expectOnlyConfig } = yield getLintConfig(lintConfigPath, tsconfigPath, minVersion, maxVersion);
-        for (const file of program.getSourceFiles()) {
-            if (program.isSourceFileDefaultLibrary(file)) {
+        const linter = new tslint_1.Linter(lintOptions, lintProgram);
+        const config = yield getLintConfig(getConfigPath(dirPath), tsconfigPath, minVersion, maxVersion);
+        for (const file of lintProgram.getSourceFiles()) {
+            if (lintProgram.isSourceFileDefaultLibrary(file)) {
                 continue;
             }
             const { fileName, text } = file;
@@ -37,14 +43,34 @@ function lint(dirPath, minVersion, maxVersion) {
                 const place = file.getLineAndCharacterOfPosition(pos);
                 return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
             }
-            const isExternal = !startsWithDirectory(fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
-            linter.lint(fileName, text, isExternal ? expectOnlyConfig : config);
+            // External dependencies should have been handled by `testDependencies`.
+            if (!isExternalDependency(file, dirPath, lintProgram)) {
+                linter.lint(fileName, text, config);
+            }
         }
         const result = linter.getResult();
         return result.failures.length ? result.output : undefined;
     });
 }
 exports.lint = lint;
+function testDependencies(version, dirPath, lintProgram) {
+    const tsconfigPath = path_1.join(dirPath, "tsconfig.json");
+    const ts = require(installer_1.typeScriptPath(version));
+    const program = expectRule_1.getProgram(tsconfigPath, ts, version, lintProgram);
+    const diagnostics = ts.getPreEmitDiagnostics(program).filter(d => !d.file || isExternalDependency(d.file, dirPath, program));
+    if (!diagnostics.length) {
+        return undefined;
+    }
+    const showDiags = ts.formatDiagnostics(diagnostics, {
+        getCanonicalFileName: f => f,
+        getCurrentDirectory: () => dirPath,
+        getNewLine: () => "\n",
+    });
+    return `Errors in typescript@${version} for external dependencies:\n${showDiags}`;
+}
+function isExternalDependency(file, dirPath, program) {
+    return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
+}
 function startsWithDirectory(filePath, dirPath) {
     const normalFilePath = path_1.normalize(filePath);
     const normalDirPath = path_1.normalize(dirPath);
@@ -113,13 +139,7 @@ function getLintConfig(expectedConfigPath, tsconfigPath, minVersion, maxVersion)
             const expectOptions = { tsconfigPath, versionsToTest };
             expectRule.ruleArguments = [expectOptions];
         }
-        const expectOnlyConfig = {
-            extends: [],
-            rulesDirectory: config.rulesDirectory,
-            rules: new Map([["expect", expectRule]]),
-            jsRules: new Map(),
-        };
-        return { config, expectOnlyConfig };
+        return config;
     });
 }
 function range(minVersion, maxVersion) {
