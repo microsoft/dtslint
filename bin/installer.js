@@ -16,6 +16,9 @@ const installsDir = path.join(__dirname, "..", "typescript-installs");
 function installAll() {
     return __awaiter(this, void 0, void 0, function* () {
         for (const v of definitelytyped_header_parser_1.TypeScriptVersion.all) {
+            // manually instead typescript@next outside the loop
+            if (v === definitelytyped_header_parser_1.TypeScriptVersion.all[definitelytyped_header_parser_1.TypeScriptVersion.all.length - 1])
+                continue;
             yield install(v);
         }
         yield install("next");
