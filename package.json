@@ -1,6 +1,6 @@
 {
   "name": "dtslint",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
@@ -24,7 +24,7 @@
     "test": "node test/test.js"
   },
   "dependencies": {
-    "definitelytyped-header-parser": "Microsoft/definitelytyped-header-parser#production",
+    "definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production",
     "fs-extra": "^6.0.1",
     "strip-json-comments": "^2.0.1",
     "tslint": "^5.9.1",
