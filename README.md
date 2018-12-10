@@ -151,8 +151,12 @@ The `production` branch is a dependency of [DefinitelyTyped](https://github.com/
 
 #### NPM
 
-TODO
+1. Update package.json
+2. Follow publish steps except for the `git push` at the end.
+3. Make sure you are logged in to npm as typescript.
+4. `npm publish`
 
+```
 
 ## Code of Conduct
 
