@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths } from "path";
@@ -160,7 +159,7 @@ async function testTypesVersion(
 	await checkTsconfig(dirPath, dt
 		? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
 		: undefined);
-	const err = await lint(dirPath, minVersion, maxVersion);
+	const err = await lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory);
 	if (err) {
 		throw new Error(err);
 	}
