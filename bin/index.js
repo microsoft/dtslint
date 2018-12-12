@@ -153,7 +153,7 @@ function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, i
         yield checks_1.checkTsconfig(dirPath, dt
             ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
             : undefined);
-        const err = yield lint_1.lint(dirPath, minVersion, maxVersion);
+        const err = yield lint_1.lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory);
         if (err) {
             throw new Error(err);
         }

@@ -16,7 +16,7 @@ const tslint_1 = require("tslint");
 const expectRule_1 = require("./rules/expectRule");
 const installer_1 = require("./installer");
 const util_1 = require("./util");
-function lint(dirPath, minVersion, maxVersion) {
+function lint(dirPath, minVersion, maxVersion, inTypesVersionDirectory) {
     return __awaiter(this, void 0, void 0, function* () {
         const tsconfigPath = path_1.join(dirPath, "tsconfig.json");
         const lintProgram = tslint_1.Linter.createProgram(tsconfigPath);
@@ -43,8 +43,10 @@ function lint(dirPath, minVersion, maxVersion) {
                 const place = file.getLineAndCharacterOfPosition(pos);
                 return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
             }
-            // External dependencies should have been handled by `testDependencies`.
-            if (!isExternalDependency(file, dirPath, lintProgram)) {
+            // External dependencies should have been handled by `testDependencies`;
+            // typesVersions should be handled in a separate lint
+            if (!isExternalDependency(file, dirPath, lintProgram) &&
+                (inTypesVersionDirectory || !isTypesVersionPath(fileName, dirPath))) {
                 linter.lint(fileName, text, config);
             }
         }
@@ -70,6 +72,10 @@ function testDependencies(version, dirPath, lintProgram) {
 }
 function isExternalDependency(file, dirPath, program) {
     return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
+}
+function isTypesVersionPath(fileName, dirPath) {
+    const subdirPath = util_1.withoutPrefix(fileName, dirPath);
+    return subdirPath && /^\/ts\d+\.\d/.test(subdirPath);
 }
 function startsWithDirectory(filePath, dirPath) {
     const normalFilePath = path_1.normalize(filePath);
