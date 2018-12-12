@@ -10,9 +10,9 @@ type IConfigurationFile = Configuration.IConfigurationFile;
 import { getProgram, Options as ExpectOptions } from "./rules/expectRule";
 
 import { typeScriptPath } from "./installer";
-import { readJson } from "./util";
+import { readJson, withoutPrefix } from "./util";
 
-export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: TsVersion): Promise<string | undefined> {
+export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: TsVersion, inTypesVersionDirectory: boolean): Promise<string | undefined> {
 	const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
 	const lintProgram = Linter.createProgram(tsconfigPath);
 
@@ -39,8 +39,10 @@ export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: T
 			return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
 		}
 
-		// External dependencies should have been handled by `testDependencies`.
-		if (!isExternalDependency(file, dirPath, lintProgram)) {
+		// External dependencies should have been handled by `testDependencies`;
+		// typesVersions should be handled in a separate lint
+		if (!isExternalDependency(file, dirPath, lintProgram) &&
+			(inTypesVersionDirectory || !isTypesVersionPath(fileName, dirPath))) {
 			linter.lint(fileName, text, config);
 		}
 	}
@@ -66,6 +68,11 @@ function testDependencies(version: TsVersion, dirPath: string, lintProgram: TsTy
 
 function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
 	return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
+}
+
+function isTypesVersionPath(fileName: string, dirPath: string) {
+	const subdirPath = withoutPrefix(fileName, dirPath)
+	return subdirPath && /^\/ts\d+\.\d/.test(subdirPath);
 }
 
 function startsWithDirectory(filePath: string, dirPath: string): boolean {

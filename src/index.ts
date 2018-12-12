@@ -160,7 +160,7 @@ async function testTypesVersion(
 	await checkTsconfig(dirPath, dt
 		? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
 		: undefined);
-	const err = await lint(dirPath, minVersion, maxVersion);
+	const err = await lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory);
 	if (err) {
 		throw new Error(err);
 	}
