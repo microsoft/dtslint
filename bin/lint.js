@@ -153,13 +153,14 @@ function range(minVersion, maxVersion) {
         assert(maxVersion === "next");
         return ["next"];
     }
-    const minIdx = definitelytyped_header_parser_1.TypeScriptVersion.all.indexOf(minVersion);
+    // The last item of TypeScriptVersion is the unreleased version of Typescript,
+    // which is called 'next' on npm, so replace it with 'next'.
+    const allReleased = [...definitelytyped_header_parser_1.TypeScriptVersion.all];
+    allReleased[allReleased.length - 1] = "next";
+    const minIdx = allReleased.indexOf(minVersion);
     assert(minIdx >= 0);
-    if (maxVersion === "next") {
-        return [...definitelytyped_header_parser_1.TypeScriptVersion.all.slice(minIdx), "next"];
-    }
-    const maxIdx = definitelytyped_header_parser_1.TypeScriptVersion.all.indexOf(maxVersion);
+    const maxIdx = allReleased.indexOf(maxVersion);
     assert(maxIdx >= minIdx);
-    return definitelytyped_header_parser_1.TypeScriptVersion.all.slice(minIdx, maxIdx + 1);
+    return allReleased.slice(minIdx, maxIdx + 1);
 }
 //# sourceMappingURL=lint.js.map
