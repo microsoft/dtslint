@@ -162,15 +162,15 @@ function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVe
 		return ["next"];
 	}
 
-	const minIdx = TypeScriptVersion.all.indexOf(minVersion);
+	// The last item of TypeScriptVersion is the unreleased version of Typescript,
+	// which is called 'next' on npm, so replace it with 'next'.
+	const allReleased: TsVersion[] = [...TypeScriptVersion.all];
+	allReleased[allReleased.length - 1] = "next";
+	const minIdx = allReleased.indexOf(minVersion);
 	assert(minIdx >= 0);
-	if (maxVersion === "next") {
-		return [...TypeScriptVersion.all.slice(minIdx), "next"];
-	}
-
-	const maxIdx = TypeScriptVersion.all.indexOf(maxVersion);
+	const maxIdx = allReleased.indexOf(maxVersion);
 	assert(maxIdx >= minIdx);
-	return TypeScriptVersion.all.slice(minIdx, maxIdx + 1);
+	return allReleased.slice(minIdx, maxIdx + 1);
 }
 
 export type TsVersion = TypeScriptVersion | "next";
