@@ -1,122 +1,123 @@
 {
-	"extends": "tslint:all",
-	"rulesDirectory": "./bin/rules",
-	"rules": {
-		// Custom rules
-		"expect": true,
-		"export-just-namespace": true,
-		"no-bad-reference": true,
-		"no-const-enum": true,
-		"no-dead-reference": true,
-		"no-import-default-of-export-equals": true,
-		"no-padding": true,
-		"no-redundant-undefined": true,
-		"no-relative-import-in-test": true,
-		"strict-export-declare-modifiers": true,
-		"no-any-union": true,
-		"no-single-declare-module": true,
-		"no-unnecessary-generics": true,
-		"no-useless-files": true,
-		"prefer-declare-function": true,
-		"trim-file": true,
-		"unified-signatures": true,
-		"void-return": true,
+    "extends": "tslint:all",
+    "rulesDirectory": "./bin/rules",
+    "rules": {
+        // Custom rules
+        "expect": true,
+        "export-just-namespace": true,
+        "no-bad-reference": true,
+        "no-const-enum": true,
+        "no-dead-reference": true,
+        "no-import-default-of-export-equals": true,
+        "no-padding": true,
+        "no-redundant-undefined": true,
+        "no-relative-import-in-test": true,
+        "strict-export-declare-modifiers": true,
+        "no-any-union": true,
+        "no-single-declare-module": true,
+        "no-unnecessary-generics": true,
+        "no-useless-files": true,
+        "prefer-declare-function": true,
+        "trim-file": true,
+        "unified-signatures": true,
+        "void-return": true,
 
-		"comment-format": [true, "check-space"], // But not check-uppercase or check-lowercase
-		"interface-name": [true, "never-prefix"],
-		"max-line-length": [true, 200],
-		"member-access": [true, "no-public"],
-		"no-consecutive-blank-lines": true,
-		"no-unnecessary-callback-wrapper": true,
-		"no-namespace": [true, "allow-declarations"],
-		"object-literal-key-quotes": [true, "as-needed"],
-		"one-line": [
-			true,
-			"check-catch",
-			"check-finally",
-			"check-else",
-			"check-open-brace",
-			"check-whitespace"
-		],
-		"one-variable-per-declaration": [true, "ignore-for-loop"],
-		"only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
-		"prefer-template": [true, "allow-single-concat"],
-		"whitespace": [
-			true,
-			"check-branch",
-			"check-decl",
-			"check-operator",
-			"check-module",
-			"check-separator",
-			"check-type",
-			"check-typecast"
-		],
+        "comment-format": [true, "check-space"], // But not check-uppercase or check-lowercase
+        "interface-name": [true, "never-prefix"],
+        "max-line-length": [true, 200],
+        "member-access": [true, "no-public"],
+        "no-consecutive-blank-lines": true,
+        "no-unnecessary-callback-wrapper": true,
+        "no-namespace": [true, "allow-declarations"],
+        "object-literal-key-quotes": [true, "as-needed"],
+        "one-line": [
+            true,
+            "check-catch",
+            "check-finally",
+            "check-else",
+            "check-open-brace",
+            "check-whitespace"
+        ],
+        "one-variable-per-declaration": [true, "ignore-for-loop"],
+        "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
+        "prefer-template": [true, "allow-single-concat"],
+        "whitespace": [
+            true,
+            "check-branch",
+            "check-decl",
+            "check-operator",
+            "check-module",
+            "check-separator",
+            "check-type",
+            "check-typecast"
+        ],
 
-		// TODO?
-		"align": false, // TODO
-		"arrow-parens": false,
-		"arrow-return-shorthand": true, // TODO: "multiline"
-		"linebreak-style": false, // TODO
-		"no-void-expression": [true, "ignore-arrow-function-shorthand"],
-		"no-any": false, // TODO
-		"no-floating-promises": false, // TODO: https://github.com/palantir/tslint/issues/2879
-		"no-import-side-effect": false,
-		"no-this-assignment": false,
-		"no-unbound-method": false, // TODO?
-		"no-unsafe-any": false, // TODO
-		"number-literal-format": false, // TODO
-		"promise-function-async": false,
-		"restrict-plus-operands": false, // TODO
-		"return-undefined": false, // TODO
-		"switch-final-break": false, // TODO
-		"prefer-method-signature": false, // TODO?
+        // TODO?
+        "align": false, // TODO
+        "arrow-parens": false,
+        "arrow-return-shorthand": true, // TODO: "multiline"
+        "linebreak-style": false, // TODO
+        "no-void-expression": [true, "ignore-arrow-function-shorthand"],
+        "no-any": false, // TODO
+        "no-floating-promises": false, // TODO: https://github.com/palantir/tslint/issues/2879
+        "no-import-side-effect": false,
+        "no-this-assignment": false,
+        "no-unbound-method": false, // TODO?
+        "no-unsafe-any": false, // TODO
+        "number-literal-format": false, // TODO
+        "promise-function-async": false,
+        "restrict-plus-operands": false, // TODO
+        "return-undefined": false, // TODO
+        "switch-final-break": false, // TODO
+        "prefer-method-signature": false, // TODO?
 
-		// Pretty sure we don't want these
-		"binary-expression-operand-order": false,
-		"class-name": false,
-		"completed-docs": false,
-		"curly": false,
-		"cyclomatic-complexity": false,
-		"deprecation": false,
-		"file-name-casing": false,
-		"forin": false,
-		"indent": false,
-		"match-default-export-name": false,
-		"max-classes-per-file": false,
-		"max-file-line-count": false,
-		"member-ordering": false,
-		"newline-before-return": false,
-		"newline-per-chained-call": false,
-		"no-bitwise": false,
-		"no-console": false,
-		"no-default-export": false,
-		"no-empty": false,
-		"no-implicit-dependencies": false, // See https://github.com/palantir/tslint/issues/3364
-		"no-inferred-empty-object-type": false,
-		"no-magic-numbers": false,
-		"no-non-null-assertion": false,
-		"no-null-keyword": false,
-		"no-parameter-properties": false,
-		"no-parameter-reassignment": false,
-		"no-reference": false, // But see no-bad-reference
-		"no-require-imports": false,
-		"no-shadowed-variable": false,
-		"no-string-literal": false,
-		"no-submodule-imports": false,
-		"no-unused-expression": false,
-		"no-unused-variable": false,
-		"no-use-before-declare": false,
-		"object-literal-sort-keys": false,
-		"ordered-imports": false,
-		"prefer-function-over-method": false,
-		"quotemark": false,
-		"strict-boolean-expressions": false,
-		"strict-type-predicates": false,
-		"switch-default": false,
-		"trailing-comma": false,
-		"triple-equals": [true, "allow-null-check"],
-		"typedef": false,
-		"type-literal-delimiter": false,
-		"variable-name": false
-	}
+        // Pretty sure we don't want these
+        "binary-expression-operand-order": false,
+        "class-name": false,
+        "completed-docs": false,
+        "curly": false,
+        "cyclomatic-complexity": false,
+        "deprecation": false,
+        "file-name-casing": false,
+        "forin": false,
+        "indent": false,
+        "match-default-export-name": false,
+        "max-classes-per-file": false,
+        "max-file-line-count": false,
+        "member-ordering": false,
+        "newline-before-return": false,
+        "newline-per-chained-call": false,
+        "no-bitwise": false,
+        "no-console": false,
+        "no-default-export": false,
+        "no-empty": false,
+        "no-implicit-dependencies": false, // See https://github.com/palantir/tslint/issues/3364
+        "no-inferred-empty-object-type": false,
+        "no-magic-numbers": false,
+        "no-non-null-assertion": false,
+        "no-null-keyword": false,
+        "no-parameter-properties": false,
+        "no-parameter-reassignment": false,
+        "no-reference": false, // But see no-bad-reference
+        "no-require-imports": false,
+        "no-shadowed-variable": false,
+        "no-string-literal": false,
+        "no-submodule-imports": false,
+        "no-unused-expression": false,
+        "no-unused-variable": false,
+        "no-use-before-declare": false,
+        "object-literal-sort-keys": false,
+        "ordered-imports": false,
+        "prefer-function-over-method": false,
+        "quotemark": false,
+        "strict-boolean-expressions": false,
+        "strict-type-predicates": false,
+        "switch-default": false,
+        "trailing-comma": false,
+        "triple-equals": [true, "allow-null-check"],
+        "typedef": false,
+        "type-literal-delimiter": false,
+        "variable-name": false,
+        "increment-decrement": false
+    }
 }
