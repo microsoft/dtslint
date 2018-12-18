@@ -72,6 +72,7 @@
 		"prefer-method-signature": false, // TODO?
 
 		// Pretty sure we don't want these
+		"ban-ts-ignore": false,
 		"binary-expression-operand-order": false,
 		"class-name": false,
 		"completed-docs": false,
@@ -80,6 +81,7 @@
 		"deprecation": false,
 		"file-name-casing": false,
 		"forin": false,
+		"increment-decrement": false,
 		"indent": false,
 		"match-default-export-name": false,
 		"max-classes-per-file": false,
@@ -90,6 +92,7 @@
 		"no-bitwise": false,
 		"no-console": false,
 		"no-default-export": false,
+		"no-default-import": false,
 		"no-empty": false,
 		"no-implicit-dependencies": false, // See https://github.com/palantir/tslint/issues/3364
 		"no-inferred-empty-object-type": false,
