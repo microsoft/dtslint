@@ -72,7 +72,6 @@
 		"prefer-method-signature": false, // TODO?
 
 		// Pretty sure we don't want these
-		"ban-ts-ignore": false,
 		"binary-expression-operand-order": false,
 		"class-name": false,
 		"completed-docs": false,
