@@ -10,6 +10,10 @@ export async function installAll() {
 	for (const v of TypeScriptVersion.all) {
 		await install(v);
 	}
+	await installNext();
+}
+
+export async function installNext() {
 	await install("next");
 }
 

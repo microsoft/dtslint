@@ -4,7 +4,7 @@ import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, installAll } from "./installer";
+import { cleanInstalls, installAll, installNext } from "./installer";
 import { checkTslintJson, lint, TsVersion } from "./lint";
 import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
 
@@ -57,7 +57,13 @@ async function main(): Promise<void> {
 		// Do this *after* to ensure messages sent during installation aren't dropped.
 		await installAll();
 	} else {
-		await installAll();
+		if (!onlyTestTsNext) {
+			await installAll();
+		} else {
+			// if `onlyTestTsNext` is true we only need to install the next typescript version
+			// not all of them
+			await installNext();
+		}
 		await runTests(dirPath, onlyTestTsNext);
 	}
 }
