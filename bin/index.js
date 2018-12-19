@@ -60,7 +60,12 @@ function main() {
             yield installer_1.installAll();
         }
         else {
-            yield installer_1.installAll();
+            if (onlyTestTsNext) {
+                yield installer_1.installNext();
+            }
+            else {
+                yield installer_1.installAll();
+            }
             yield runTests(dirPath, onlyTestTsNext);
         }
     });

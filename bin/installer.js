@@ -21,10 +21,16 @@ function installAll() {
                 continue;
             yield install(v);
         }
-        yield install("next");
+        yield installNext();
     });
 }
 exports.installAll = installAll;
+function installNext() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield install("next");
+    });
+}
+exports.installNext = installNext;
 function install(version) {
     return __awaiter(this, void 0, void 0, function* () {
         const dir = installDir(version);
