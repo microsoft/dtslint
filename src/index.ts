@@ -57,12 +57,10 @@ async function main(): Promise<void> {
 		// Do this *after* to ensure messages sent during installation aren't dropped.
 		await installAll();
 	} else {
-		if (!onlyTestTsNext) {
-			await installAll();
-		} else {
-			// if `onlyTestTsNext` is true we only need to install the next typescript version
-			// not all of them
+		if (onlyTestTsNext) {
 			await installNext();
+		} else {
+			await installAll();
 		}
 		await runTests(dirPath, onlyTestTsNext);
 	}
