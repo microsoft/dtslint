@@ -118,6 +118,10 @@
         "typedef": false,
         "type-literal-delimiter": false,
         "variable-name": false,
-        "increment-decrement": false
+        "increment-decrement": false,
+        "unnecessary-constructor": false,
+        "no-angle-bracket-type-assertion": false,
+        "no-default-import": false,
+        "callable-types": false
     }
 }
