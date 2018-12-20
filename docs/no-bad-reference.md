@@ -1,7 +1,8 @@
 # no-bad-reference
 
 (This rule is specific to DefinitelyTyped.)
-Avoid using `<reference path>`.
+Avoid using `<reference path>` to reference other packages.
+Do use `<reference path>` to reference a file in the current package, though this is usually unnecessary.
 
 **Bad**:
 
@@ -25,4 +26,17 @@ If not, use `<reference types>` instead:
 /// <reference types="foo" />
 ```
 
-The only time `<reference path>` should be necessary if for global (not module) libraries that are separated into multiple files; the index file must include references to the others to bring them into the compilation.
+The only time `<reference path>` should be necessary is for global (not module) libraries that are separated into multiple files; the index file must include references to the others to bring them into the compilation.
+
+**Bad**:
+```ts
+/// <reference types="this-package-name" />
+```
+
+ **Good**:
+
+Usually intra-package references can simply be omitted. If not, use a relative path.
+
+```ts
+/// <reference path="./index.d.ts" />
+```
