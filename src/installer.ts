@@ -12,6 +12,10 @@ export async function installAll() {
 		if (v === TypeScriptVersion.all[TypeScriptVersion.all.length - 1]) continue;
 		await install(v);
 	}
+	await installNext();
+}
+
+export async function installNext() {
 	await install("next");
 }
 
