@@ -7,8 +7,8 @@
     "dt.json",
     "dtslint.json"
   ],
-  "main": "bin",
-  "bin": "./bin/index.js",
+  "main": "dist",
+  "bin": "./dist/bin/index.js",
   "contributors": [
     "Andy Hanson <andy-ms@microsoft.com> (https://github.com/andy-ms)",
     "Dan Vanderkam <danvdk@gmail.com> (https://github.com/danvk)"

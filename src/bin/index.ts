@@ -3,10 +3,10 @@ import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } fr
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths } from "path";
 
-import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, installAll } from "./installer";
-import { checkTslintJson, lint, TsVersion } from "./lint";
-import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
+import { checkPackageJson, checkTsconfig } from "../checks";
+import { cleanInstalls, installAll } from "../installer";
+import { checkTslintJson, lint, TsVersion } from "../lint";
+import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "../util";
 
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
