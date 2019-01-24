@@ -21,7 +21,8 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "lint": "tslint --project tsconfig.json --format stylish",
-    "test": "node test/test.js"
+    "test": "node test/test.js",
+    "push-production": "npm run build && git checkout production && git merge master && npm run build && git add bin/* && git commit -m 'Update bin/' && git push -u origin production"
   },
   "dependencies": {
     "definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production",
