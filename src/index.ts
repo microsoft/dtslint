@@ -155,9 +155,6 @@ async function testTypesVersion(
 	if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
 		throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
 	}
-	if (minVersionFromComment !== undefined && TypeScriptVersion.isRedirectable(minVersionFromComment)) {
-		throw new Error(`Don't use \`// TypeScript Version\` for newer TS versions, use typesVerisons instead.`);
-	}
 	const minVersion = lowVersion || minVersionFromComment || TypeScriptVersion.lowest;
 
 	await checkTslintJson(dirPath, dt);
