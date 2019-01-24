@@ -150,9 +150,6 @@ function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, i
         if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
             throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
         }
-        if (minVersionFromComment !== undefined && definitelytyped_header_parser_1.TypeScriptVersion.isRedirectable(minVersionFromComment)) {
-            throw new Error(`Don't use \`// TypeScript Version\` for newer TS versions, use typesVerisons instead.`);
-        }
         const minVersion = lowVersion || minVersionFromComment || definitelytyped_header_parser_1.TypeScriptVersion.lowest;
         yield lint_1.checkTslintJson(dirPath, dt);
         yield checks_1.checkTsconfig(dirPath, dt
