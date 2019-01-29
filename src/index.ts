@@ -18,6 +18,7 @@ async function main(): Promise<void> {
 		switch (arg) {
 			case "--installAll":
 				console.log("Cleaning old installs and installing for all TypeScript versions...");
+				console.log("Working...");
 				await cleanInstalls();
 				await installAll();
 				return;
