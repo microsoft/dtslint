@@ -26,6 +26,7 @@ function main() {
             switch (arg) {
                 case "--installAll":
                     console.log("Cleaning old installs and installing for all TypeScript versions...");
+                    console.log("Working...");
                     yield installer_1.cleanInstalls();
                     yield installer_1.installAll();
                     return;
