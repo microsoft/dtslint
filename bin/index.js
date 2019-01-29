@@ -127,7 +127,7 @@ function runTests(dirPath, onlyTestTsNext) {
                 const latestTypesVersion = util_1.last(typesVersions);
                 const versionPath = path_1.join(dirPath, `ts${latestTypesVersion}`);
                 const versionIndexText = yield fs_extra_1.readFile(path_1.join(versionPath, "index.d.ts"), "utf-8");
-                yield testTypesVersion(versionPath, "next", "next", isOlderVersion, dt, versionIndexText);
+                yield testTypesVersion(versionPath, "next", "next", isOlderVersion, dt, versionIndexText, /*inTypesVersionDirectory*/ true);
             }
         }
         else {
