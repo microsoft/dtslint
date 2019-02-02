@@ -161,4 +161,4 @@ I'm getting an error about a missing typescript install.
 ```
 Error: Cannot find module '/node_modules/dtslint/typescript-installs/3.1/node_modules/typescript`
 ```
-Package lock files such as `yarn.lock` and `package-lock.json` may cause this issue because of our github dependency on `"definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production"`, which contains the list of typescript versions to install. To fix this, try installing `definitelytyped-header-parser` directly, or if all else fails, deleting your lock file and re-installing.
+Package lock files such as `yarn.lock` and `package-lock.json` may cause this issue because of our github dependency on `"definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production"`, which contains the list of typescript versions to install. To fix this, try deleting your lock file and re-installing.
