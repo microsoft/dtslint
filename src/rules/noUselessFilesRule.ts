@@ -7,25 +7,25 @@ import { failure } from "../util";
 // Remove when that PR is in.
 
 export class Rule extends Lint.Rules.AbstractRule {
-	static metadata: Lint.IRuleMetadata = {
-		ruleName: "no-useless-files",
-		description: "Forbids files with no content.",
-		optionsDescription: "Not configurable.",
-		options: null,
-		type: "functionality",
-		typescriptOnly: false,
-	};
+    static metadata: Lint.IRuleMetadata = {
+        ruleName: "no-useless-files",
+        description: "Forbids files with no content.",
+        optionsDescription: "Not configurable.",
+        options: null,
+        type: "functionality",
+        typescriptOnly: false,
+    };
 
-	static FAILURE_STRING = failure(
-		Rule.metadata.ruleName,
-		"File has no content.");
+    static FAILURE_STRING = failure(
+        Rule.metadata.ruleName,
+        "File has no content.");
 
-	apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-		const { statements, referencedFiles, typeReferenceDirectives } = sourceFile;
-		if (statements.length + referencedFiles.length + typeReferenceDirectives.length !== 0) {
-			return [];
-		}
+    apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+        const { statements, referencedFiles, typeReferenceDirectives } = sourceFile;
+        if (statements.length + referencedFiles.length + typeReferenceDirectives.length !== 0) {
+            return [];
+        }
 
-		return [new Lint.RuleFailure(sourceFile, 0, 1, Rule.FAILURE_STRING, this.ruleName)];
-	}
+        return [new Lint.RuleFailure(sourceFile, 0, 1, Rule.FAILURE_STRING, this.ruleName)];
+    }
 }
