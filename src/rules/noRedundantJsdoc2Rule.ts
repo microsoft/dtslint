@@ -86,7 +86,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
             case ts.SyntaxKind.JSDocThisTag:
             case ts.SyntaxKind.JSDocEnumTag:
                 // Always redundant
-                ctx.addFailureAtNode(tag.tagName, Rule.FAILURE_STRING_REDUNDANT_TAG(tag.tagName.text), removeTag(tag, sourceFile));
+                ctx.addFailureAtNode(
+                    tag.tagName,
+                    Rule.FAILURE_STRING_REDUNDANT_TAG(tag.tagName.text),
+                    removeTag(tag, sourceFile));
                 break;
 
             case ts.SyntaxKind.JSDocReturnTag:
@@ -100,7 +103,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
                 }
                 if (noComment) {
                     // Redundant if no documentation
-                    ctx.addFailureAtNode(tag.tagName, Rule.FAILURE_STRING_NO_COMMENT(tag.tagName.text), removeTag(tag, sourceFile));
+                    ctx.addFailureAtNode(
+                        tag.tagName,
+                        Rule.FAILURE_STRING_NO_COMMENT(tag.tagName.text),
+                        removeTag(tag, sourceFile));
                 }
                 break;
             }

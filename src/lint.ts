@@ -12,7 +12,11 @@ import { getProgram, Options as ExpectOptions } from "./rules/expectRule";
 import { typeScriptPath } from "./installer";
 import { readJson, withoutPrefix } from "./util";
 
-export async function lint(dirPath: string, minVersion: TsVersion, maxVersion: TsVersion, inTypesVersionDirectory: boolean): Promise<string | undefined> {
+export async function lint(
+    dirPath: string,
+    minVersion: TsVersion,
+    maxVersion: TsVersion,
+    inTypesVersionDirectory: boolean): Promise<string | undefined> {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
     const lintProgram = Linter.createProgram(tsconfigPath);
 
@@ -71,7 +75,7 @@ function isExternalDependency(file: TsType.SourceFile, dirPath: string, program:
 }
 
 function isTypesVersionPath(fileName: string, dirPath: string) {
-    const subdirPath = withoutPrefix(fileName, dirPath)
+    const subdirPath = withoutPrefix(fileName, dirPath);
     return subdirPath && /^\/ts\d+\.\d/.test(subdirPath);
 }
 
