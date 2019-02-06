@@ -215,6 +215,45 @@ function isFirstOnLine(text, lineStart, pos) {
     }
     return true;
 }
+function matchReadonlyArray(actual, expected) {
+    if (!(/\breadonly\b/.test(actual) && /\bReadonlyArray\b/.test(expected)))
+        return false;
+    const readonlyArrayRegExp = /\bReadonlyArray</y;
+    const readonlyModifierRegExp = /\breadonly /y;
+    // A<ReadonlyArray<B<ReadonlyArray<C>>>>
+    // A<readonly B<readonly C[]>[]>
+    let expectedPos = 0;
+    let actualPos = 0;
+    let depth = 0;
+    while (expectedPos < expected.length && actualPos < actual.length) {
+        const expectedChar = expected.charAt(expectedPos);
+        const actualChar = actual.charAt(actualPos);
+        if (expectedChar === actualChar) {
+            expectedPos++;
+            actualPos++;
+            continue;
+        }
+        // check for end of readonly array
+        if (depth > 0 && expectedChar === ">" && actualChar === "[" && actualPos < actual.length - 1 &&
+            actual.charAt(actualPos + 1) === "]") {
+            depth--;
+            expectedPos++;
+            actualPos += 2;
+            continue;
+        }
+        // check for start of readonly array
+        readonlyArrayRegExp.lastIndex = expectedPos;
+        readonlyModifierRegExp.lastIndex = actualPos;
+        if (readonlyArrayRegExp.test(expected) && readonlyModifierRegExp.test(actual)) {
+            depth++;
+            expectedPos += 14; // "ReadonlyArray<".length;
+            actualPos += 9; // "readonly ".length;
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
 function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
     const unmetExpectations = [];
     // Match assertions to the first node that appears on the line they apply to.
@@ -231,7 +270,7 @@ function getExpectTypeFailures(sourceFile, typeAssertions, checker, ts) {
             const actual = type
                 ? checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation)
                 : "";
-            if (actual !== expected) {
+            if (actual !== expected && !matchReadonlyArray(actual, expected)) {
                 unmetExpectations.push({ node, expected, actual });
             }
             typeAssertions.delete(line);
