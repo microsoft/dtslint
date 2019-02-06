@@ -297,7 +297,8 @@ function matchReadonlyArray(actual: string, expected: string) {
         }
 
         // check for end of readonly array
-        if (depth > 0 && expectedChar === ">" && actualChar === "[" && actualPos < actual.length - 1 && actual.charAt(actualPos + 1) === "]") {
+        if (depth > 0 && expectedChar === ">" && actualChar === "[" && actualPos < actual.length - 1 &&
+            actual.charAt(actualPos + 1) === "]") {
             depth--;
             expectedPos++;
             actualPos += 2;
