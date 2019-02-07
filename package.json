@@ -1,6 +1,6 @@
 {
   "name": "dtslint",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
