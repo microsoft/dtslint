@@ -17,6 +17,11 @@ export async function checkPackageJson(
         }
         return;
     }
+    if (/download/.test(dirPath)) {
+        // Since npm won't release their banned-words list, we'll have to manually add to this list.
+        throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
+    }
+
     const pkgJson = await readJson(pkgJsonPath) as {};
 
     if ((pkgJson as any).private !== true) {
@@ -107,9 +112,11 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
         throw new Error('Must specify "lib", usually to `"lib": ["es6"]` or `"lib": ["es6", "dom"]`.');
     }
 
-    for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
-        if (!(key in options)) {
-            throw new Error(`Expected \`"${key}": true\` or \`"${key}": false\`.`);
+    if (!("strict" in options)) {
+        for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
+            if (!(key in options)) {
+                throw new Error(`Expected \`"${key}": true\` or \`"${key}": false\`.`);
+            }
         }
     }
 
