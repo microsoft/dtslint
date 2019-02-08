@@ -17,6 +17,11 @@ export async function checkPackageJson(
         }
         return;
     }
+    if (/download/.test(dirPath)) {
+        // Since npm won't release their banned-words list, we'll have to manually add to this list.
+        throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
+    }
+
     const pkgJson = await readJson(pkgJsonPath) as {};
 
     if ((pkgJson as any).private !== true) {
