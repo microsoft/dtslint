@@ -23,10 +23,11 @@ function checkPackageJson(dirPath, typesVersions) {
             }
             return;
         }
-        if (/download/.test(dirPath) &&
-            dirPath !== "download" &&
-            dirPath !== "downloadjs" &&
-            dirPath !== "s3-download-stream") {
+        const basedir = path_1.basename(dirPath);
+        if (/download/.test(basedir) &&
+            basedir !== "download" &&
+            basedir !== "downloadjs" &&
+            basedir !== "s3-download-stream") {
             // Since npm won't release their banned-words list, we'll have to manually add to this list.
             throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
         }
