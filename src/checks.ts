@@ -1,7 +1,7 @@
 import assert = require("assert");
 import { makeTypesVersionsForPackageJson, TypeScriptVersion } from "definitelytyped-header-parser";
 import { pathExists } from "fs-extra";
-import { join as joinPaths } from "path";
+import { join as joinPaths, basename } from "path";
 
 import { getCompilerOptions, readJson } from "./util";
 
@@ -17,10 +17,11 @@ export async function checkPackageJson(
         }
         return;
     }
-    if (/download/.test(dirPath) &&
-        dirPath !== "download" &&
-        dirPath !== "downloadjs" &&
-        dirPath !== "s3-download-stream") {
+    const basedir = basename(dirPath);
+    if (/download/.test(basedir) &&
+        basedir !== "download" &&
+        basedir !== "downloadjs" &&
+        basedir !== "s3-download-stream") {
         // Since npm won't release their banned-words list, we'll have to manually add to this list.
         throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
     }
