@@ -11,6 +11,7 @@ export async function installAll() {
         // manually instead typescript@next outside the loop
         if (v === TypeScriptVersion.all[TypeScriptVersion.all.length - 1]) continue;
         await install(v);
+        console.log("");
     }
     await installNext();
 }
@@ -46,7 +47,10 @@ function installDir(version: TsVersion): string {
 async function execAndThrowErrors(cmd: string, cwd?: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         exec(cmd, { encoding: "utf8", cwd }, (err, _stdout, stderr) => {
-            console.error(stderr);
+            if (stderr) {
+                console.error(stderr);
+            }
+
             if (err) {
                 reject(err);
             } else {
