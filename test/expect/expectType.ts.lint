@@ -25,3 +25,6 @@ f; // $ExpectType (one: number, two: [number, number], three: [number, number, n
 // Test that we get the type of the initializer on a variable declaration.
 // $ExpectType 1
 const x = 1;
+
+declare const ar: readonly number[];
+ar; // $ExpectType ReadonlyArray<number>

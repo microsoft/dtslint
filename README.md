@@ -139,14 +139,10 @@ To run a single test: `node node_modules/tslint/bin/tslint --rules-dir bin/rules
 #### `production` branch
 
 ```sh
-git checkout production
-git merge master
-npm run build
-git add --all
-git commit -m "Update bin/"
-git push
+npm run push-production
 ```
 
+This script merges changes from master into `production` and updates the `bin/` directory.
 The `production` branch is a dependency of [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) and [types-publisher](https://github.com/Microsoft/types-publisher).
 
 #### NPM
@@ -156,8 +152,13 @@ The `production` branch is a dependency of [DefinitelyTyped](https://github.com/
 3. Make sure you are logged in to npm as typescript.
 4. `npm publish`
 
-```
-
 ## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## FAQ
+I'm getting an error about a missing typescript install.
+```
+Error: Cannot find module '/node_modules/dtslint/typescript-installs/3.1/node_modules/typescript`
+```
+Package lock files such as `yarn.lock` and `package-lock.json` may cause this issue because of our github dependency on `"definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production"`, which contains the list of typescript versions to install. To fix this, try deleting your lock file and re-installing.
