@@ -13,6 +13,7 @@ const definitelytyped_header_parser_1 = require("definitelytyped-header-parser")
 const fs_extra_1 = require("fs-extra");
 const path_1 = require("path");
 const checks_1 = require("./checks");
+const critic = require("dts-critic");
 const installer_1 = require("./installer");
 const lint_1 = require("./lint");
 const util_1 = require("./util");
@@ -117,6 +118,7 @@ function runTests(dirPath, onlyTestTsNext) {
             return version;
         }));
         if (dt) {
+            yield critic(path_1.join(dirPath, "index.d.ts"));
             yield checks_1.checkPackageJson(dirPath, typesVersions);
         }
         if (onlyTestTsNext) {
