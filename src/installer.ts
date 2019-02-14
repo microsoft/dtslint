@@ -1,15 +1,16 @@
 import { exec } from "child_process";
 import { TypeScriptVersion } from "definitelytyped-header-parser";
 import * as fs from "fs-extra";
+import * as os from "os";
 import * as path from "path";
 import { TsVersion } from "./lint";
 
-const installsDir = path.join(__dirname, "..", "typescript-installs");
+const installsDir = path.join(os.homedir(), ".dts", "typescript-installs");
 
 export async function installAll() {
     for (const v of TypeScriptVersion.all) {
         // manually instead typescript@next outside the loop
-        if (v === TypeScriptVersion.all[TypeScriptVersion.all.length - 1]) continue;
+        if (v === TypeScriptVersion.all[TypeScriptVersion.all.length - 1]) { continue };
         await install(v);
     }
     await installNext();

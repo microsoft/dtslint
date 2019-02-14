@@ -4,6 +4,7 @@ import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
+import critic = require("dts-critic");
 import { cleanInstalls, installAll, installNext } from "./installer";
 import { checkTslintJson, lint, TsVersion } from "./lint";
 import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
@@ -114,6 +115,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
     });
 
     if (dt) {
+        await critic(joinPaths(dirPath, "index.d.ts"));
         await checkPackageJson(dirPath, typesVersions);
     }
 
