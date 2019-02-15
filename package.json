@@ -10,6 +10,7 @@
   "main": "bin",
   "bin": "./bin/index.js",
   "contributors": [
+    "Nathan Shively-Sanders <nathansa@microsoft.com> (https://github.com/sandersn)",
     "Andy Hanson <andy-ms@microsoft.com> (https://github.com/andy-ms)",
     "Dan Vanderkam <danvdk@gmail.com> (https://github.com/danvk)"
   ],
@@ -25,7 +26,7 @@
     "push-production": "npm run build && git checkout production && git merge master && npm run build && git add bin/* && git commit -m 'Update bin/' && git push -u origin production"
   },
   "dependencies": {
-    "definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production",
+    "definitelytyped-header-parser": "^1.0.1",
     "dts-critic": "^1.0.1",
     "fs-extra": "^6.0.1",
     "request": "^2.88.0",
