@@ -118,7 +118,9 @@ function runTests(dirPath, onlyTestTsNext) {
             return version;
         }));
         if (dt) {
-            yield critic(path_1.join(dirPath, "index.d.ts"));
+            if (yield hasDtHeaderLintRule(path_1.join(dirPath, "tslint.json"))) {
+                yield critic(path_1.join(dirPath, "index.d.ts"));
+            }
             yield checks_1.checkPackageJson(dirPath, typesVersions);
         }
         if (onlyTestTsNext) {
@@ -145,6 +147,19 @@ function runTests(dirPath, onlyTestTsNext) {
                 return i === typesVersions.length ? "next" : util_1.assertDefined(definitelytyped_header_parser_1.TypeScriptVersion.previous(typesVersions[i]));
             }
         }
+    });
+}
+function hasDtHeaderLintRule(tslintPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (yield fs_extra_1.pathExists(tslintPath)) {
+            const tslint = yield util_1.readJson(tslintPath);
+            if (tslint.rules && tslint.rules["dt-header"] !== undefined) {
+                return !!tslint.rules["dt-header"];
+            }
+            // if dt-header is not present, assume that tslint.json extends dtslint.json
+            return true;
+        }
+        return false;
     });
 }
 function testTypesVersion(dirPath, lowVersion, maxVersion, isOlderVersion, dt, indexText, inTypesVersionDirectory) {
