@@ -23,6 +23,7 @@ function installAll() {
             }
             ;
             yield install(v);
+            console.log("");
         }
         yield installNext();
     });
@@ -62,7 +63,9 @@ function execAndThrowErrors(cmd, cwd) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
             child_process_1.exec(cmd, { encoding: "utf8", cwd }, (err, _stdout, stderr) => {
-                console.error(stderr);
+                if (stderr) {
+                    console.error(stderr);
+                }
                 if (err) {
                     reject(err);
                 }

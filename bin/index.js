@@ -118,7 +118,7 @@ function runTests(dirPath, onlyTestTsNext) {
             return version;
         }));
         if (dt) {
-            if (yield hasDtHeaderLintRule(path_1.join(dirPath, "tslint.json"))) {
+            if ((yield hasDtHeaderLintRule(path_1.join(dirPath, "tslint.json"))) && isToplevelDtPath(dirPath)) {
                 yield critic(path_1.join(dirPath, "index.d.ts"));
             }
             yield checks_1.checkPackageJson(dirPath, typesVersions);
@@ -148,6 +148,10 @@ function runTests(dirPath, onlyTestTsNext) {
             }
         }
     });
+}
+function isToplevelDtPath(dirPath) {
+    return path_1.basename(path_1.dirname(dirPath)) === "types" &&
+        path_1.basename(path_1.dirname(path_1.dirname(dirPath))) === "DefinitelyTyped";
 }
 function hasDtHeaderLintRule(tslintPath) {
     return __awaiter(this, void 0, void 0, function* () {
