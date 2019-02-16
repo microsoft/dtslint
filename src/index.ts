@@ -115,7 +115,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
     });
 
     if (dt) {
-        if (await hasDtHeaderLintRule(joinPaths(dirPath, "tslint.json"))) {
+        if (await hasDtHeaderLintRule(joinPaths(dirPath, "tslint.json")) && isToplevelDtPath(dirPath)) {
             await critic(joinPaths(dirPath, "index.d.ts"));
         }
         await checkPackageJson(dirPath, typesVersions);
@@ -146,6 +146,12 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
             return i === typesVersions.length ? "next" : assertDefined(TypeScriptVersion.previous(typesVersions[i]));
         }
     }
+}
+
+function isToplevelDtPath(dirPath: string) {
+    return basename(dirname(dirPath)) === "types" &&
+        basename(dirname(dirname(dirPath))) === "DefinitelyTyped";
+
 }
 
 async function hasDtHeaderLintRule(tslintPath: string) {
