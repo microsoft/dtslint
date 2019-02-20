@@ -22,7 +22,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "lint": "tslint --project tsconfig.json --format stylish",
-    "test": "node test/test.js",
+    "test": "npm run build && node test/test.js",
     "publish": "npm run build && npm run test && npm run lint && npm publish"
   },
   "dependencies": {
