@@ -13,6 +13,7 @@ async function main(): Promise<void> {
     const args = process.argv.slice(2);
     let dirPath = process.cwd();
     let onlyTestTsNext = false;
+    let expectOnly = false;
     let shouldListen = false;
 
     for (const arg of args) {
@@ -27,6 +28,9 @@ async function main(): Promise<void> {
             case "--version":
                 console.log(require("../package.json").version);
                 return;
+            case "--expectOnly":
+                expectOnly = true;
+                break;
 
             case "--onlyTestTsNext":
                 onlyTestTsNext = true;
@@ -64,7 +68,7 @@ async function main(): Promise<void> {
         } else {
             await installAll();
         }
-        await runTests(dirPath, onlyTestTsNext);
+        await runTests(dirPath, onlyTestTsNext, expectOnly);
     }
 }
 
@@ -78,8 +82,8 @@ function usage(): void {
 
 function listen(dirPath: string): void {
     process.on("message", (message: {}) => {
-        const { path, onlyTestTsNext } = message as { path: string, onlyTestTsNext: boolean };
-        runTests(joinPaths(dirPath, path), onlyTestTsNext)
+        const { path, onlyTestTsNext, expectOnly } = message as { path: string, onlyTestTsNext: boolean, expectOnly?: boolean };
+        runTests(joinPaths(dirPath, path), onlyTestTsNext, !!expectOnly)
             .catch(e => e.stack)
             .then(maybeError => {
                 process.send!({ path, status: maybeError === undefined ? "OK" : maybeError });
@@ -88,7 +92,7 @@ function listen(dirPath: string): void {
     });
 }
 
-async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void> {
+async function runTests(dirPath: string, onlyTestTsNext: boolean, expectOnly: boolean): Promise<void> {
     const isOlderVersion = /^v\d+$/.test(basename(dirPath));
 
     const indexText = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
@@ -123,7 +127,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
 
     if (onlyTestTsNext) {
         if (typesVersions.length === 0) {
-            await testTypesVersion(dirPath, "next", "next", isOlderVersion, dt, indexText);
+            await testTypesVersion(dirPath, "next", "next", isOlderVersion, dt, indexText, expectOnly);
         } else {
             const latestTypesVersion = last(typesVersions);
             const versionPath = joinPaths(dirPath, `ts${latestTypesVersion}`);
@@ -132,7 +136,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean): Promise<void>
                 isOlderVersion, dt, versionIndexText, /*inTypesVersionDirectory*/ true);
         }
     } else {
-        await testTypesVersion(dirPath, undefined, getTsVersion(0), isOlderVersion, dt, indexText);
+        await testTypesVersion(dirPath, undefined, getTsVersion(0), isOlderVersion, dt, indexText, expectOnly);
         for (let i = 0; i < typesVersions.length; i++) {
             const version = typesVersions[i];
             const versionPath = joinPaths(dirPath, `ts${version}`);
@@ -174,6 +178,7 @@ async function testTypesVersion(
     isOlderVersion: boolean,
     dt: boolean,
     indexText: string,
+    expectOnly: boolean,
     inTypesVersionDirectory?: boolean,
 ): Promise<void> {
     const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
@@ -186,7 +191,7 @@ async function testTypesVersion(
     await checkTsconfig(dirPath, dt
         ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
         : undefined);
-    const err = await lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory);
+    const err = await lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory, expectOnly);
     if (err) {
         throw new Error(err);
     }

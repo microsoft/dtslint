@@ -1,0 +1,6 @@
+{
+    "rulesDirectory": "./bin/rules",
+    "rules": {
+        "expect": true
+    }
+}

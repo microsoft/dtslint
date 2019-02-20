@@ -16,7 +16,8 @@ export async function lint(
     dirPath: string,
     minVersion: TsVersion,
     maxVersion: TsVersion,
-    inTypesVersionDirectory: boolean): Promise<string | undefined> {
+    inTypesVersionDirectory: boolean,
+    expectOnly: boolean): Promise<string | undefined> {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
     const lintProgram = Linter.createProgram(tsconfigPath);
 
@@ -30,7 +31,8 @@ export async function lint(
         formatter: "stylish",
     };
     const linter = new Linter(lintOptions, lintProgram);
-    const config = await getLintConfig(getConfigPath(dirPath), tsconfigPath, minVersion, maxVersion);
+    const configPath = expectOnly ? joinPaths(__dirname, "..", "dtslint-expect-only.json") : getConfigPath(dirPath);
+    const config = await getLintConfig(configPath, tsconfigPath, minVersion, maxVersion);
 
     for (const file of lintProgram.getSourceFiles()) {
         if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
