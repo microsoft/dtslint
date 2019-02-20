@@ -1,11 +1,12 @@
 {
   "name": "dtslint",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
     "dt.json",
-    "dtslint.json"
+    "dtslint.json",
+    "dtslint-expect-only.json"
   ],
   "main": "bin",
   "bin": "./bin/index.js",
@@ -23,7 +24,7 @@
     "build": "tsc",
     "lint": "tslint --project tsconfig.json --format stylish",
     "test": "npm run build && node test/test.js",
-    "publish": "npm run build && npm run test && npm run lint && npm publish"
+    "do-publish": "npm run build && npm run test && npm run lint && npm publish"
   },
   "dependencies": {
     "definitelytyped-header-parser": "^1.0.1",
