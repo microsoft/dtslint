@@ -67,10 +67,9 @@ function walk(ctx: Lint.WalkContext<void>): void {
     function checkInOther(node: ts.Statement): void {
         // Compiler will enforce presence of 'declare' where necessary. But types do not need 'declare'.
         if (isDeclare(node)) {
-            if (isExport(node)) {
-                fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
-            }
-            else if (node.kind === ts.SyntaxKind.InterfaceDeclaration || node.kind === ts.SyntaxKind.TypeAliasDeclaration) {
+            if (isExport(node) ||
+                node.kind === ts.SyntaxKind.InterfaceDeclaration ||
+                node.kind === ts.SyntaxKind.TypeAliasDeclaration) {
                 fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
             }
         }
