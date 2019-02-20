@@ -1,7 +1,7 @@
 import assert = require("assert");
 import { makeTypesVersionsForPackageJson, TypeScriptVersion } from "definitelytyped-header-parser";
 import { pathExists } from "fs-extra";
-import { join as joinPaths, basename } from "path";
+import { basename, join as joinPaths } from "path";
 
 import { getCompilerOptions, readJson } from "./util";
 

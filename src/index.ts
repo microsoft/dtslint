@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
-import { readdir, readFile, stat, pathExists } from "fs-extra";
+import { pathExists, readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths } from "path";
 
-import { checkPackageJson, checkTsconfig } from "./checks";
 import critic = require("dts-critic");
+import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, installAll, installNext } from "./installer";
 import { checkTslintJson, lint, TsVersion } from "./lint";
-import { assertDefined, last, mapDefinedAsync, withoutPrefix, readJson } from "./util";
+import { assertDefined, last, mapDefinedAsync, readJson, withoutPrefix } from "./util";
 
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
@@ -157,8 +157,8 @@ function isToplevelDtPath(dirPath: string) {
 async function hasDtHeaderLintRule(tslintPath: string) {
     if (await pathExists(tslintPath)) {
         const tslint = await readJson(tslintPath);
-        if(tslint.rules && tslint.rules["dt-header"] !== undefined) {
-            return !!tslint.rules["dt-header"]
+        if (tslint.rules && tslint.rules["dt-header"] !== undefined) {
+            return !!tslint.rules["dt-header"];
         }
 
         // if dt-header is not present, assume that tslint.json extends dtslint.json
