@@ -22,7 +22,7 @@ export class Rule extends Lint.Rules.TypedRule {
         const failures: Lint.RuleFailure[] = [];
         for (const sourceFile of program.getSourceFiles()) {
             const { fileName } = sourceFile;
-            if (fileName.includes("/DefinitelyTyped/node_modules/")) {
+            if (fileName.includes("/DefinitelyTyped/node_modules/") && !program.isSourceFileDefaultLibrary(sourceFile)) {
                 const msg = failure(
                     Rule.metadata.ruleName,
                     `File ${fileName} comes from a \`node_modules\` but is not declared in this type's \`package.json\`. `);
