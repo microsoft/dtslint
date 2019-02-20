@@ -132,8 +132,9 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean, expectOnly: bo
             const latestTypesVersion = last(typesVersions);
             const versionPath = joinPaths(dirPath, `ts${latestTypesVersion}`);
             const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
-            await testTypesVersion(versionPath, "next", "next",
-                isOlderVersion, dt, versionIndexText, /*inTypesVersionDirectory*/ true);
+            await testTypesVersion(
+                versionPath, "next", "next",
+                isOlderVersion, dt, versionIndexText, expectOnly, /*inTypesVersionDirectory*/ true);
         }
     } else {
         await testTypesVersion(dirPath, undefined, getTsVersion(0), isOlderVersion, dt, indexText, expectOnly);
@@ -143,7 +144,7 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean, expectOnly: bo
             const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
             await testTypesVersion(
                 versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText,
-                /*inTypesVersionDirectory*/ true);
+                expectOnly, /*inTypesVersionDirectory*/ true);
         }
 
         function getTsVersion(i: number): TsVersion {
