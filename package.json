@@ -1,6 +1,6 @@
 {
   "name": "dtslint",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
@@ -23,7 +23,7 @@
     "build": "tsc",
     "lint": "tslint --project tsconfig.json --format stylish",
     "test": "node test/test.js",
-    "push-production": "npm run build && git checkout production && git merge master && npm run build && git add bin/* && git commit -m 'Update bin/' && git push -u origin production"
+    "publish": "npm run build && npm run test && npm run lint && npm publish"
   },
   "dependencies": {
     "definitelytyped-header-parser": "^1.0.1",
