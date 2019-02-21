@@ -10,10 +10,8 @@ export declare function f(): void;
        ~~~~~~~ [declare-redundant]
 
 declare function g(): void;
-~~~~~~~  [declare-redundant]
 
 declare namespace N {}
-~~~~~~~ [declare-redundant]
 
 export namespace M {
     export function f(): void;

@@ -21,7 +21,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 function walk(ctx: Lint.WalkContext<void>): void {
     const { sourceFile } = ctx;
     const isExternal = sourceFile.isDeclarationFile
-        && !sourceFile.statements.some(s => s.kind === ts.SyntaxKind.ExportAssignment)
+        && !sourceFile.statements.some(
+            s => s.kind === ts.SyntaxKind.ExportAssignment ||
+                 s.kind === ts.SyntaxKind.ExportDeclaration && !!(s as ts.ExportDeclaration).exportClause)
         && ts.isExternalModule(sourceFile);
 
     for (const node of sourceFile.statements) {
@@ -65,10 +67,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
     function checkInOther(node: ts.Statement): void {
         // Compiler will enforce presence of 'declare' where necessary. But types do not need 'declare'.
         if (isDeclare(node)) {
-            switch (node.kind) {
-                case ts.SyntaxKind.InterfaceDeclaration:
-                case ts.SyntaxKind.TypeAliasDeclaration:
-                    fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
+            if (isExport(node) ||
+                node.kind === ts.SyntaxKind.InterfaceDeclaration ||
+                node.kind === ts.SyntaxKind.TypeAliasDeclaration) {
+                fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
             }
         }
     }
