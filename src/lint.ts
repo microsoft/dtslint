@@ -22,10 +22,6 @@ export async function lint(
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
     const lintProgram = Linter.createProgram(tsconfigPath);
 
-    if (tsLocal) {
-        const errors = testDependencies("local", dirPath, lintProgram, tsLocal);
-        if (errors) { return errors; }
-    }
     for (const version of [maxVersion, minVersion]) {
         const errors = testDependencies(version, dirPath, lintProgram, tsLocal);
         if (errors) { return errors; }
