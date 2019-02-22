@@ -17,12 +17,13 @@ export async function lint(
     minVersion: TsVersion,
     maxVersion: TsVersion,
     inTypesVersionDirectory: boolean,
-    expectOnly: boolean): Promise<string | undefined> {
+    expectOnly: boolean,
+    tsLocal: string | undefined): Promise<string | undefined> {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
     const lintProgram = Linter.createProgram(tsconfigPath);
 
     for (const version of [maxVersion, minVersion]) {
-        const errors = testDependencies(version, dirPath, lintProgram);
+        const errors = testDependencies(version, dirPath, lintProgram, tsLocal);
         if (errors) { return errors; }
     }
 
@@ -32,7 +33,7 @@ export async function lint(
     };
     const linter = new Linter(lintOptions, lintProgram);
     const configPath = expectOnly ? joinPaths(__dirname, "..", "dtslint-expect-only.json") : getConfigPath(dirPath);
-    const config = await getLintConfig(configPath, tsconfigPath, minVersion, maxVersion);
+    const config = await getLintConfig(configPath, tsconfigPath, minVersion, maxVersion, tsLocal);
 
     for (const file of lintProgram.getSourceFiles()) {
         if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
@@ -57,9 +58,10 @@ export async function lint(
     return result.failures.length ? result.output : undefined;
 }
 
-function testDependencies(version: TsVersion, dirPath: string, lintProgram: TsType.Program): string | undefined {
+function testDependencies(version: TsVersion, dirPath: string, lintProgram: TsType.Program, tsLocal: string | undefined): string | undefined {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
-    const ts: typeof TsType = require(typeScriptPath(version));
+    assert(version !== "local" || tsLocal);
+    const ts: typeof TsType = require(typeScriptPath(version, tsLocal));
     const program = getProgram(tsconfigPath, ts, version, lintProgram);
     const diagnostics = ts.getPreEmitDiagnostics(program).filter(d => !d.file || isExternalDependency(d.file, dirPath, program));
     if (!diagnostics.length) { return undefined; }
@@ -143,6 +145,7 @@ async function getLintConfig(
     tsconfigPath: string,
     minVersion: TsVersion,
     maxVersion: TsVersion,
+    tsLocal: string | undefined
 ): Promise<IConfigurationFile> {
     const configExists = await pathExists(expectedConfigPath);
     const configPath = configExists ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
@@ -157,8 +160,8 @@ async function getLintConfig(
         throw new Error("'expect' rule should be enabled, else compile errors are ignored");
     }
     if (expectRule) {
-        const versionsToTest = range(minVersion, maxVersion).map(versionName =>
-            ({ versionName, path: typeScriptPath(versionName) }));
+        const versionsToTest =
+            range(minVersion, maxVersion).map(versionName => ({ versionName, path: typeScriptPath(versionName, tsLocal) }));
         const expectOptions: ExpectOptions = { tsconfigPath, versionsToTest };
         expectRule.ruleArguments = [expectOptions];
     }
@@ -169,6 +172,10 @@ function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVe
     if (minVersion === "next") {
         assert(maxVersion === "next");
         return ["next"];
+    }
+    if (minVersion === "local") {
+        assert(maxVersion === "local");
+        return ["local"];
     }
 
     // The last item of TypeScriptVersion is the unreleased version of Typescript,
@@ -182,4 +189,4 @@ function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVe
     return allReleased.slice(minIdx, maxIdx + 1);
 }
 
-export type TsVersion = TypeScriptVersion | "next";
+export type TsVersion = TypeScriptVersion | "next" | "local";
