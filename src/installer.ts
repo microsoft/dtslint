@@ -1,3 +1,4 @@
+import assert = require("assert");
 import { exec } from "child_process";
 import { TypeScriptVersion } from "definitelytyped-header-parser";
 import * as fs from "fs-extra";
@@ -22,6 +23,9 @@ export async function installNext() {
 }
 
 async function install(version: TsVersion): Promise<void> {
+    if (version === "local") {
+        return;
+    }
     const dir = installDir(version);
     if (!await fs.pathExists(dir)) {
         console.log(`Installing to ${dir}...`);
@@ -36,11 +40,15 @@ export function cleanInstalls(): Promise<void> {
     return fs.remove(installsDir);
 }
 
-export function typeScriptPath(version: TsVersion): string {
+export function typeScriptPath(version: TsVersion, tsLocal: string | undefined): string {
+    if (version === "local") {
+        return tsLocal! + "/typescript.js";
+    }
     return path.join(installDir(version), "node_modules", "typescript");
 }
 
 function installDir(version: TsVersion): string {
+    assert(version !== "local");
     return path.join(installsDir, version);
 }
 

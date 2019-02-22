@@ -15,8 +15,18 @@ async function main(): Promise<void> {
     let onlyTestTsNext = false;
     let expectOnly = false;
     let shouldListen = false;
+    let lookingForTsLocal = false;
+    let tsLocal: string | undefined;
 
     for (const arg of args) {
+        if (lookingForTsLocal) {
+            if (arg.startsWith("--")) {
+                throw new Error("Looking for local path for TS, but got " + arg);
+            }
+            tsLocal = arg;
+            lookingForTsLocal = false;
+            continue;
+        }
         switch (arg) {
             case "--installAll":
                 console.log("Cleaning old installs and installing for all TypeScript versions...");
@@ -24,24 +34,23 @@ async function main(): Promise<void> {
                 await cleanInstalls();
                 await installAll();
                 return;
-
+            case "--localTs":
+                lookingForTsLocal = true;
+                break;
             case "--version":
                 console.log(require("../package.json").version);
                 return;
             case "--expectOnly":
                 expectOnly = true;
                 break;
-
             case "--onlyTestTsNext":
                 onlyTestTsNext = true;
                 break;
-
             // Only for use by types-publisher.
             // Listens for { path, onlyTestTsNext } messages and ouputs { path, status }.
             case "--listen":
                 shouldListen = true;
                 break;
-
             default:
                 if (arg.startsWith("--")) {
                     console.error(`Unknown option '${arg}'`);
@@ -57,33 +66,44 @@ async function main(): Promise<void> {
                 dirPath = joinPaths(dirPath, path);
         }
     }
+    if (lookingForTsLocal) {
+        throw new Error("Path for --localTs was not provided.");
+    }
 
     if (shouldListen) {
-        listen(dirPath);
+        listen(dirPath, tsLocal);
         // Do this *after* to ensure messages sent during installation aren't dropped.
-        await installAll();
-    } else {
-        if (onlyTestTsNext) {
-            await installNext();
-        } else {
+        if (!tsLocal) {
             await installAll();
         }
-        await runTests(dirPath, onlyTestTsNext, expectOnly);
+    } else {
+        if (!tsLocal) {
+            if (onlyTestTsNext) {
+                await installNext();
+            } else {
+                await installAll();
+            }
+        }
+        await runTests(dirPath, onlyTestTsNext, expectOnly, tsLocal);
     }
 }
 
 function usage(): void {
-    console.error("Usage: dtslint [--version] [--installAll]");
+    console.error("Usage: dtslint [--version] [--installAll] [--onlyTestTsNext] [--expectOnly] [--localTs path]");
     console.error("Args:");
     console.error("  --version        Print version and exit.");
     console.error("  --installAll     Cleans and installs all TypeScript versions.");
+    console.error("  --expectOnly     Run only the ExpectType lint rule.");
     console.error("  --onlyTestTsNext Only run with `typescript@next`, not with the minimum version.");
+    console.error("  --localTs path   Run with *path* as the latest version of TS.");
+    console.error("");
+    console.error("onlyTestTsNext and localTs are (1) mutually exclusive and (2) test a single version of TS");
 }
 
-function listen(dirPath: string): void {
+function listen(dirPath: string, tsLocal: string | undefined): void {
     process.on("message", (message: {}) => {
         const { path, onlyTestTsNext, expectOnly } = message as { path: string, onlyTestTsNext: boolean, expectOnly?: boolean };
-        runTests(joinPaths(dirPath, path), onlyTestTsNext, !!expectOnly)
+        runTests(joinPaths(dirPath, path), onlyTestTsNext, !!expectOnly, tsLocal)
             .catch(e => e.stack)
             .then(maybeError => {
                 process.send!({ path, status: maybeError === undefined ? "OK" : maybeError });
@@ -92,7 +112,7 @@ function listen(dirPath: string): void {
     });
 }
 
-async function runTests(dirPath: string, onlyTestTsNext: boolean, expectOnly: boolean): Promise<void> {
+async function runTests(dirPath: string, onlyTestTsNext: boolean, expectOnly: boolean, tsLocal: string | undefined): Promise<void> {
     const isOlderVersion = /^v\d+$/.test(basename(dirPath));
 
     const indexText = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
@@ -125,26 +145,27 @@ async function runTests(dirPath: string, onlyTestTsNext: boolean, expectOnly: bo
         await checkPackageJson(dirPath, typesVersions);
     }
 
-    if (onlyTestTsNext) {
+    if (onlyTestTsNext || tsLocal) {
+        const tsVersion = tsLocal ? "local" : "next";
         if (typesVersions.length === 0) {
-            await testTypesVersion(dirPath, "next", "next", isOlderVersion, dt, indexText, expectOnly);
+            await testTypesVersion(dirPath, tsVersion, tsVersion, isOlderVersion, dt, indexText, expectOnly, tsLocal);
         } else {
             const latestTypesVersion = last(typesVersions);
             const versionPath = joinPaths(dirPath, `ts${latestTypesVersion}`);
             const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
             await testTypesVersion(
-                versionPath, "next", "next",
-                isOlderVersion, dt, versionIndexText, expectOnly, /*inTypesVersionDirectory*/ true);
+                versionPath, tsVersion, tsVersion,
+                isOlderVersion, dt, versionIndexText, expectOnly, tsLocal, /*inTypesVersionDirectory*/ true);
         }
     } else {
-        await testTypesVersion(dirPath, undefined, getTsVersion(0), isOlderVersion, dt, indexText, expectOnly);
+        await testTypesVersion(dirPath, undefined, getTsVersion(0), isOlderVersion, dt, indexText, expectOnly, undefined);
         for (let i = 0; i < typesVersions.length; i++) {
             const version = typesVersions[i];
             const versionPath = joinPaths(dirPath, `ts${version}`);
             const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
             await testTypesVersion(
                 versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText,
-                expectOnly, /*inTypesVersionDirectory*/ true);
+                expectOnly, undefined, /*inTypesVersionDirectory*/ true);
         }
 
         function getTsVersion(i: number): TsVersion {
@@ -180,6 +201,7 @@ async function testTypesVersion(
     dt: boolean,
     indexText: string,
     expectOnly: boolean,
+    tsLocal: string | undefined,
     inTypesVersionDirectory?: boolean,
 ): Promise<void> {
     const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
@@ -192,7 +214,7 @@ async function testTypesVersion(
     await checkTsconfig(dirPath, dt
         ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
         : undefined);
-    const err = await lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory, expectOnly);
+    const err = await lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory, expectOnly, tsLocal);
     if (err) {
         throw new Error(err);
     }
