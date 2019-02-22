@@ -112,7 +112,12 @@ function listen(dirPath: string, tsLocal: string | undefined): void {
     });
 }
 
-async function runTests(dirPath: string, onlyTestTsNext: boolean, expectOnly: boolean, tsLocal: string | undefined): Promise<void> {
+async function runTests(
+    dirPath: string,
+    onlyTestTsNext: boolean,
+    expectOnly: boolean,
+    tsLocal: string | undefined,
+): Promise<void> {
     const isOlderVersion = /^v\d+$/.test(basename(dirPath));
 
     const indexText = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");

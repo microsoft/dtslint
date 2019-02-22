@@ -58,7 +58,12 @@ export async function lint(
     return result.failures.length ? result.output : undefined;
 }
 
-function testDependencies(version: TsVersion, dirPath: string, lintProgram: TsType.Program, tsLocal: string | undefined): string | undefined {
+function testDependencies(
+    version: TsVersion,
+    dirPath: string,
+    lintProgram: TsType.Program,
+    tsLocal: string | undefined,
+): string | undefined {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
     assert(version !== "local" || tsLocal);
     const ts: typeof TsType = require(typeScriptPath(version, tsLocal));
@@ -145,7 +150,7 @@ async function getLintConfig(
     tsconfigPath: string,
     minVersion: TsVersion,
     maxVersion: TsVersion,
-    tsLocal: string | undefined
+    tsLocal: string | undefined,
 ): Promise<IConfigurationFile> {
     const configExists = await pathExists(expectedConfigPath);
     const configPath = configExists ? expectedConfigPath : joinPaths(__dirname, "..", "dtslint.json");
