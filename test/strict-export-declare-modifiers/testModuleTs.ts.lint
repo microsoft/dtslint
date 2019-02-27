@@ -1,3 +1,5 @@
+export declare class C {}
+
 export function f() {}
 
 declare interface I {}

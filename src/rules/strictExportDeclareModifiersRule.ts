@@ -30,7 +30,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
         if (isExternal) {
             checkInExternalModule(node, isAutomaticExport(sourceFile));
         } else {
-            checkInOther(node);
+            checkInOther(node, sourceFile.isDeclarationFile);
         }
 
         if (isModuleDeclaration(node) && (sourceFile.isDeclarationFile || isDeclare(node))) {
@@ -64,10 +64,10 @@ function walk(ctx: Lint.WalkContext<void>): void {
         }
     }
 
-    function checkInOther(node: ts.Statement): void {
+    function checkInOther(node: ts.Statement, inDeclarationFile: boolean): void {
         // Compiler will enforce presence of 'declare' where necessary. But types do not need 'declare'.
         if (isDeclare(node)) {
-            if (isExport(node) ||
+            if (isExport(node) && inDeclarationFile ||
                 node.kind === ts.SyntaxKind.InterfaceDeclaration ||
                 node.kind === ts.SyntaxKind.TypeAliasDeclaration) {
                 fail(mod(node, ts.SyntaxKind.DeclareKeyword), "'declare' keyword is redundant here.");
