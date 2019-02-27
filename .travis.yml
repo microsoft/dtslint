@@ -1,0 +1,16 @@
+language: node_js
+
+node_js:
+  - 'node'
+
+sudo: false
+
+branches:
+  only:
+  - master
+
+install:
+  - npm install
+
+git:
+  depth: 1
