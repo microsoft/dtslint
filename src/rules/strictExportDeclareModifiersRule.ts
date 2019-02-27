@@ -29,7 +29,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
     for (const node of sourceFile.statements) {
         if (isExternal) {
             checkInExternalModule(node, isAutomaticExport(sourceFile));
-        } else {
+        } else if (sourceFile.isDeclarationFile) {
             checkInOther(node);
         }
 
