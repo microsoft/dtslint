@@ -144,7 +144,7 @@ async function runTests(
     });
 
     if (dt) {
-        if (await hasDtHeaderLintRule(joinPaths(dirPath, "tslint.json")) && isToplevelDtPath(dirPath)) {
+        if (!expectOnly && await hasDtHeaderLintRule(joinPaths(dirPath, "tslint.json")) && isToplevelDtPath(dirPath)) {
             await critic(joinPaths(dirPath, "index.d.ts"));
         }
         await checkPackageJson(dirPath, typesVersions);
