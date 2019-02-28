@@ -64,6 +64,7 @@
         "no-this-assignment": false,
         "no-unbound-method": false, // TODO?
         "no-unsafe-any": false, // TODO
+        "no-restricted-globals": false,
         "number-literal-format": false, // TODO
         "promise-function-async": false,
         "restrict-plus-operands": false, // TODO
