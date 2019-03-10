@@ -23,20 +23,19 @@ export class Rule extends Lint.Rules.AbstractRule {
 function walk(ctx: Lint.WalkContext<void>): void {
     const { sourceFile } = ctx;
     const { text } = sourceFile;
-
+    const lookFor = (search: string, explanation: string) => {
+        const idx = text.indexOf(search);
+        if (idx !== -1) {
+            ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
+        }
+    };
     if (!isMainFile(sourceFile.fileName)) {
-        const lookFor = (search: string, explanation: string) => {
-            const idx = text.indexOf(search);
-            if (idx !== -1) {
-                ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
-            }
-        };
-
         lookFor("// Type definitions for", "Header should only be in `index.d.ts` of the root.");
         lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
         return;
     }
 
+    lookFor("// Definitions by: My Self", "Author name should be your name, not the default.");
     const error = validate(text);
     if (error) {
         ctx.addFailureAt(error.index, 1, failure(
