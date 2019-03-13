@@ -104,6 +104,7 @@
         "no-shadowed-variable": false,
         "no-string-literal": false,
         "no-submodule-imports": false,
+        "no-tautology-expression": false,
         "no-unused-expression": false,
         "no-unused-variable": false,
         "no-use-before-declare": false,
@@ -121,6 +122,7 @@
         "variable-name": false,
         "increment-decrement": false,
         "unnecessary-constructor": false,
+        "unnecessary-else": false,
         "no-angle-bracket-type-assertion": false,
         "no-default-import": false,
         "callable-types": false
