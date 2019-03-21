@@ -2,6 +2,7 @@ import { renderExpected, validate } from "definitelytyped-header-parser";
 import { basename, dirname } from "path";
 import * as Lint from "tslint";
 import * as ts from "typescript";
+import critic = require("dts-critic");
 
 import { failure } from "../util";
 
@@ -29,7 +30,20 @@ function walk(ctx: Lint.WalkContext<void>): void {
             ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
         }
     };
-    if (!isMainFile(sourceFile.fileName)) {
+    if (isMainFile(sourceFile.fileName)) {
+        try {
+            critic(sourceFile.fileName);
+        }
+        catch (e) {
+            if (e.message.indexOf('d.ts file must have a matching npm package') > -1) {
+                lookFor("// Type definitions for", e.message);
+            }
+            else {
+                ctx.addFailureAt(0, 1, e.message);
+            }
+        }
+    }
+    else {
         lookFor("// Type definitions for", "Header should only be in `index.d.ts` of the root.");
         lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
         return;
