@@ -1,5 +1,13 @@
 // Type definitions for dt-header v1.0.3
                         ~ [Error parsing header. Expected: foo MAJOR.MINOR (patch version not allowed). See: https://github.com/Microsoft/dtslint/blob/master/docs/dt-header.md]
-// Project: https://github.com/jasonlaster/foo
+// Project: https://github.com/does-not-match/foo
+~~~~~~~~~~~                                       [At least one of the project urls listed in the header, ["https://github.com/does-not-match/foo"], must match the homepage listed by npm, 'https://github.com/jasonlaster/foo'.
+If your d.ts file is not for the npm package with URL https://github.com/jasonlaster/foo,
+change the name by adding -browser to the end and change the first line
+of the Definitely Typed header to
+ 
+    // Type definitions for non-npm package foo-browser
+ See: https://github.com/Microsoft/dtslint/blob/master/docs/dt-header.md]
+
 // Definitions by: Jane Doe <https://github.com/janedoe>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped

@@ -39,7 +39,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
                 lookFor("// Type definitions for", e.message);
             }
             else if (e.message.indexOf('At least one of the project urls listed') > -1) {
-                lookFor("// Type definitions for", e.message);
+                lookFor("// Project:", e.message);
             }
             else {
                 ctx.addFailureAt(0, 1, e.message);
