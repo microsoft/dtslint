@@ -1,12 +1,13 @@
-import { renderExpected, validate } from "definitelytyped-header-parser";
 import * as Lint from "tslint";
 import * as ts from "typescript";
+import critic = require("dts-critic");
+
 import { failure, isMainFile } from "../util";
 
 export class Rule extends Lint.Rules.AbstractRule {
     static metadata: Lint.IRuleMetadata = {
-        ruleName: "dt-header",
-        description: "Ensure consistency of DefinitelyTyped headers.",
+        ruleName: "npm-naming",
+        description: "Ensure that package name and DefinitelyTyped header match npm package info.",
         optionsDescription: "Not configurable.",
         options: null,
         type: "functionality",
@@ -27,18 +28,21 @@ function walk(ctx: Lint.WalkContext<void>): void {
             ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
         }
     };
-    if (!isMainFile(sourceFile.fileName)) {
-        lookFor("// Type definitions for", "Header should only be in `index.d.ts` of the root.");
-        lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
-        return;
+    if (isMainFile(sourceFile.fileName)) {
+        try {
+            (critic as any).alternate(text, sourceFile.fileName);
+        }
+        catch (e) {
+            if (e.message.indexOf('d.ts file must have a matching npm package') > -1) {
+                lookFor("// Type definitions for", e.message);
+            }
+            else if (e.message.indexOf('At least one of the project urls listed') > -1) {
+                lookFor("// Project:", e.message);
+            }
+            else {
+                ctx.addFailureAt(0, 1, e.message);
+            }
+        }
     }
-
-    lookFor("// Definitions by: My Self", "Author name should be your name, not the default.");
-    const error = validate(text);
-    if (error) {
-        ctx.addFailureAt(error.index, 1, failure(
-            Rule.metadata.ruleName,
-            `Error parsing header. Expected: ${renderExpected(error.expected)}.`));
-    }
-    // Don't recurse, we're done.
+    // Don't recur, we're done.
 }
