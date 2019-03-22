@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "definitelytyped-header-parser": "^1.0.1",
-    "dts-critic": "^1.0.1",
+    "dts-critic": "^1.0.4",
     "fs-extra": "^6.0.1",
     "request": "^2.88.0",
     "strip-json-comments": "^2.0.1",

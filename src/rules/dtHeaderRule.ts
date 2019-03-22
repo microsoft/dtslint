@@ -1,9 +1,7 @@
 import { renderExpected, validate } from "definitelytyped-header-parser";
-import { basename, dirname } from "path";
 import * as Lint from "tslint";
 import * as ts from "typescript";
-
-import { failure } from "../util";
+import { failure, isMainFile } from "../util";
 
 export class Rule extends Lint.Rules.AbstractRule {
     static metadata: Lint.IRuleMetadata = {
@@ -43,25 +41,4 @@ function walk(ctx: Lint.WalkContext<void>): void {
             `Error parsing header. Expected: ${renderExpected(error.expected)}.`));
     }
     // Don't recurse, we're done.
-}
-
-function isMainFile(fileName: string) {
-    // Linter may be run with cwd of the package. We want `index.d.ts` but not `submodule/index.d.ts` to match.
-    if (fileName === "index.d.ts") {
-        return true;
-    }
-
-    if (basename(fileName) !== "index.d.ts") {
-        return false;
-    }
-
-    let parent = dirname(fileName);
-    // May be a directory for an older version, e.g. `v0`.
-    // Note a types redirect `foo/ts3.1` should not have its own header.
-    if (/^v\d+$/.test(basename(parent))) {
-        parent = dirname(parent);
-    }
-
-    // Allow "types/foo/index.d.ts", not "types/foo/utils/index.d.ts"
-    return basename(dirname(parent)) === "types";
 }

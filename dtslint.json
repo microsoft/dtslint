@@ -21,6 +21,7 @@
         "trim-file": true,
         "unified-signatures": true,
         "void-return": true,
+        "npm-naming": true,
 
         "comment-format": [true, "check-space"], // But not check-uppercase or check-lowercase
         "interface-name": [true, "never-prefix"],

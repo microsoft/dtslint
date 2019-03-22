@@ -1,13 +1,11 @@
-#!/usr/bin/env node
 import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
-import { pathExists, readdir, readFile, stat } from "fs-extra";
+import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths } from "path";
 
-import critic = require("dts-critic");
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, installAll, installNext } from "./installer";
 import { checkTslintJson, lint, TsVersion } from "./lint";
-import { assertDefined, last, mapDefinedAsync, readJson, withoutPrefix } from "./util";
+import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
 
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
@@ -144,9 +142,6 @@ async function runTests(
     });
 
     if (dt) {
-        if (!expectOnly && await hasDtHeaderLintRule(joinPaths(dirPath, "tslint.json")) && isToplevelDtPath(dirPath)) {
-            await critic(joinPaths(dirPath, "index.d.ts"));
-        }
         await checkPackageJson(dirPath, typesVersions);
     }
 
@@ -177,25 +172,6 @@ async function runTests(
             return i === typesVersions.length ? "next" : assertDefined(TypeScriptVersion.previous(typesVersions[i]));
         }
     }
-}
-
-function isToplevelDtPath(dirPath: string) {
-    return basename(dirname(dirPath)) === "types" &&
-        basename(dirname(dirname(dirPath))) === "DefinitelyTyped";
-
-}
-
-async function hasDtHeaderLintRule(tslintPath: string) {
-    if (await pathExists(tslintPath)) {
-        const tslint = await readJson(tslintPath);
-        if (tslint.rules && tslint.rules["dt-header"] !== undefined) {
-            return !!tslint.rules["dt-header"];
-        }
-
-        // if dt-header is not present, assume that tslint.json extends dtslint.json
-        return true;
-    }
-    return false;
 }
 
 async function testTypesVersion(
