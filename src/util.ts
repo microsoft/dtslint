@@ -86,7 +86,7 @@ export async function mapDefinedAsync<T, U>(arr: Iterable<T>, mapper: (t: T) => 
     return out;
 }
 
-export function isMainFile(fileName: string) {
+export function isMainFile(fileName: string, allowNested: boolean) {
     // Linter may be run with cwd of the package. We want `index.d.ts` but not `submodule/index.d.ts` to match.
     if (fileName === "index.d.ts") {
         return true;
@@ -99,7 +99,7 @@ export function isMainFile(fileName: string) {
     let parent = dirname(fileName);
     // May be a directory for an older version, e.g. `v0`.
     // Note a types redirect `foo/ts3.1` should not have its own header.
-    if (/^v\d+$/.test(basename(parent))) {
+    if (allowNested && /^v\d+$/.test(basename(parent))) {
         parent = dirname(parent);
     }
 

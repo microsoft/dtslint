@@ -27,7 +27,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
             ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
         }
     };
-    if (!isMainFile(sourceFile.fileName)) {
+    if (!isMainFile(sourceFile.fileName, /*allowNested*/ true)) {
         lookFor("// Type definitions for", "Header should only be in `index.d.ts` of the root.");
         lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
         return;
