@@ -28,7 +28,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
             ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
         }
     };
-    if (isMainFile(sourceFile.fileName)) {
+    if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
         try {
             critic(sourceFile.fileName);
         } catch (e) {
