@@ -206,11 +206,15 @@ async function testTypesVersion(
 function assertPathIsInDefinitelyTyped(dirPath: string): void {
     const parent = dirname(dirPath);
     const types = /^v\d+$/.test(basename(dirPath)) ? dirname(parent) : parent;
-    const dt = dirname(types);
-    if (basename(dt) !== "DefinitelyTyped" || basename(types) !== "types") {
+    // TODO: It's not clear whether this assertion makes sense, and it's broken on Azure Pipelines
+    // Re-enable it later if it makes sense.
+    // const dt = dirname(types);
+    // if (basename(dt) !== "DefinitelyTyped" || basename(types) !== "types") {
+    if (basename(types) !== "types") {
         throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), "
             + "assumed this was a DefinitelyTyped package.\n"
-            + "But it is not in a `DefinitelyTyped/types/xxx` directory.");
+            + "But it is not in a `DefinitelyTyped/types/xxx` directory: "
+            + dirPath);
     }
 }
 
