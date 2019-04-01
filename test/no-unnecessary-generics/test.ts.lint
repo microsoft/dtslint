@@ -34,5 +34,7 @@ function f<T, U extends T>(u: U): U;
 function foo<T>(m: Map<T, T>): void {}
 // `T` appears in a constraint, so it appears twice.
 function f<T, U extends T>(t: T, u: U): U;
+// `T` is used as inner type parameter
+function f<TX extends object>(t: Foo<TX>): void;
 
 [0]: Type parameter T is used only once. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-unnecessary-generics.md

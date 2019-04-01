@@ -46,7 +46,7 @@ function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
 
         for (const tp of sig.typeParameters) {
             const typeParameter = tp.name.text;
-            const res = getSoleUse(sig, assertDefined(checker.getSymbolAtLocation(tp.name)), checker);
+            const res = getSoleUse(sig, tp, checker);
             switch (res.type) {
                 case "ok":
                     break;
@@ -66,7 +66,8 @@ function walk(ctx: Lint.WalkContext<void>, checker: ts.TypeChecker): void {
 type Result =
     | { type: "ok" | "never" }
     | { type: "sole", soleUse: ts.Identifier };
-function getSoleUse(sig: ts.SignatureDeclaration, typeParameterSymbol: ts.Symbol, checker: ts.TypeChecker): Result {
+function getSoleUse(sig: ts.SignatureDeclaration, typeParameter: ts.TypeParameterDeclaration, checker: ts.TypeChecker): Result {
+    const typeParameterSymbol = assertDefined(checker.getSymbolAtLocation(typeParameter.name));
     const exit = {};
     let soleUse: ts.Identifier | undefined;
 
@@ -105,6 +106,15 @@ function getSoleUse(sig: ts.SignatureDeclaration, typeParameterSymbol: ts.Symbol
                 }
             }
         } else {
+            if (ts.isTypeReferenceNode(node) &&
+                typeParameter.constraint &&
+                node.typeArguments &&
+                node.typeArguments.some((n) =>
+                    ts.isTypeReferenceNode(n) &&
+                    ts.isIdentifier(n.typeName) &&
+                    checker.getSymbolAtLocation(n.typeName) === typeParameterSymbol)) {
+                throw exit;
+            }
             node.forEachChild(recur);
         }
     }
