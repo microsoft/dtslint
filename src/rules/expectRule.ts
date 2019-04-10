@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { dirname, basename, resolve as resolvePath } from "path";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { dirname, basename, resolve as resolvePath, join } from "path";
+import os = require("os");
 import * as Lint from "tslint";
 import * as TsType from "typescript";
 import { last } from "../util";
@@ -8,6 +9,8 @@ type Program = TsType.Program;
 type SourceFile = TsType.SourceFile;
 
 // Based on https://github.com/danvk/typings-checker
+
+const perfDir = join(os.homedir(), ".dts", "perf");
 
 export class Rule extends Lint.Rules.TypedRule {
     /* tslint:disable:object-literal-sort-keys */
@@ -47,7 +50,10 @@ export class Rule extends Lint.Rules.TypedRule {
                 const packageName = basename(dirname(tsconfigPath));
                 if (!packageName.match(/v\d+/) && !packageName.match(/ts\d\.\d/)) {
                     const d = { [packageName]: { typeCount: (program as any).getTypeCount(), memory: ts.sys.getMemoryUsage ? ts.sys.getMemoryUsage() : 0 } };
-                    writeFileSync(`./perf-${packageName}.json`, JSON.stringify(d));
+                    if (!existsSync(perfDir)) {
+                        mkdirSync(perfDir);
+                    }
+                    writeFileSync(join(perfDir, `${packageName}.json`), JSON.stringify(d));
                     console.log(JSON.stringify(d[packageName]));
                 }
             }
