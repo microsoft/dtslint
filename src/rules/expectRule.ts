@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from "fs";
-import { dirname, resolve as resolvePath } from "path";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { dirname, basename, resolve as resolvePath, join } from "path";
+import os = require("os");
 import * as Lint from "tslint";
 import * as TsType from "typescript";
 import { last } from "../util";
@@ -8,6 +9,8 @@ type Program = TsType.Program;
 type SourceFile = TsType.SourceFile;
 
 // Based on https://github.com/danvk/typings-checker
+
+const perfDir = join(os.homedir(), ".dts", "perf");
 
 export class Rule extends Lint.Rules.TypedRule {
     /* tslint:disable:object-literal-sort-keys */
@@ -39,20 +42,31 @@ export class Rule extends Lint.Rules.TypedRule {
 
         const { tsconfigPath, versionsToTest } = options;
 
-        const getFailures = ({ versionName, path }: VersionToTest, nextHigherVersion: string | undefined) => {
+        const getFailures = ({ versionName, path }: VersionToTest, nextHigherVersion: string | undefined, writeOutput: boolean) => {
             const ts = require(path);
             const program = getProgram(tsconfigPath, ts, versionName, lintProgram);
-            return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
+            const failures = this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
+            if (writeOutput) {
+                const packageName = basename(dirname(tsconfigPath));
+                if (!packageName.match(/v\d+/) && !packageName.match(/ts\d\.\d/)) {
+                    const d = { [packageName]: { typeCount: (program as any).getTypeCount(), memory: ts.sys.getMemoryUsage ? ts.sys.getMemoryUsage() : 0 } };
+                    if (!existsSync(perfDir)) {
+                        mkdirSync(perfDir);
+                    }
+                    writeFileSync(join(perfDir, `${packageName}.json`), JSON.stringify(d));
+                }
+            }
+            return failures;
         };
 
-        const maxFailures = getFailures(last(versionsToTest), undefined);
+        const maxFailures = getFailures(last(versionsToTest), undefined, /*writeOutput*/ true);
         if (maxFailures.length) {
             return maxFailures;
         }
 
         // As an optimization, check the earliest version for errors;
         // assume that if it works on min and max, it works for everything in between.
-        const minFailures = getFailures(versionsToTest[0], undefined);
+        const minFailures = getFailures(versionsToTest[0], undefined, /*writeOutput*/ false);
         if (!minFailures.length) {
             return [];
         }
@@ -60,7 +74,7 @@ export class Rule extends Lint.Rules.TypedRule {
         // There are no failures in the max version, but there are failures in the min version.
         // Work backward to find the newest version with failures.
         for (let i = versionsToTest.length - 2; i >= 0; i--) {
-            const failures = getFailures(versionsToTest[i], options.versionsToTest[i + 1].versionName);
+            const failures = getFailures(versionsToTest[i], options.versionsToTest[i + 1].versionName, /*writeOutput*/ false);
             if (failures.length) {
                 return failures;
             }
@@ -129,7 +143,6 @@ function walk(
     const checker = program.getTypeChecker();
     // Don't care about emit errors.
     const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
-
     if (sourceFile.isDeclarationFile || !/\$Expect(Type|Error)/.test(sourceFile.text)) {
         // Normal file.
         for (const diagnostic of diagnostics) {
