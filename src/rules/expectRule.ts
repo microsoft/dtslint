@@ -54,7 +54,6 @@ export class Rule extends Lint.Rules.TypedRule {
                         mkdirSync(perfDir);
                     }
                     writeFileSync(join(perfDir, `${packageName}.json`), JSON.stringify(d));
-                    console.log(JSON.stringify(d[packageName]));
                 }
             }
             return failures;
