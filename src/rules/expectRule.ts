@@ -1,6 +1,6 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
-import { dirname, basename, resolve as resolvePath, join } from "path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import os = require("os");
+import { basename, dirname, join, resolve as resolvePath } from "path";
 import * as Lint from "tslint";
 import * as TsType from "typescript";
 import { last } from "../util";
@@ -42,14 +42,23 @@ export class Rule extends Lint.Rules.TypedRule {
 
         const { tsconfigPath, versionsToTest } = options;
 
-        const getFailures = ({ versionName, path }: VersionToTest, nextHigherVersion: string | undefined, writeOutput: boolean) => {
+        const getFailures = (
+            { versionName, path }: VersionToTest,
+            nextHigherVersion: string | undefined,
+            writeOutput: boolean,
+        ) => {
             const ts = require(path);
             const program = getProgram(tsconfigPath, ts, versionName, lintProgram);
             const failures = this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
             if (writeOutput) {
                 const packageName = basename(dirname(tsconfigPath));
                 if (!packageName.match(/v\d+/) && !packageName.match(/ts\d\.\d/)) {
-                    const d = { [packageName]: { typeCount: (program as any).getTypeCount(), memory: ts.sys.getMemoryUsage ? ts.sys.getMemoryUsage() : 0 } };
+                    const d = {
+                        [packageName]: {
+                            typeCount: (program as any).getTypeCount(),
+                            memory: ts.sys.getMemoryUsage ? ts.sys.getMemoryUsage() : 0,
+                        },
+                    };
                     if (!existsSync(perfDir)) {
                         mkdirSync(perfDir);
                     }
