@@ -2,7 +2,7 @@
 
 import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
 import { readdir, readFile, stat } from "fs-extra";
-import { basename, dirname, join as joinPaths } from "path";
+import { basename, dirname, join as joinPaths, resolve } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, installAll, installNext } from "./installer";
@@ -23,7 +23,7 @@ async function main(): Promise<void> {
             if (arg.startsWith("--")) {
                 throw new Error("Looking for local path for TS, but got " + arg);
             }
-            tsLocal = arg;
+            tsLocal = resolve(arg);
             lookingForTsLocal = false;
             continue;
         }
