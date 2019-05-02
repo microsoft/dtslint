@@ -39,7 +39,8 @@ export async function lint(
         if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
 
         const { fileName, text } = file;
-        const err = testNoTsIgnore(text) || testNoTslintDisables(text);
+        const err = isDeclarationFile(fileName) &&
+                    (testNoTsIgnore(text) || testNoTslintDisables(text));
         if (err) {
             const { pos, message } = err;
             const place = file.getLineAndCharacterOfPosition(pos);
@@ -86,6 +87,10 @@ function isExternalDependency(file: TsType.SourceFile, dirPath: string, program:
 function isTypesVersionPath(fileName: string, dirPath: string) {
     const subdirPath = withoutPrefix(fileName, dirPath);
     return subdirPath && /^\/ts\d+\.\d/.test(subdirPath);
+}
+
+function isDeclarationFile(fileName: string) {
+    return fileName.endsWith("d.ts");
 }
 
 function startsWithDirectory(filePath: string, dirPath: string): boolean {
