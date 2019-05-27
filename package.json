@@ -33,7 +33,7 @@
     "request": "^2.88.0",
     "strip-json-comments": "^2.0.1",
     "tslint": "5.14.0",
-    "typescript": "next"
+    "typescript": "^3.4.5"
   },
   "devDependencies": {
     "@types/fs-extra": "^5.0.2",
