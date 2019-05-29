@@ -27,7 +27,7 @@
     "do-publish": "npm run build && npm run test && npm run lint && npm publish"
   },
   "dependencies": {
-    "definitelytyped-header-parser": "1.1.0",
+    "definitelytyped-header-parser": "1.2.0",
     "dts-critic": "^1.0.9",
     "fs-extra": "^6.0.1",
     "request": "^2.88.0",
