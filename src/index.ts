@@ -127,6 +127,7 @@ async function runTests(
         // Someone may have copied text from DefinitelyTyped to their type definition and included a header,
         // so assert that we're really on DefinitelyTyped.
         assertPathIsInDefinitelyTyped(dirPath);
+        assertPathIsNotBanned(dirPath);
     }
 
     const typesVersions = await mapDefinedAsync(await readdir(dirPath), async name => {
@@ -215,6 +216,17 @@ function assertPathIsInDefinitelyTyped(dirPath: string): void {
             + "assumed this was a DefinitelyTyped package.\n"
             + "But it is not in a `DefinitelyTyped/types/xxx` directory: "
             + dirPath);
+    }
+}
+
+function assertPathIsNotBanned(dirPath: string) {
+    const basedir = basename(dirPath);
+    if (/download/.test(basedir) &&
+        basedir !== "download" &&
+        basedir !== "downloadjs" &&
+        basedir !== "s3-download-stream") {
+        // Since npm won't release their banned-words list, we'll have to manually add to this list.
+        throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
     }
 }
 
