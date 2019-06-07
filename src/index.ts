@@ -221,7 +221,7 @@ function assertPathIsInDefinitelyTyped(dirPath: string): void {
 
 function assertPathIsNotBanned(dirPath: string) {
     const basedir = basename(dirPath);
-    if (/download/.test(basedir) &&
+    if (/(^|\W)download($|\W)/.test(basedir) &&
         basedir !== "download" &&
         basedir !== "downloadjs" &&
         basedir !== "s3-download-stream") {
