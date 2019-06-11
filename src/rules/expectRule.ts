@@ -29,8 +29,8 @@ export class Rule extends Lint.Rules.TypedRule {
     static FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this assertion.";
     static FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found none.";
 
-    static FAILURE_STRING(expectedType: string, actualType: string): string {
-        return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
+    static FAILURE_STRING(expectedVersion: string, expectedType: string, actualType: string): string {
+        return `TypeScript@${expectedVersion} expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
     }
 
     applyWithProgram(sourceFile: SourceFile, lintProgram: Program): Lint.RuleFailure[] {
@@ -184,7 +184,7 @@ function walk(
 
     const { unmetExpectations, unusedAssertions } = getExpectTypeFailures(sourceFile, typeAssertions, checker, ts);
     for (const { node, expected, actual } of unmetExpectations) {
-        ctx.addFailureAtNode(node, Rule.FAILURE_STRING(expected, actual));
+        ctx.addFailureAtNode(node, Rule.FAILURE_STRING(versionName, expected, actual));
     }
     for (const line of unusedAssertions) {
         addFailureAtLine(line, Rule.FAILURE_STRING_ASSERTION_MISSING_NODE);
