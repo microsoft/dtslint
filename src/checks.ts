@@ -91,6 +91,7 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
                 case "target":
                 case "paths":
                 case "jsx":
+                case "jsxFactory":
                 case "experimentalDecorators":
                 case "noUnusedLocals":
                 case "noUnusedParameters":
