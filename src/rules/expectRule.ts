@@ -298,6 +298,38 @@ interface ExpectTypeFailures {
     readonly unusedAssertions: Iterable<number>;
 }
 
+function typeToString (checker: TsType.TypeChecker, type: TsType.Type) {
+    return checker.typeToString(type, /*enclosingDeclaration*/ undefined, TsType.TypeFormatFlags.NoTruncation);
+}
+function matchGenericDefault(checker: TsType.TypeChecker, type: TsType.Type, expected: string) {
+    const typeStr = typeToString(checker, type);
+
+    const ref = type as TsType.TypeReference;
+    const args = ref.typeArguments;
+    const generic = ref.target;
+
+    if (!generic || !generic.typeArguments || !typeStr.startsWith(expected)) {
+        return false;
+    }
+
+    const defaults = generic.typeArguments
+        .map(type => type.getDefault() as TsType.Type)
+        .filter(Boolean);
+
+    // store
+    ref.typeArguments = defaults;
+
+    if (
+        defaults.length !== generic.typeArguments.length ||
+        typeStr !== typeToString(checker, ref)
+    ) {
+        return false;
+    }
+    // reset
+    ref.typeArguments = args;
+
+    return true;
+}
 function matchReadonlyArray(actual: string, expected: string) {
     if (!(/\breadonly\b/.test(actual) && /\bReadonlyArray\b/.test(expected))) return false;
     const readonlyArrayRegExp = /\bReadonlyArray</y;
@@ -363,11 +395,13 @@ function getExpectTypeFailures(
 
             const type = checker.getTypeAtLocation(getNodeForExpectType(node, ts));
 
-            const actual = type
-                ? checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation)
-                : "";
+            const actual = type ? typeToString(checker, type) : "";
 
-            if (actual !== expected && !matchReadonlyArray(actual, expected)) {
+            if (
+                actual !== expected &&
+                !matchReadonlyArray(actual, expected) &&
+                !matchGenericDefault(checker, type, expected)
+            ) {
                 unmetExpectations.push({ node, expected, actual });
             }
 
