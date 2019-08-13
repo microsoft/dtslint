@@ -129,7 +129,7 @@ dtslint --localTs node_modules/typescript/lib types
 ```
 - `--expectOnly`
 
-Disable all the lint rules and check for type correctness only.
+Disable all the lint rules except the one that checks for type correctness.
 
 ```sh
 dtslint --expectOnly types
