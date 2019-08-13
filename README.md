@@ -118,6 +118,23 @@ For bundled typings, this can go on any line (but should be near the top).
 - Add to your `package.json` `scripts`: `"dtslint": "dtslint types"`
 - `npm run dtslint`
 
+### Options
+
+- `--localTs`
+
+Use your locally installed version of TypeScript.
+
+```sh
+dtslint --localTs node_modules/typescript/lib types
+```
+- `--expectOnly`
+
+Disable all the lint rules except the one that checks for type correctness.
+
+```sh
+dtslint --expectOnly types
+```
+
 
 # Contributing
 
