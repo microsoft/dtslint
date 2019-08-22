@@ -24,7 +24,7 @@
     "build": "tsc",
     "lint": "tslint --project tsconfig.json --format stylish",
     "test": "npm run build && node test/test.js",
-    "do-publish": "npm run build && npm run test && npm run lint && npm publish"
+    "prepublishOnly": "npm run build && npm run test && npm run lint"
   },
   "dependencies": {
     "definitelytyped-header-parser": "1.2.0",
