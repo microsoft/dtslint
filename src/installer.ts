@@ -13,7 +13,6 @@ export async function installAll() {
         // manually instead typescript@next outside the loop
         if (v === TypeScriptVersion.all[TypeScriptVersion.all.length - 1]) { continue; }
         await install(v);
-        console.log("");
     }
     await installNext();
 }
@@ -33,6 +32,7 @@ async function install(version: TsVersion): Promise<void> {
         await fs.writeJson(path.join(dir, "package.json"), packageJson(version));
         await execAndThrowErrors("npm install --ignore-scripts --no-shrinkwrap --no-package-lock --no-bin-links", dir);
         console.log("Installed!");
+        console.log("");
     }
 }
 
