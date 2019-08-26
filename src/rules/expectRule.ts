@@ -10,6 +10,7 @@ type SourceFile = TsType.SourceFile;
 
 // Based on https://github.com/danvk/typings-checker
 
+const cacheDir = join(os.homedir(), ".dts");
 const perfDir = join(os.homedir(), ".dts", "perf");
 
 export class Rule extends Lint.Rules.TypedRule {
@@ -59,6 +60,9 @@ export class Rule extends Lint.Rules.TypedRule {
                             memory: ts.sys.getMemoryUsage ? ts.sys.getMemoryUsage() : 0,
                         },
                     };
+                    if (!existsSync(cacheDir)) {
+                        mkdirSync(cacheDir);
+                    }
                     if (!existsSync(perfDir)) {
                         mkdirSync(perfDir);
                     }
