@@ -3,6 +3,10 @@ It will install `typescript` and `tslint` for you, so this is the only tool you 
 
 Lint rules new to dtslint are documented in the [docs](docs) directory.
 
+# Just looking for ExpectType and ExpectError?
+
+[Use tsd instead](https://github.com/SamVerschueren/tsd).
+
 # Setup
 
 If you are working on DefinitelyTyped, read the [DefinitelyTyped README](https://github.com/DefinitelyTyped/DefinitelyTyped#readme).
