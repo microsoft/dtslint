@@ -371,7 +371,7 @@ function getExpectTypeFailures(
                 ? checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation)
                 : "";
 
-            if (actual !== expected && !matchReadonlyArray(actual, expected)) {
+            if (!expected.split(/\s*\|\|\s*/).some(s => actual === s || matchReadonlyArray(actual, s))) {
                 unmetExpectations.push({ node, expected, actual });
             }
 
