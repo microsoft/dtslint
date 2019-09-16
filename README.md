@@ -55,7 +55,7 @@ Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-
 ```
 
 You may extend `"lib"` to, for example, `["es6", "dom"]` if you need those typings.
-You may also have add `"target": "es6"` if using certain language features.
+You may also have to add `"target": "es6"` if using certain language features.
 
 
 #### `types/tslint.json`
