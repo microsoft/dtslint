@@ -56,6 +56,7 @@ module.exports = function () {
 ```
 
 * A commonjs module.exports assignment is not really an export default, and the d.ts should use the `export =` syntax.
+* `export default` can only be used to export a commonjs `module.exports =` when you have `esModuleInterop` turned on, which not everybody does.
 
 **Good**:
 
