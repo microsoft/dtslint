@@ -37,9 +37,7 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^5.0.2",
-    "@types/mz": "0.0.30",
     "@types/node": "^7.10.7",
-    "@types/parsimmon": "^1.0.3",
     "@types/strip-json-comments": "^0.0.28"
   },
   "engines": {
