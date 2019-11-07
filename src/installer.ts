@@ -9,9 +9,9 @@ import { TsVersion } from "./lint";
 const installsDir = path.join(os.homedir(), ".dts", "typescript-installs");
 
 export async function installAll() {
-    for (const v of TypeScriptVersion.all) {
-        // manually instead typescript@next outside the loop
-        if (v === TypeScriptVersion.all[TypeScriptVersion.all.length - 1]) { continue; }
+    for (const v of TypeScriptVersion.supported) {
+        // manually install typescript@next outside the loop
+        if (v === TypeScriptVersion.supported[TypeScriptVersion.supported.length - 1]) { continue; }
         await install(v);
     }
     await installNext();
