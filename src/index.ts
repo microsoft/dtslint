@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
-import { isTypeScriptVersion, parseTypeScriptVersionLine, AllTypeScriptVersion, TypeScriptVersion } from "definitelytyped-header-parser";
+import {
+    AllTypeScriptVersion,
+    isTypeScriptVersion,
+    parseTypeScriptVersionLine,
+    TypeScriptVersion,
+} from "definitelytyped-header-parser";
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths, resolve } from "path";
 
