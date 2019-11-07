@@ -185,7 +185,7 @@ function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVe
 
     // The last item of TypeScriptVersion is the unreleased version of Typescript,
     // which is called 'next' on npm, so replace it with 'next'.
-    const allReleased: TsVersion[] = [...TypeScriptVersion.all];
+    const allReleased: TsVersion[] = [...TypeScriptVersion.supported];
     allReleased[allReleased.length - 1] = "next";
     const minIdx = allReleased.indexOf(minVersion);
     assert(minIdx >= 0);

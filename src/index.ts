@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
-import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
+import {
+    AllTypeScriptVersion,
+    isTypeScriptVersion,
+    parseTypeScriptVersionLine,
+    TypeScriptVersion,
+} from "definitelytyped-header-parser";
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths, resolve } from "path";
 
@@ -192,7 +197,9 @@ async function testTypesVersion(
     if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
         throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
     }
-    const minVersion = lowVersion || minVersionFromComment || TypeScriptVersion.lowest;
+    const minVersion = lowVersion
+        || minVersionFromComment && TypeScriptVersion.isSupported(minVersionFromComment) && minVersionFromComment
+        || TypeScriptVersion.lowest;
 
     await checkTslintJson(dirPath, dt);
     await checkTsconfig(dirPath, dt
@@ -230,7 +237,7 @@ function assertPathIsNotBanned(dirPath: string) {
     }
 }
 
-function getTypeScriptVersionFromComment(text: string): TypeScriptVersion | undefined {
+function getTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
     const searchString = "// TypeScript Version: ";
     const x = text.indexOf(searchString);
     if (x === -1) {
