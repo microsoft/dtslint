@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from "fs";
-import { dirname, resolve as resolvePath } from "path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import os = require("os");
+import { basename, dirname, join, resolve as resolvePath } from "path";
 import * as Lint from "tslint";
 import * as TsType from "typescript";
 import { last } from "../util";
@@ -8,6 +9,9 @@ type Program = TsType.Program;
 type SourceFile = TsType.SourceFile;
 
 // Based on https://github.com/danvk/typings-checker
+
+const cacheDir = join(os.homedir(), ".dts");
+const perfDir = join(os.homedir(), ".dts", "perf");
 
 export class Rule extends Lint.Rules.TypedRule {
     /* tslint:disable:object-literal-sort-keys */
@@ -26,8 +30,8 @@ export class Rule extends Lint.Rules.TypedRule {
     static FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this assertion.";
     static FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found none.";
 
-    static FAILURE_STRING(expectedType: string, actualType: string): string {
-        return `Expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
+    static FAILURE_STRING(expectedVersion: string, expectedType: string, actualType: string): string {
+        return `TypeScript@${expectedVersion} expected type to be:\n  ${expectedType}\ngot:\n  ${actualType}`;
     }
 
     applyWithProgram(sourceFile: SourceFile, lintProgram: Program): Lint.RuleFailure[] {
@@ -39,20 +43,43 @@ export class Rule extends Lint.Rules.TypedRule {
 
         const { tsconfigPath, versionsToTest } = options;
 
-        const getFailures = ({ versionName, path }: VersionToTest, nextHigherVersion: string | undefined) => {
+        const getFailures = (
+            { versionName, path }: VersionToTest,
+            nextHigherVersion: string | undefined,
+            writeOutput: boolean,
+        ) => {
             const ts = require(path);
             const program = getProgram(tsconfigPath, ts, versionName, lintProgram);
-            return this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
+            const failures = this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));
+            if (writeOutput) {
+                const packageName = basename(dirname(tsconfigPath));
+                if (!packageName.match(/v\d+/) && !packageName.match(/ts\d\.\d/)) {
+                    const d = {
+                        [packageName]: {
+                            typeCount: (program as any).getTypeCount(),
+                            memory: ts.sys.getMemoryUsage ? ts.sys.getMemoryUsage() : 0,
+                        },
+                    };
+                    if (!existsSync(cacheDir)) {
+                        mkdirSync(cacheDir);
+                    }
+                    if (!existsSync(perfDir)) {
+                        mkdirSync(perfDir);
+                    }
+                    writeFileSync(join(perfDir, `${packageName}.json`), JSON.stringify(d));
+                }
+            }
+            return failures;
         };
 
-        const maxFailures = getFailures(last(versionsToTest), undefined);
+        const maxFailures = getFailures(last(versionsToTest), undefined, /*writeOutput*/ true);
         if (maxFailures.length) {
             return maxFailures;
         }
 
         // As an optimization, check the earliest version for errors;
         // assume that if it works on min and max, it works for everything in between.
-        const minFailures = getFailures(versionsToTest[0], undefined);
+        const minFailures = getFailures(versionsToTest[0], undefined, /*writeOutput*/ false);
         if (!minFailures.length) {
             return [];
         }
@@ -60,7 +87,7 @@ export class Rule extends Lint.Rules.TypedRule {
         // There are no failures in the max version, but there are failures in the min version.
         // Work backward to find the newest version with failures.
         for (let i = versionsToTest.length - 2; i >= 0; i--) {
-            const failures = getFailures(versionsToTest[i], options.versionsToTest[i + 1].versionName);
+            const failures = getFailures(versionsToTest[i], options.versionsToTest[i + 1].versionName, /*writeOutput*/ false);
             if (failures.length) {
                 return failures;
             }
@@ -129,7 +156,6 @@ function walk(
     const checker = program.getTypeChecker();
     // Don't care about emit errors.
     const diagnostics = ts.getPreEmitDiagnostics(program, sourceFile);
-
     if (sourceFile.isDeclarationFile || !/\$Expect(Type|Error)/.test(sourceFile.text)) {
         // Normal file.
         for (const diagnostic of diagnostics) {
@@ -162,7 +188,7 @@ function walk(
 
     const { unmetExpectations, unusedAssertions } = getExpectTypeFailures(sourceFile, typeAssertions, checker, ts);
     for (const { node, expected, actual } of unmetExpectations) {
-        ctx.addFailureAtNode(node, Rule.FAILURE_STRING(expected, actual));
+        ctx.addFailureAtNode(node, Rule.FAILURE_STRING(versionName, expected, actual));
     }
     for (const line of unusedAssertions) {
         addFailureAtLine(line, Rule.FAILURE_STRING_ASSERTION_MISSING_NODE);
@@ -345,7 +371,7 @@ function getExpectTypeFailures(
                 ? checker.typeToString(type, /*enclosingDeclaration*/ undefined, ts.TypeFormatFlags.NoTruncation)
                 : "";
 
-            if (actual !== expected && !matchReadonlyArray(actual, expected)) {
+            if (!expected.split(/\s*\|\|\s*/).some(s => actual === s || matchReadonlyArray(actual, s))) {
                 unmetExpectations.push({ node, expected, actual });
             }
 

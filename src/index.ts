@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 
-import { isTypeScriptVersion, parseTypeScriptVersionLine, TypeScriptVersion } from "definitelytyped-header-parser";
+import {
+    AllTypeScriptVersion,
+    isTypeScriptVersion,
+    parseTypeScriptVersionLine,
+    TypeScriptVersion,
+} from "definitelytyped-header-parser";
 import { readdir, readFile, stat } from "fs-extra";
-import { basename, dirname, join as joinPaths } from "path";
+import { basename, dirname, join as joinPaths, resolve } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
 import { cleanInstalls, installAll, installNext } from "./installer";
@@ -23,7 +28,7 @@ async function main(): Promise<void> {
             if (arg.startsWith("--")) {
                 throw new Error("Looking for local path for TS, but got " + arg);
             }
-            tsLocal = arg;
+            tsLocal = resolve(arg);
             lookingForTsLocal = false;
             continue;
         }
@@ -127,6 +132,7 @@ async function runTests(
         // Someone may have copied text from DefinitelyTyped to their type definition and included a header,
         // so assert that we're really on DefinitelyTyped.
         assertPathIsInDefinitelyTyped(dirPath);
+        assertPathIsNotBanned(dirPath);
     }
 
     const typesVersions = await mapDefinedAsync(await readdir(dirPath), async name => {
@@ -191,7 +197,9 @@ async function testTypesVersion(
     if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
         throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
     }
-    const minVersion = lowVersion || minVersionFromComment || TypeScriptVersion.lowest;
+    const minVersion = lowVersion
+        || minVersionFromComment && TypeScriptVersion.isSupported(minVersionFromComment) && minVersionFromComment
+        || TypeScriptVersion.lowest;
 
     await checkTslintJson(dirPath, dt);
     await checkTsconfig(dirPath, dt
@@ -218,7 +226,18 @@ function assertPathIsInDefinitelyTyped(dirPath: string): void {
     }
 }
 
-function getTypeScriptVersionFromComment(text: string): TypeScriptVersion | undefined {
+function assertPathIsNotBanned(dirPath: string) {
+    const basedir = basename(dirPath);
+    if (/(^|\W)download($|\W)/.test(basedir) &&
+        basedir !== "download" &&
+        basedir !== "downloadjs" &&
+        basedir !== "s3-download-stream") {
+        // Since npm won't release their banned-words list, we'll have to manually add to this list.
+        throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
+    }
+}
+
+function getTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
     const searchString = "// TypeScript Version: ";
     const x = text.indexOf(searchString);
     if (x === -1) {

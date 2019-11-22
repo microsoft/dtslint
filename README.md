@@ -3,6 +3,10 @@ It will install `typescript` and `tslint` for you, so this is the only tool you 
 
 Lint rules new to dtslint are documented in the [docs](docs) directory.
 
+# Just looking for ExpectType and ExpectError?
+
+[Use tsd instead](https://github.com/SamVerschueren/tsd).
+
 # Setup
 
 If you are working on DefinitelyTyped, read the [DefinitelyTyped README](https://github.com/DefinitelyTyped/DefinitelyTyped#readme).
@@ -51,7 +55,7 @@ Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-
 ```
 
 You may extend `"lib"` to, for example, `["es6", "dom"]` if you need those typings.
-You may also have add `"target": "es6"` if using certain language features.
+You may also have to add `"target": "es6"` if using certain language features.
 
 
 #### `types/tslint.json`
@@ -117,6 +121,23 @@ For bundled typings, this can go on any line (but should be near the top).
 - `npm install --save-dev dtslint`
 - Add to your `package.json` `scripts`: `"dtslint": "dtslint types"`
 - `npm run dtslint`
+
+### Options
+
+- `--localTs`
+
+Use your locally installed version of TypeScript.
+
+```sh
+dtslint --localTs node_modules/typescript/lib types
+```
+- `--expectOnly`
+
+Disable all the lint rules except the one that checks for type correctness.
+
+```sh
+dtslint --expectOnly types
+```
 
 
 # Contributing

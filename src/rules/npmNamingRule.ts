@@ -37,10 +37,9 @@ function walk(ctx: Lint.WalkContext<void>): void {
             // 2. export an error code enum
             // 3. add an errorCode property to the exception (or return value)
             if (e.message.indexOf("d.ts file must have a matching npm package") > -1 ||
+                e.message.indexOf("must match a version that exists on npm") > -1 ||
                 e.message.indexOf("The non-npm package") > -1) {
                 lookFor("// Type definitions for", e.message);
-            } else if (e.message.indexOf("At least one of the project urls listed") > -1) {
-                lookFor("// Project:", e.message);
             } else if (e.message.indexOf("export default") > -1) {
                 lookFor("export default", e.message);
             } else {
