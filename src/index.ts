@@ -238,7 +238,7 @@ function assertPathIsNotBanned(dirPath: string) {
 }
 
 function getTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
-    const match = text.match(/\/\/ (?:Minimum)? TypeScript Version: /);
+    const match = text.match(/\/\/ (?:Minimum )?TypeScript Version: /);
     if (!match) {
         return undefined;
     }
