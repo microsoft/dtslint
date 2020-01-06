@@ -195,7 +195,7 @@ async function testTypesVersion(
 ): Promise<void> {
     const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
     if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
-        throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
+        throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// Minimum TypeScript Version\`.`);
     }
     const minVersion = lowVersion
         || minVersionFromComment && TypeScriptVersion.isSupported(minVersionFromComment) && minVersionFromComment
@@ -238,13 +238,12 @@ function assertPathIsNotBanned(dirPath: string) {
 }
 
 function getTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
-    const searchString = "// TypeScript Version: ";
-    const x = text.indexOf(searchString);
-    if (x === -1) {
+    const match = text.match(/\/\/ (?:Minimum)? TypeScript Version: /);
+    if (!match) {
         return undefined;
     }
 
-    let line = text.slice(x, text.indexOf("\n", x));
+    let line = text.slice(match.index, text.indexOf("\n", match.index));
     if (line.endsWith("\r")) {
         line = line.slice(0, line.length - 1);
     }
