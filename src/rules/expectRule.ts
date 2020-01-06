@@ -211,7 +211,7 @@ function walk(
             const msg = `Compile error in typescript@${versionName} but not in typescript@${nextHigherVersion}.\n`;
             const explain = nextHigherVersion === "next"
                 ? "TypeScript@next features not yet supported."
-                : `Fix with a comment '// TypeScript Version: ${nextHigherVersion}' just under the header.`;
+                : `Fix with a comment '// Minimum TypeScript Version: ${nextHigherVersion}' just under the header.`;
             return msg + explain;
         }
     }

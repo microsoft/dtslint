@@ -109,7 +109,7 @@ Normally packages will be tested using TypeScript 2.0.
 To use a newer version, specify it by including a comment like so:
 
 ```ts
-// TypeScript Version: 2.1
+// Minimum TypeScript Version: 2.1
 ```
 
 For DefinitelyTyped packages, this should go just under the header (on line 5).
