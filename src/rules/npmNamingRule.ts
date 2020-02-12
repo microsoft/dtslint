@@ -5,6 +5,7 @@ import {
     ErrorKind,
     ExportErrorKind,
     Mode,
+    NameOnlyOptions,
     parseExportErrorKind,
     parseMode } from "dts-critic";
 import * as Lint from "tslint";
@@ -14,9 +15,9 @@ import { failure, isMainFile } from "../util";
 
 type Options = CriticOptions & { singleLine?: boolean };
 
-const defaultOptions = {
+const defaultOptions: NameOnlyOptions = {
     mode: Mode.NameOnly,
-} as const;
+};
 
 export class Rule extends Lint.Rules.AbstractRule {
     static metadata: Lint.IRuleMetadata = {
@@ -38,7 +39,7 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
                             description: "Whether to print error messages in a single line. Used for testing.",
                             type: "boolean",
                         },
-                        required: ["mode"],
+                        "required": ["mode"],
                     },
                 },
                 {
@@ -60,7 +61,7 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
                                     {
                                         description: "Whether the check is enabled or disabled.",
                                         type: "boolean",
-                                    }
+                                    },
                                 ],
                                 minItems: 2,
                                 maxItems: 2,
@@ -70,7 +71,7 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
                             description: "Whether to print error messages in a single line. Used for testing.",
                             type: "boolean",
                         },
-                        required: ["mode"],
+                        "required": ["mode"],
                     },
                 },
             ],
@@ -99,11 +100,11 @@ function parseOptions(args: unknown[]): Options {
         return defaultOptions;
     }
 
-    if (!arg["mode"]|| typeof arg["mode"] !== "string") {
+    if (!arg.mode || typeof arg.mode !== "string") {
         return defaultOptions;
     }
 
-    const mode = parseMode(arg["mode"]);
+    const mode = parseMode(arg.mode);
     if (!mode) {
         return defaultOptions;
     }
@@ -111,16 +112,16 @@ function parseOptions(args: unknown[]): Options {
     let singleLine;
     if (arg["single-line"]) {
         singleLine = true;
-    } 
+    }
 
     switch (mode) {
         case Mode.NameOnly:
             return { mode, singleLine };
         case Mode.Code:
-            if (!arg["errors"] || !Array.isArray(arg["errors"])) {
+            if (!arg.errors || !Array.isArray(arg.errors)) {
                 return { mode, errors: new Map(), singleLine };
             }
-            return { mode, errors: parseEnabledErrors(arg["errors"]), singleLine };
+            return { mode, errors: parseEnabledErrors(arg.errors), singleLine };
     }
 }
 
@@ -157,12 +158,12 @@ function tslintDisableOption(error: ErrorKind): string {
 }
 
 function errorMessage(error: CriticError, opts: Options): string {
-    const message = error.message + 
+    const message = error.message +
 `\nIf you won't fix this error now or you think this error is wrong,
 you can disable this check by adding the following options to your project's tslint.json file under "rules":
 
     "npm-naming": ${tslintDisableOption(error.kind)}
-`
+`;
     if (opts.singleLine) {
         return message.replace(/(\r\n|\n|\r|\t)/gm, " ");
     }
@@ -200,14 +201,13 @@ function walk(ctx: Lint.WalkContext<Options>): void {
                                 error.position.start,
                                 error.position.length,
                                 failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
-                        }
-                        else {
+                        } else {
                             ctx.addFailure(0, 1, failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
                         }
                         break;
                 }
             }
-            
+
         } catch (e) {
             // We're ignoring exceptions.
         }
