@@ -1,0 +1,6 @@
+// Type definitions for package parseltongue 1.0
+~~~~~~~~~~~~~~~~~~~~~~~                          [0]
+// Project: https://github.com/bobby-headers/dt-header
+// Definitions by: Jane Doe <https://github.com/janedoe>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+[0]: Declaration file must have a matching npm package. To resolve this error, either: 1. Change the name to match an npm package. 2. Add a Definitely Typed header with the first line   // Type definitions for non-npm package parseltongue-browser  Add -browser to the end of your name to make sure it doesn't conflict with existing npm packages. If you won't fix this error now or you think this error is wrong, you can disable this check by adding the following options to your project's tslint.json file under "rules":      "npm-naming": false  See: https://github.com/Microsoft/dtslint/blob/master/docs/npm-naming.md
