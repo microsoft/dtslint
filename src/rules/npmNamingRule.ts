@@ -90,7 +90,6 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
 }
 
 function parseOptions(args: unknown[]): Options {
-    console.log("Options: ", args);
     if (args.length === 0) {
         return defaultOptions;
     }
@@ -132,9 +131,7 @@ function parseEnabledErrors(errors: unknown[]): Map<ExportErrorKind, boolean> {
             && tuple.length === 2
             && typeof tuple[0] === "string"
             && typeof tuple[1] === "boolean") {
-            console.log(tuple[0], tuple[1]);
             const error = parseExportErrorKind(tuple[0]);
-            console.log(error);
             if (error) {
                 enabledChecks.set(error, tuple[1]);
             }
@@ -213,7 +210,6 @@ function walk(ctx: Lint.WalkContext<Options>): void {
             
         } catch (e) {
             // We're ignoring exceptions.
-            console.log(e);
         }
     }
     // Don't recur, we're done.
