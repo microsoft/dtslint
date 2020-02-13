@@ -50,6 +50,7 @@ export async function lint(
         // typesVersions should be handled in a separate lint
         if (!isExternalDependency(file, dirPath, lintProgram) &&
             (inTypesVersionDirectory || !isTypesVersionPath(fileName, dirPath))) {
+            console.log(fileName, JSON.stringify(config));
             linter.lint(fileName, text, config);
         }
     }
@@ -79,7 +80,7 @@ function testDependencies(
     return `Errors in typescript@${version} for external dependencies:\n${showDiags}`;
 }
 
-function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
+export function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
     return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
 }
 
@@ -169,6 +170,7 @@ async function getLintConfig(
             range(minVersion, maxVersion).map(versionName => ({ versionName, path: typeScriptPath(versionName, tsLocal) }));
         const expectOptions: ExpectOptions = { tsconfigPath, versionsToTest };
         expectRule.ruleArguments = [expectOptions];
+        console.log("Expect args\n", JSON.stringify(expectOptions, undefined, 4));
     }
     return config;
 }

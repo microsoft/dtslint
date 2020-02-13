@@ -13,7 +13,9 @@
 		"noImplicitThis": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"strictNullChecks": true
+		"strictNullChecks": true,
+		// TODO: remove,
+		"esModuleInterop": true,
 	},
 	"include": ["src"]
 }

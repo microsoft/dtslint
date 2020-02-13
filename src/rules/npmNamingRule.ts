@@ -1,6 +1,7 @@
 import {
     CheckOptions as CriticOptions,
     CriticError,
+    defaultErrors,
     dtsCritic as critic,
     ErrorKind,
     ExportErrorKind,
@@ -210,4 +211,41 @@ function walk(ctx: Lint.WalkContext<Options>): void {
         }
     }
     // Don't recur, we're done.
+}
+
+/**
+ * Given lint failures of this rule, returns a rule configuration that disables such failures.
+ */
+export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, Options] {
+    const disabledErrors = new Set<ExportErrorKind>();
+    for (const failure of failures) {
+        if (failure.ruleName != "npm-naming") {
+            throw new Error(`Expected failures of rule "npm-naming", found failures of rule ${failure.ruleName}.`);
+        }
+        const message = failure.failure;
+        // Name errors.
+        if (message.includes("must have a matching npm package")
+            || message.includes("must have a version that exists on npm")
+            || message.includes("conflicts with the existing npm package")) {
+            return false;
+        }
+        // Code errors.
+        if (message.includes("declaration should use 'export =' syntax")) {
+            disabledErrors.add(ErrorKind.NeedsExportEquals);
+        }
+        else if (message.includes("declaration specifies 'export default' but the JavaScript source \
+            does not mention 'default' anywhere")) {
+            disabledErrors.add(ErrorKind.NoDefaultExport);
+        }
+        else {
+            return [true, { mode: Mode.NameOnly }];
+        }
+    }
+    
+    if ((defaultErrors as ExportErrorKind[]).every(error => disabledErrors.has(error))) {
+        return [true, { mode: Mode.NameOnly }];
+    }
+    const errors = new Map();
+    disabledErrors.forEach((error) => errors.set(error, false));
+    return [true, { mode: Mode.Code, errors }];
 }
