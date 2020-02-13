@@ -99,7 +99,8 @@ var foo = require('foo');
 var x = new foo.C(); 
 ```
 
-* The d.ts should use [`export =`](https://www.typescriptlang.org/docs/handbook/modules.html#export--and-import--require) syntax to match the CommonJs module behavior.
+* The d.ts should use [`export =`](https://www.typescriptlang.org/docs/handbook/modules.html#export--and-import--require)
+syntax to match the CommonJs module behavior.
 
 **Good**:
 
@@ -108,4 +109,29 @@ var x = new foo.C();
 ```ts
 declare class C {}
 export = C;
+```
+
+* If you need to use `export =` syntax as in the example above, and the source JavaScript also exports some properties,
+you might need to use [*declaration merging*](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#merging-namespaces-with-classes-functions-and-enums) in your d.ts. Example:
+
+**JavaScript**:
+
+`foo/index.js`:
+
+```js
+function foo() {};
+foo.bar = "Exported property";
+module.exports = foo; // module.exports is a function, but it also has a property called `bar`
+```
+
+**Declaration**:
+
+`foo/index.d.ts`:
+
+```ts
+declare function foo(): void;
+declare namespace foo {
+    var bar: string;
+}
+export = foo;
 ```
