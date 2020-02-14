@@ -109,10 +109,7 @@ function parseOptions(args: unknown[]): Options {
         return defaultOptions;
     }
 
-    let singleLine;
-    if (arg["single-line"]) {
-        singleLine = true;
-    }
+    const singleLine = !!arg["single-line"];
 
     switch (mode) {
         case Mode.NameOnly:
