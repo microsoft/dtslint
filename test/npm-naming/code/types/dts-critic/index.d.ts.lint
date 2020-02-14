@@ -1,0 +1,8 @@
+// Type definitions for package dts-critic 1.0
+~ [0]
+// Project: https://https://github.com/DefinitelyTyped/dts-critic
+// Definitions by: Jane Doe <https://github.com/janedoe>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
+export default dtsCritic();
+[0]: The declaration doesn't match the JavaScript module 'dts-critic'. Reason: The declaration should use 'export =' syntax because the JavaScript source uses 'module.exports =' syntax and 'module.exports' can be called or constructed.  To learn more about 'export =' syntax, see https://www.typescriptlang.org/docs/handbook/modules.html#export--and-import--require. If you won't fix this error now or you think this error is wrong, you can disable this check by adding the following options to your project's tslint.json file under "rules":      "npm-naming": [true,{"mode":"code","errors":[["NeedsExportEquals",false]]}]  See: https://github.com/Microsoft/dtslint/blob/master/docs/npm-naming.md

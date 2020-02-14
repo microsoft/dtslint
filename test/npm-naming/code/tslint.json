@@ -1,0 +1,6 @@
+{
+    "rulesDirectory": ["../../../bin/rules"],
+    "rules": {
+      "npm-naming": [true, {"mode": "code", "errors": [["NeedsExportEquals", true]], "single-line": true }]
+    }
+  }
