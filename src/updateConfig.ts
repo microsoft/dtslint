@@ -1,14 +1,16 @@
-import path from "path";
-import fs from "fs";
+import path = require("path");
+import fs = require("fs");
 import { isExternalDependency } from "./lint";
 import { Configuration as Config, ILinterOptions, Linter, RuleFailure, IRuleFailureJson, LintResult } from "tslint";
 import { disabler as npmNamingDisabler } from "./rules/npmNamingRule";
 import * as ts from "typescript";
 import yargs = require("yargs");
+import stringify = require("json-stable-stringify");
 
 function main() {
-    // TODO: write about our assumptions of config file (dt.json).
     const args = yargs
+        .usage(`\`$0 --dt=path-to-dt\` or \`$0 --package=path-to-dt-package\`
+'dt.json' is used as the base tslint config for running the linter.`)
         .option("package", {
             describe: "Path of DT package.",
             type: "string",
@@ -33,10 +35,20 @@ function main() {
     }
 }
 
+const dtConfigPath = "dt.json";
+const ignoredRules: string[] = ["expect"];
+
 function dtConfig(): Config.IConfigurationFile {
     const config = Config.findConfiguration(dtConfigPath).results;
     if (!config) {
         throw new Error(`Could not load config at ${dtConfigPath}.`);
+    }
+    // Disable ignored rules.
+    for (const ignoredRule of ignoredRules) {
+        const ruleOpts = config.rules.get(ignoredRule);
+        if (ruleOpts) {
+            ruleOpts.ruleSeverity = "off";
+        }
     }
     return config;
 }
@@ -55,20 +67,42 @@ function updatePackage(pkgPath: string, baseConfig: Config.IConfigurationFile): 
         fix: false,
     };
 
-    // console.log(packages);
     for (const pkg of packages) {
         const results = pkg.lint(linterOpts, baseConfig);
         if (results.failures.length > 0) {
-            const newRulesConfig = disableRules(results.failures);
-            const oldConfig: Config.RawConfigFile = pkg.config();
-            const newConfig: Config.RawConfigFile = { ...oldConfig, rules: newRulesConfig };
+            const disabledRules = disableRules(results.failures);
+            const newConfig = mergeConfigRules(pkg.config(), disabledRules, baseConfig);
             pkg.updateConfig(newConfig);
         }
     }
 }
 
-/** Represents a package from the linter's perspective. */
-// TODO: write more about this.
+function mergeConfigRules(
+    config: Config.RawConfigFile,
+    newRules: Config.RawRulesConfig,
+    baseConfig: Config.IConfigurationFile): Config.RawConfigFile {
+        const activeRules: string[] = [];
+        baseConfig.rules.forEach((ruleOpts, ruleName) => {
+            if (ruleOpts.ruleSeverity !== "off") {
+                activeRules.push(ruleName);
+            }
+        });
+        const oldRules: Config.RawRulesConfig = config.rules || {};
+        let newRulesConfig: Config.RawRulesConfig = {};
+        for (const rule of Object.keys(oldRules)) {
+            if (activeRules.includes(rule)) {
+                continue;
+            }
+            newRulesConfig[rule] = oldRules[rule];
+        }
+        newRulesConfig = { ...newRulesConfig, ...newRules };
+        return { ...config, rules: newRulesConfig };
+}
+
+/** Represents a package from the linter's perspective.
+ * For example, `DefinitelyTyped/types/react` and `DefinitelyTyped/types/react/v15` are different
+ * packages.
+*/
 class LintPackage {
     private rootDir: string;
     private files: ts.SourceFile[];
@@ -97,8 +131,8 @@ class LintPackage {
             if (ignoreFile(file, this.rootDir, this.program)) {
                 continue;
             }
-            console.log(`Linting file ${file.fileName}.
-Root: ${this.rootDir}.`);
+//             console.log(`Linting file ${file.fileName}.
+// Root: ${this.rootDir}.`);
             linter.lint(file.fileName, file.text, config);
         }
         return linter.getResult();
@@ -107,7 +141,7 @@ Root: ${this.rootDir}.`);
     updateConfig(config: Config.RawConfigFile): void {
         fs.writeFileSync(
             path.join(this.rootDir, "tslint.json"),
-            JSON.stringify(config, /* replacer */ undefined, /* space */ 4),
+            stringify(config, { space: 4 }),
             { encoding: "utf8", flag: "w" });
     }
 }
@@ -144,7 +178,7 @@ function walkPackageDir(rootDir: string): LintPackage[] {
 }
 
 /** Returns true if directory name matches a TypeScript or package version directory.
- *  Examples: `ts3.5`, `v11`, v0.6
+ *  Examples: `ts3.5`, `v11`, `v0.6` are all version names.
 */
 function isVersionDir(dirName: string): boolean {
     return /^ts\d+\.\d$/.test(dirName) || /^v\d+(\.\d+)?$/.test(dirName);
@@ -163,7 +197,6 @@ function disableRules(failures: RuleFailure[]): Config.RawRulesConfig {
     const ruleToFailures: Map<string, IRuleFailureJson[]> = new Map();
     for (const failure of failures) {
         const failureJson = failure.toJson();
-        console.log(JSON.stringify(failureJson));
         if (ruleToFailures.has(failureJson.ruleName)) {
             ruleToFailures.get(failureJson.ruleName)!.push(failureJson);
         } else {
@@ -173,6 +206,9 @@ function disableRules(failures: RuleFailure[]): Config.RawRulesConfig {
 
     const newRulesConfig: Config.RawRulesConfig = {};
     ruleToFailures.forEach((failures, rule) => {
+        if (ignoredRules.includes(rule)) {
+            return;
+        }
         const disabler = ruleDisablers.get(rule) || defaultDisabler;
         const opts = disabler(failures);
         newRulesConfig[rule] = opts;
@@ -180,18 +216,6 @@ function disableRules(failures: RuleFailure[]): Config.RawRulesConfig {
 
     return newRulesConfig;
 }
-
-const dtConfigPath = "dt.json";
-// const baseDtTslintConfig: Config.RawConfigFile = {
-//     extends: `dtslint/${dtConfigPath}`,
-// };
-
-// function readConfig(pkgPath: string): Config.RawConfigFile {
-//     if (fs.existsSync(path.join(pkgPath, "tslint.json"))) {
-//         return Config.readConfigurationFile(path.join(pkgPath, "tslint.json"));
-//     }
-//     return baseDtTslintConfig;
-// }
 
 if (!module.parent) {
     main();
