@@ -1,11 +1,20 @@
 import path = require("path");
 import fs = require("fs");
 import { isExternalDependency } from "./lint";
-import { Configuration as Config, ILinterOptions, Linter, RuleFailure, IRuleFailureJson, LintResult } from "tslint";
+import { ILinterOptions, Linter, RuleFailure, IRuleFailureJson, LintResult } from "tslint";
 import { disabler as npmNamingDisabler } from "./rules/npmNamingRule";
 import * as ts from "typescript";
 import yargs = require("yargs");
 import stringify = require("json-stable-stringify");
+import {
+    IConfigurationFile,
+    RawConfigFile,
+    RawRulesConfig,
+    findConfiguration,
+    readConfigurationFile
+} from "tslint/lib/configuration";
+
+const ignoredRules: string[] = ["expect"];
 
 function main() {
     const args = yargs
@@ -21,46 +30,55 @@ function main() {
             type: "string",
             conflicts: "package",
         })
+        .option("rules", {
+            describe: "Names of the rules to be updated. Leave this empty to update all rules.",
+            type: "array",
+            string: true,
+            default: [] as string[],
+        })
         .check(arg => {
             if (!arg.package && !arg.dt) {
                 throw new Error("You must provide either argument 'package' or 'dt'.");
+            }
+            const unsupportedRules = arg.rules.filter(rule => ignoredRules.includes(rule));
+            if (unsupportedRules.length > 0) {
+                throw new Error(`Rules ${unsupportedRules.join(", ")} are not supported at the moment.`);
             }
             return true;
         }).argv;
     
     if (args.package) {
-        updatePackage(args.package, dtConfig());
+        updatePackage(args.package, dtConfig(args.rules));
     } else if (args.dt) {
-        updateAll(args.dt);
+        updateAll(args.dt, dtConfig(args.rules));
     }
 }
 
 const dtConfigPath = "dt.json";
-const ignoredRules: string[] = ["expect"];
 
-function dtConfig(): Config.IConfigurationFile {
-    const config = Config.findConfiguration(dtConfigPath).results;
+function dtConfig(updatedRules: string[]): IConfigurationFile {
+    const config = findConfiguration(dtConfigPath).results;
     if (!config) {
         throw new Error(`Could not load config at ${dtConfigPath}.`);
     }
-    // Disable ignored rules.
-    for (const ignoredRule of ignoredRules) {
-        const ruleOpts = config.rules.get(ignoredRule);
-        if (ruleOpts) {
+    // Disable ignored or non-updated rules.
+    for (const entry of config.rules.entries()) {
+        const [rule, ruleOpts] = entry;
+        if (ignoredRules.includes(rule) || (updatedRules.length > 0 && !updatedRules.includes(rule))) {
             ruleOpts.ruleSeverity = "off";
         }
     }
     return config;
 }
 
-function updateAll(dtPath: string): void {
+function updateAll(dtPath: string, config: IConfigurationFile): void {
     const packages = fs.readdirSync(path.join(dtPath, "types"));
     for (const pkg of packages) {
-        updatePackage(path.join(dtPath, "types", pkg), dtConfig());
+        updatePackage(path.join(dtPath, "types", pkg), config);
     }
 }
 
-function updatePackage(pkgPath: string, baseConfig: Config.IConfigurationFile): void {
+function updatePackage(pkgPath: string, baseConfig: IConfigurationFile): void {
     const packages = walkPackageDir(pkgPath);
 
     const linterOpts: ILinterOptions = {
@@ -78,17 +96,17 @@ function updatePackage(pkgPath: string, baseConfig: Config.IConfigurationFile): 
 }
 
 function mergeConfigRules(
-    config: Config.RawConfigFile,
-    newRules: Config.RawRulesConfig,
-    baseConfig: Config.IConfigurationFile): Config.RawConfigFile {
+    config: RawConfigFile,
+    newRules: RawRulesConfig,
+    baseConfig: IConfigurationFile): RawConfigFile {
         const activeRules: string[] = [];
         baseConfig.rules.forEach((ruleOpts, ruleName) => {
             if (ruleOpts.ruleSeverity !== "off") {
                 activeRules.push(ruleName);
             }
         });
-        const oldRules: Config.RawRulesConfig = config.rules || {};
-        let newRulesConfig: Config.RawRulesConfig = {};
+        const oldRules: RawRulesConfig = config.rules || {};
+        let newRulesConfig: RawRulesConfig = {};
         for (const rule of Object.keys(oldRules)) {
             if (activeRules.includes(rule)) {
                 continue;
@@ -114,8 +132,8 @@ class LintPackage {
         this.program = Linter.createProgram(path.join(this.rootDir, "tsconfig.json"));
     }
 
-    config(): Config.RawConfigFile {
-        return Config.readConfigurationFile(path.join(this.rootDir, "tslint.json"));
+    config(): RawConfigFile {
+        return readConfigurationFile(path.join(this.rootDir, "tslint.json"));
     }
 
     addFile(filePath: string): void {
@@ -125,20 +143,18 @@ class LintPackage {
         }
     }
 
-    lint(opts: ILinterOptions, config: Config.IConfigurationFile): LintResult {
+    lint(opts: ILinterOptions, config: IConfigurationFile): LintResult {
         const linter = new Linter(opts, this.program);
         for (const file of this.files) {
             if (ignoreFile(file, this.rootDir, this.program)) {
                 continue;
             }
-//             console.log(`Linting file ${file.fileName}.
-// Root: ${this.rootDir}.`);
             linter.lint(file.fileName, file.text, config);
         }
         return linter.getResult();
     }
 
-    updateConfig(config: Config.RawConfigFile): void {
+    updateConfig(config: RawConfigFile): void {
         fs.writeFileSync(
             path.join(this.rootDir, "tslint.json"),
             stringify(config, { space: 4 }),
@@ -193,7 +209,7 @@ const ruleDisablers: Map<string, RuleDisabler> = new Map([
     ["npm-naming", npmNamingDisabler],
 ]);
 
-function disableRules(failures: RuleFailure[]): Config.RawRulesConfig {
+function disableRules(failures: RuleFailure[]): RawRulesConfig {
     const ruleToFailures: Map<string, IRuleFailureJson[]> = new Map();
     for (const failure of failures) {
         const failureJson = failure.toJson();
@@ -204,7 +220,7 @@ function disableRules(failures: RuleFailure[]): Config.RawRulesConfig {
         }
     }
 
-    const newRulesConfig: Config.RawRulesConfig = {};
+    const newRulesConfig: RawRulesConfig = {};
     ruleToFailures.forEach((failures, rule) => {
         if (ignoredRules.includes(rule)) {
             return;

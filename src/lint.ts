@@ -50,7 +50,6 @@ export async function lint(
         // typesVersions should be handled in a separate lint
         if (!isExternalDependency(file, dirPath, lintProgram) &&
             (inTypesVersionDirectory || !isTypesVersionPath(fileName, dirPath))) {
-            console.log(fileName, JSON.stringify(config));
             linter.lint(fileName, text, config);
         }
     }
@@ -170,7 +169,6 @@ async function getLintConfig(
             range(minVersion, maxVersion).map(versionName => ({ versionName, path: typeScriptPath(versionName, tsLocal) }));
         const expectOptions: ExpectOptions = { tsconfigPath, versionsToTest };
         expectRule.ruleArguments = [expectOptions];
-        console.log("Expect args\n", JSON.stringify(expectOptions, undefined, 4));
     }
     return config;
 }

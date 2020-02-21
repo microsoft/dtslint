@@ -14,8 +14,6 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"strictNullChecks": true,
-		// TODO: remove,
-		"esModuleInterop": true,
 	},
 	"include": ["src"]
 }
