@@ -11,9 +11,11 @@ import {
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { addSuggestion } from "../suggestions";
 import { failure, isMainFile } from "../util";
 
-type Options = {
+/** Options as parsed from the rule configuration. */
+type ConfigOptions = {
     mode: Mode.NameOnly,
     singleLine?: boolean,
 } | {
@@ -22,7 +24,9 @@ type Options = {
     singleLine?: boolean,
 };
 
-const defaultOptions: Options = {
+type Options = CriticOptions & { singleLine?: boolean };
+
+const defaultOptions: ConfigOptions = {
     mode: Mode.NameOnly,
 };
 
@@ -73,6 +77,7 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
                                 minItems: 2,
                                 maxItems: 2,
                             },
+                            default: [],
                         },
                         "single-line": {
                             description: "Whether to print error messages in a single line. Used for testing.",
@@ -85,19 +90,22 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
         },
         optionExamples: [
             true,
-            [true, { mode: Mode.NameOnly }],
-            [true, { mode: Mode.Code, errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]] }],
-        ] as Array<true | [true, Options]>,
+            [true, { mode: Mode.NameOnly } as ConfigOptions],
+            [true, {
+                mode: Mode.Code,
+                errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]] } as ConfigOptions
+            ],
+        ],
         type: "functionality",
         typescriptOnly: true,
     };
 
     apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk, parseOptions(this.ruleArguments));
+        return this.applyWithFunction(sourceFile, walk, toCriticOptions(parseOptions(this.ruleArguments)));
     }
 }
 
-function parseOptions(args: unknown[]): Options {
+function parseOptions(args: unknown[]): ConfigOptions {
     if (args.length === 0) {
         return defaultOptions;
     }
@@ -145,7 +153,7 @@ function parseEnabledErrors(errors: unknown[]): Array<[ExportErrorKind, boolean]
     return enabledChecks;
 }
 
-function toCriticOptions(options: Options): CriticOptions {
+function toCriticOptions(options: ConfigOptions): Options {
     switch (options.mode) {
         case Mode.NameOnly:
             return options;
@@ -155,37 +163,7 @@ function toCriticOptions(options: Options): CriticOptions {
     }
 }
 
-function tslintDisableOption(error: ErrorKind): string {
-    switch (error) {
-        case ErrorKind.NoMatchingNpmPackage:
-        case ErrorKind.NoMatchingNpmVersion:
-        case ErrorKind.NonNpmHasMatchingPackage:
-            return `false`;
-        case ErrorKind.NoDefaultExport:
-        case ErrorKind.NeedsExportEquals:
-        case ErrorKind.JsSignatureNotInDts:
-        case ErrorKind.JsPropertyNotInDts:
-        case ErrorKind.DtsSignatureNotInJs:
-        case ErrorKind.DtsPropertyNotInJs:
-            return JSON.stringify([true, { mode: Mode.Code, errors: [[error, false]]}]);
-    }
-}
-
-function errorMessage(error: CriticError, opts: Options): string {
-    const message = error.message +
-`\nIf you won't fix this error now or you think this error is wrong,
-you can disable this check by adding the following options to your project's tslint.json file under "rules":
-
-    "npm-naming": ${tslintDisableOption(error.kind)}
-`;
-    if (opts.singleLine) {
-        return message.replace(/(\r\n|\n|\r|\t)/gm, " ");
-    }
-
-    return message;
-}
-
-function walk(ctx: Lint.WalkContext<Options>): void {
+function walk(ctx: Lint.WalkContext<CriticOptions>): void {
     const { sourceFile } = ctx;
     const { text } = sourceFile;
     const lookFor = (search: string, explanation: string) => {
@@ -196,7 +174,9 @@ function walk(ctx: Lint.WalkContext<Options>): void {
     };
     if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
         try {
-            const errors = critic(sourceFile.fileName, /* sourcePath */ undefined, toCriticOptions(ctx.options));
+            const optionsWithSuggestions = toOptionsWithSuggestions(ctx.options);
+            const diagnostics = critic(sourceFile.fileName, /* sourcePath */ undefined, optionsWithSuggestions);
+            const errors = filterErrors(diagnostics, ctx);
             for (const error of errors) {
                 switch (error.kind) {
                     case ErrorKind.NoMatchingNpmPackage:
@@ -229,10 +209,75 @@ function walk(ctx: Lint.WalkContext<Options>): void {
     // Don't recur, we're done.
 }
 
+const enabledSuggestions: ExportErrorKind[] = [
+    ErrorKind.JsPropertyNotInDts,
+    ErrorKind.JsSignatureNotInDts
+];
+
+function toOptionsWithSuggestions(options: CriticOptions): CriticOptions {
+    if (options.mode === Mode.NameOnly) {
+        return options;
+    }
+    const optionsWithSuggestions = { mode: options.mode, errors: new Map(options.errors) };
+    enabledSuggestions.forEach(err => optionsWithSuggestions.errors.set(err, true));
+    return optionsWithSuggestions;
+}
+
+function filterErrors(diagnostics: CriticError[], ctx: Lint.WalkContext<Options>): CriticError[] {
+    const errors: CriticError[] = [];
+    diagnostics.forEach(diagnostic => {
+        if (isSuggestion(diagnostic, ctx.options)) {
+            addSuggestion(ctx, diagnostic.message, diagnostic.position?.start, diagnostic.position?.length);
+        } else {
+            errors.push(diagnostic);
+        }
+    })
+    return errors;
+}
+
+function isSuggestion(diagnostic: CriticError, options: Options): boolean {
+    if (options.mode === Mode.Code
+        && (enabledSuggestions as ErrorKind[]).includes(diagnostic.kind)
+        && !(options.errors as Map<ErrorKind, boolean>).get(diagnostic.kind)) {
+        return true;
+    }
+    return false;
+}
+
+function tslintDisableOption(error: ErrorKind): string {
+    switch (error) {
+        case ErrorKind.NoMatchingNpmPackage:
+        case ErrorKind.NoMatchingNpmVersion:
+        case ErrorKind.NonNpmHasMatchingPackage:
+            return `false`;
+        case ErrorKind.NoDefaultExport:
+        case ErrorKind.NeedsExportEquals:
+        case ErrorKind.JsSignatureNotInDts:
+        case ErrorKind.JsPropertyNotInDts:
+        case ErrorKind.DtsSignatureNotInJs:
+        case ErrorKind.DtsPropertyNotInJs:
+            return JSON.stringify([true, { mode: Mode.Code, errors: [[error, false]]}]);
+    }
+}
+
+function errorMessage(error: CriticError, opts: Options): string {
+    const message = error.message +
+`\nIf you won't fix this error now or you think this error is wrong,
+you can disable this check by adding the following options to your project's tslint.json file under "rules":
+
+    "npm-naming": ${tslintDisableOption(error.kind)}
+`;
+    if (opts.singleLine) {
+        return message.replace(/(\r\n|\n|\r|\t)/gm, " ");
+    }
+
+    return message;
+}
+
 /**
- * Given lint failures of this rule, returns a rule configuration that disables such failures.
+ * Given npm-naming lint failures, returns a rule configuration that prevents such failures.
  */
-export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, Options] {
+export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, ConfigOptions] {
     const disabledErrors = new Set<ExportErrorKind>();
     for (const ruleFailure of failures) {
         if (ruleFailure.ruleName !== "npm-naming") {
