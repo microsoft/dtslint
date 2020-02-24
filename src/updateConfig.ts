@@ -1,19 +1,13 @@
-import path = require("path");
 import fs = require("fs");
-import { isExternalDependency } from "./lint";
-import { ILinterOptions, Linter, RuleFailure, IRuleFailureJson, LintResult } from "tslint";
-import { disabler as npmNamingDisabler } from "./rules/npmNamingRule";
+import stringify = require("json-stable-stringify");
+import path = require("path");
+import { Configuration as Config, ILinterOptions, IRuleFailureJson, Linter, LintResult, RuleFailure } from "tslint";
 import * as ts from "typescript";
 import yargs = require("yargs");
-import stringify = require("json-stable-stringify");
-import {
-    IConfigurationFile,
-    RawConfigFile,
-    RawRulesConfig,
-    findConfiguration,
-    readConfigurationFile
-} from "tslint/lib/configuration";
+import { isExternalDependency } from "./lint";
+import { disabler as npmNamingDisabler } from "./rules/npmNamingRule";
 
+// Rule "expect" needs TypeScript version information, which this script doesn't collect.
 const ignoredRules: string[] = ["expect"];
 
 function main() {
@@ -46,7 +40,7 @@ function main() {
             }
             return true;
         }).argv;
-    
+
     if (args.package) {
         updatePackage(args.package, dtConfig(args.rules));
     } else if (args.dt) {
@@ -56,8 +50,8 @@ function main() {
 
 const dtConfigPath = "dt.json";
 
-function dtConfig(updatedRules: string[]): IConfigurationFile {
-    const config = findConfiguration(dtConfigPath).results;
+function dtConfig(updatedRules: string[]): Config.IConfigurationFile {
+    const config = Config.findConfiguration(dtConfigPath).results;
     if (!config) {
         throw new Error(`Could not load config at ${dtConfigPath}.`);
     }
@@ -71,14 +65,14 @@ function dtConfig(updatedRules: string[]): IConfigurationFile {
     return config;
 }
 
-function updateAll(dtPath: string, config: IConfigurationFile): void {
+function updateAll(dtPath: string, config: Config.IConfigurationFile): void {
     const packages = fs.readdirSync(path.join(dtPath, "types"));
     for (const pkg of packages) {
         updatePackage(path.join(dtPath, "types", pkg), config);
     }
 }
 
-function updatePackage(pkgPath: string, baseConfig: IConfigurationFile): void {
+function updatePackage(pkgPath: string, baseConfig: Config.IConfigurationFile): void {
     const packages = walkPackageDir(pkgPath);
 
     const linterOpts: ILinterOptions = {
@@ -96,17 +90,17 @@ function updatePackage(pkgPath: string, baseConfig: IConfigurationFile): void {
 }
 
 function mergeConfigRules(
-    config: RawConfigFile,
-    newRules: RawRulesConfig,
-    baseConfig: IConfigurationFile): RawConfigFile {
+    config: Config.RawConfigFile,
+    newRules: Config.RawRulesConfig,
+    baseConfig: Config.IConfigurationFile): Config.RawConfigFile {
         const activeRules: string[] = [];
         baseConfig.rules.forEach((ruleOpts, ruleName) => {
             if (ruleOpts.ruleSeverity !== "off") {
                 activeRules.push(ruleName);
             }
         });
-        const oldRules: RawRulesConfig = config.rules || {};
-        let newRulesConfig: RawRulesConfig = {};
+        const oldRules: Config.RawRulesConfig = config.rules || {};
+        let newRulesConfig: Config.RawRulesConfig = {};
         for (const rule of Object.keys(oldRules)) {
             if (activeRules.includes(rule)) {
                 continue;
@@ -117,10 +111,11 @@ function mergeConfigRules(
         return { ...config, rules: newRulesConfig };
 }
 
-/** Represents a package from the linter's perspective.
+/**
+ * Represents a package from the linter's perspective.
  * For example, `DefinitelyTyped/types/react` and `DefinitelyTyped/types/react/v15` are different
  * packages.
-*/
+ */
 class LintPackage {
     private rootDir: string;
     private files: ts.SourceFile[];
@@ -132,8 +127,8 @@ class LintPackage {
         this.program = Linter.createProgram(path.join(this.rootDir, "tsconfig.json"));
     }
 
-    config(): RawConfigFile {
-        return readConfigurationFile(path.join(this.rootDir, "tslint.json"));
+    config(): Config.RawConfigFile {
+        return Config.readConfigurationFile(path.join(this.rootDir, "tslint.json"));
     }
 
     addFile(filePath: string): void {
@@ -143,7 +138,7 @@ class LintPackage {
         }
     }
 
-    lint(opts: ILinterOptions, config: IConfigurationFile): LintResult {
+    lint(opts: ILinterOptions, config: Config.IConfigurationFile): LintResult {
         const linter = new Linter(opts, this.program);
         for (const file of this.files) {
             if (ignoreFile(file, this.rootDir, this.program)) {
@@ -154,7 +149,7 @@ class LintPackage {
         return linter.getResult();
     }
 
-    updateConfig(config: RawConfigFile): void {
+    updateConfig(config: Config.RawConfigFile): void {
         fs.writeFileSync(
             path.join(this.rootDir, "tslint.json"),
             stringify(config, { space: 4 }),
@@ -174,11 +169,10 @@ function walkPackageDir(rootDir: string): LintPackage[] {
             const entPath = path.join(dir, ent.name);
             if (ent.isFile()) {
                 curPackage.addFile(entPath);
-            }
-            else if (ent.isDirectory()) {
+            } else if (ent.isDirectory() && ent.name !== "node_modules") {
                 if (isVersionDir(ent.name)) {
                     const newPackage = new LintPackage(entPath);
-                    packages.push(newPackage)
+                    packages.push(newPackage);
                     walk(newPackage, entPath);
                 } else {
                     walk(curPackage, entPath);
@@ -193,25 +187,26 @@ function walkPackageDir(rootDir: string): LintPackage[] {
     return packages;
 }
 
-/** Returns true if directory name matches a TypeScript or package version directory.
- *  Examples: `ts3.5`, `v11`, `v0.6` are all version names.
-*/
+/**
+ * Returns true if directory name matches a TypeScript or package version directory.
+ * Examples: `ts3.5`, `v11`, `v0.6` are all version names.
+ */
 function isVersionDir(dirName: string): boolean {
     return /^ts\d+\.\d$/.test(dirName) || /^v\d+(\.\d+)?$/.test(dirName);
 }
 
 type RuleOptions = boolean | unknown[];
 type RuleDisabler = (failures: IRuleFailureJson[]) => RuleOptions;
-const defaultDisabler: RuleDisabler = (_) => {
+const defaultDisabler: RuleDisabler = _ => {
     return false;
-}
+};
 const ruleDisablers: Map<string, RuleDisabler> = new Map([
     ["npm-naming", npmNamingDisabler],
 ]);
 
-function disableRules(failures: RuleFailure[]): RawRulesConfig {
+function disableRules(allFailures: RuleFailure[]): Config.RawRulesConfig {
     const ruleToFailures: Map<string, IRuleFailureJson[]> = new Map();
-    for (const failure of failures) {
+    for (const failure of allFailures) {
         const failureJson = failure.toJson();
         if (ruleToFailures.has(failureJson.ruleName)) {
             ruleToFailures.get(failureJson.ruleName)!.push(failureJson);
@@ -220,7 +215,7 @@ function disableRules(failures: RuleFailure[]): RawRulesConfig {
         }
     }
 
-    const newRulesConfig: RawRulesConfig = {};
+    const newRulesConfig: Config.RawRulesConfig = {};
     ruleToFailures.forEach((failures, rule) => {
         if (ignoredRules.includes(rule)) {
             return;
