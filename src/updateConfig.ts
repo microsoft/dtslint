@@ -1,3 +1,12 @@
+// This is a stand-alone script that updates TSLint configurations for DefinitelyTyped packages.
+// It runs all rules specified in `dt.json`, and updates the existing configuration for a package
+// by adding rule exemptions only for the rules that caused a lint failure.
+// For example, if a configuration specifies `"no-trailing-whitespace": false` and this rule
+// no longer produces an error, then it will not be disabled in the new configuration.
+// If you update or create a rule and now it causes new failures in DT, you can update the `dt.json`
+// configuration with your rule, then register a disabler function for your rule
+// (check `ruleDisablers` below), then run this script with your rule as argument.
+
 import cp = require("child_process");
 import fs = require("fs");
 import stringify = require("json-stable-stringify");
