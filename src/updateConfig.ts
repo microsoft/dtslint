@@ -5,7 +5,7 @@
 // no longer produces an error, then it will not be disabled in the new configuration.
 // If you update or create a rule and now it causes new failures in DT, you can update the `dt.json`
 // configuration with your rule, then register a disabler function for your rule
-// (check `ruleDisablers` below), then run this script with your rule as argument.
+// (check `disableRules` function below), then run this script with your rule as argument.
 
 import cp = require("child_process");
 import fs = require("fs");
@@ -139,13 +139,10 @@ function mergeConfigRules(
  * packages.
  */
 class LintPackage {
-    private rootDir: string;
-    private files: ts.SourceFile[];
+    private files: ts.SourceFile[] = [];
     private program: ts.Program;
 
-    constructor(rootDir: string) {
-        this.rootDir = rootDir;
-        this.files = [];
+    constructor(private rootDir: string) {
         this.program = Linter.createProgram(path.join(this.rootDir, "tsconfig.json"));
     }
 
@@ -222,9 +219,6 @@ type RuleDisabler = (failures: IRuleFailureJson[]) => RuleOptions;
 const defaultDisabler: RuleDisabler = _ => {
     return false;
 };
-const ruleDisablers: Map<string, RuleDisabler> = new Map([
-    ["npm-naming", npmNamingDisabler],
-]);
 
 function disableRules(allFailures: RuleFailure[]): Config.RawRulesConfig {
     const ruleToFailures: Map<string, IRuleFailureJson[]> = new Map();
@@ -242,8 +236,8 @@ function disableRules(allFailures: RuleFailure[]): Config.RawRulesConfig {
         if (ignoredRules.includes(rule)) {
             return;
         }
-        const disabler = ruleDisablers.get(rule) || defaultDisabler;
-        const opts = disabler(failures);
+        const disabler = rule === "npm-naming" ? npmNamingDisabler : defaultDisabler;
+        const opts: RuleOptions = disabler(failures);
         newRulesConfig[rule] = opts;
     });
 
