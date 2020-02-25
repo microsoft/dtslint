@@ -1,3 +1,4 @@
+import cp = require("child_process");
 import fs = require("fs");
 import stringify = require("json-stable-stringify");
 import path = require("path");
@@ -73,6 +74,7 @@ function updateAll(dtPath: string, config: Config.IConfigurationFile): void {
 }
 
 function updatePackage(pkgPath: string, baseConfig: Config.IConfigurationFile): void {
+    installDependencies(pkgPath);
     const packages = walkPackageDir(pkgPath);
 
     const linterOpts: ILinterOptions = {
@@ -86,6 +88,17 @@ function updatePackage(pkgPath: string, baseConfig: Config.IConfigurationFile): 
             const newConfig = mergeConfigRules(pkg.config(), disabledRules, baseConfig);
             pkg.updateConfig(newConfig);
         }
+    }
+}
+
+function installDependencies(pkgPath: string): void {
+    if (fs.existsSync(path.join(pkgPath, "package.json"))) {
+        cp.execSync(
+            "npm install --ignore-scripts --no-shrinkwrap --no-package-lock --no-bin-links",
+            {
+                encoding: "utf8",
+                cwd: pkgPath,
+            });
     }
 }
 
