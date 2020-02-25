@@ -1,11 +1,11 @@
 import {
     CheckOptions as CriticOptions,
     CriticError,
+    defaultErrors,
     dtsCritic as critic,
     ErrorKind,
     ExportErrorKind,
     Mode,
-    NameOnlyOptions,
     parseExportErrorKind,
     parseMode } from "dts-critic";
 import * as Lint from "tslint";
@@ -13,9 +13,16 @@ import * as ts from "typescript";
 
 import { failure, isMainFile } from "../util";
 
-type Options = CriticOptions & { singleLine?: boolean };
+type Options = {
+    mode: Mode.NameOnly,
+    singleLine?: boolean,
+} | {
+    mode: Mode.Code,
+    errors: Array<[ExportErrorKind, boolean]>,
+    singleLine?: boolean,
+};
 
-const defaultOptions: NameOnlyOptions = {
+const defaultOptions: Options = {
     mode: Mode.NameOnly,
 };
 
@@ -80,7 +87,7 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
             true,
             [true, { mode: Mode.NameOnly }],
             [true, { mode: Mode.Code, errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]] }],
-        ],
+        ] as Array<true | [true, Options]>,
         type: "functionality",
         typescriptOnly: true,
     };
@@ -116,14 +123,14 @@ function parseOptions(args: unknown[]): Options {
             return { mode, singleLine };
         case Mode.Code:
             if (!arg.errors || !Array.isArray(arg.errors)) {
-                return { mode, errors: new Map(), singleLine };
+                return { mode, errors: [], singleLine };
             }
             return { mode, errors: parseEnabledErrors(arg.errors), singleLine };
     }
 }
 
-function parseEnabledErrors(errors: unknown[]): Map<ExportErrorKind, boolean> {
-    const enabledChecks = new Map<ExportErrorKind, boolean>();
+function parseEnabledErrors(errors: unknown[]): Array<[ExportErrorKind, boolean]> {
+    const enabledChecks: Array<[ExportErrorKind, boolean]> = [];
     for (const tuple of errors) {
         if (Array.isArray(tuple)
             && tuple.length === 2
@@ -131,11 +138,21 @@ function parseEnabledErrors(errors: unknown[]): Map<ExportErrorKind, boolean> {
             && typeof tuple[1] === "boolean") {
             const error = parseExportErrorKind(tuple[0]);
             if (error) {
-                enabledChecks.set(error, tuple[1]);
+                enabledChecks.push([error, tuple[1]]);
             }
         }
     }
     return enabledChecks;
+}
+
+function toCriticOptions(options: Options): CriticOptions {
+    switch (options.mode) {
+        case Mode.NameOnly:
+            return options;
+        case Mode.Code:
+            const errors = new Map(options.errors);
+            return { ...options, errors };
+    }
 }
 
 function tslintDisableOption(error: ErrorKind): string {
@@ -179,7 +196,7 @@ function walk(ctx: Lint.WalkContext<Options>): void {
     };
     if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
         try {
-            const errors = critic(sourceFile.fileName, /* sourcePath */ undefined, ctx.options);
+            const errors = critic(sourceFile.fileName, /* sourcePath */ undefined, toCriticOptions(ctx.options));
             for (const error of errors) {
                 switch (error.kind) {
                     case ErrorKind.NoMatchingNpmPackage:
@@ -210,4 +227,39 @@ function walk(ctx: Lint.WalkContext<Options>): void {
         }
     }
     // Don't recur, we're done.
+}
+
+/**
+ * Given lint failures of this rule, returns a rule configuration that disables such failures.
+ */
+export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, Options] {
+    const disabledErrors = new Set<ExportErrorKind>();
+    for (const ruleFailure of failures) {
+        if (ruleFailure.ruleName !== "npm-naming") {
+            throw new Error(`Expected failures of rule "npm-naming", found failures of rule ${ruleFailure.ruleName}.`);
+        }
+        const message = ruleFailure.failure;
+        // Name errors.
+        if (message.includes("must have a matching npm package")
+            || message.includes("must match a version that exists on npm")
+            || message.includes("conflicts with the existing npm package")) {
+            return false;
+        }
+        // Code errors.
+        if (message.includes("declaration should use 'export =' syntax")) {
+            disabledErrors.add(ErrorKind.NeedsExportEquals);
+        } else if (message.includes("declaration specifies 'export default' but the JavaScript source \
+            does not mention 'default' anywhere")) {
+            disabledErrors.add(ErrorKind.NoDefaultExport);
+        } else {
+            return [true, { mode: Mode.NameOnly }];
+        }
+    }
+
+    if ((defaultErrors as ExportErrorKind[]).every(error => disabledErrors.has(error))) {
+        return [true, { mode: Mode.NameOnly }];
+    }
+    const errors: Array<[ExportErrorKind, boolean]> = [];
+    disabledErrors.forEach(error => errors.push([error, false]));
+    return [true, { mode: Mode.Code, errors }];
 }

@@ -30,14 +30,18 @@
     "definitelytyped-header-parser": "3.8.2",
     "dts-critic": "^3.0.0",
     "fs-extra": "^6.0.1",
+    "json-stable-stringify": "^1.0.1",
     "strip-json-comments": "^2.0.1",
     "tslint": "5.14.0",
-    "typescript": "next"
+    "typescript": "next",
+    "yargs": "^15.1.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^5.0.2",
+    "@types/json-stable-stringify": "^1.0.32",
     "@types/node": "12.0.x",
-    "@types/strip-json-comments": "^0.0.28"
+    "@types/strip-json-comments": "^0.0.28",
+    "@types/yargs": "^15.0.3"
   },
   "engines": {
     "node": ">=10.0.0"

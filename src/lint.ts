@@ -79,7 +79,7 @@ function testDependencies(
     return `Errors in typescript@${version} for external dependencies:\n${showDiags}`;
 }
 
-function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
+export function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
     return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
 }
 
