@@ -63,12 +63,13 @@ function dtPackageName(filePath: string): string | undefined {
         return undefined;
     }
     const packageName = dirs[0];
+    // Check if this is an old version of a package.
     if (dirs.length > 1 && /^v\d+(\.\d+)?$/.test(dirs[1])) {
         return packageName + dirs[1];
     }
     return packageName;
 }
 
-export function formatSuggestion(suggestion: Suggestion): string {
+function formatSuggestion(suggestion: Suggestion): string {
     return JSON.stringify(suggestion, /*replacer*/ undefined, 0);
 }
