@@ -172,6 +172,7 @@ function walk(ctx: Lint.WalkContext<CriticOptions>): void {
             ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
         }
     };
+    addSuggestion(ctx, "testing");
     if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
         try {
             const optionsWithSuggestions = toOptionsWithSuggestions(ctx.options);
@@ -201,7 +202,6 @@ function walk(ctx: Lint.WalkContext<CriticOptions>): void {
                         break;
                 }
             }
-
         } catch (e) {
             // We're ignoring exceptions.
         }
