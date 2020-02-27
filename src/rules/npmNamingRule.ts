@@ -90,10 +90,10 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
         },
         optionExamples: [
             true,
-            [true, { mode: Mode.NameOnly } as ConfigOptions],
+            [true, { mode: Mode.NameOnly }],
             [true, {
                 mode: Mode.Code,
-                errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]] } as ConfigOptions
+                errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]] },
             ],
         ],
         type: "functionality",
@@ -172,7 +172,6 @@ function walk(ctx: Lint.WalkContext<CriticOptions>): void {
             ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
         }
     };
-    addSuggestion(ctx, "testing");
     if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
         try {
             const optionsWithSuggestions = toOptionsWithSuggestions(ctx.options);
@@ -211,7 +210,7 @@ function walk(ctx: Lint.WalkContext<CriticOptions>): void {
 
 const enabledSuggestions: ExportErrorKind[] = [
     ErrorKind.JsPropertyNotInDts,
-    ErrorKind.JsSignatureNotInDts
+    ErrorKind.JsSignatureNotInDts,
 ];
 
 function toOptionsWithSuggestions(options: CriticOptions): CriticOptions {
@@ -231,7 +230,7 @@ function filterErrors(diagnostics: CriticError[], ctx: Lint.WalkContext<Options>
         } else {
             errors.push(diagnostic);
         }
-    })
+    });
     return errors;
 }
 

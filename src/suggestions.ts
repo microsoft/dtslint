@@ -6,11 +6,11 @@ import { WalkContext } from "tslint";
 const suggestionsDir = path.join(os.homedir(), ".dts", "suggestions");
 
 export interface Suggestion {
-    fileName: string,
-    ruleName: string,
-    message: string,
-    start?: number,
-    width?: number,
+    fileName: string;
+    ruleName: string;
+    message: string;
+    start?: number;
+    width?: number;
 }
 
 // Packages for which suggestions were already added in this run of dtslint.
@@ -18,22 +18,20 @@ const existingPackages = new Set();
 
 /**
  *  A rule should call this function to provide a suggestion instead of a lint failure.
-*/
+ */
 export function addSuggestion<T>(ctx: WalkContext<T>, message: string, start?: number, width?: number) {
     const suggestion: Suggestion = {
         fileName: ctx.sourceFile.fileName,
         ruleName: ctx.ruleName,
         message,
         start,
-        width
+        width,
     };
 
     const packageName = dtPackageName(ctx.sourceFile.fileName);
     if (!packageName) {
         return;
     }
-    console.log(existingPackages);
-    console.log("Package " + packageName);
     let flag = "a";
     if (!existingPackages.has(packageName)) {
         flag = "w";
@@ -41,7 +39,7 @@ export function addSuggestion<T>(ctx: WalkContext<T>, message: string, start?: n
     }
     try {
         if (!fs.existsSync(suggestionsDir)) {
-            fs.mkdirSync(suggestionsDir, { recursive: true }); 
+            fs.mkdirSync(suggestionsDir, { recursive: true });
         }
         fs.writeFileSync(
             path.join(suggestionsDir, packageName + ".txt"),
