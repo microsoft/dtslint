@@ -109,8 +109,16 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
         throw new Error('Must specify "lib", usually to `"lib": ["es6"]` or `"lib": ["es6", "dom"]`.');
     }
 
+    if (!options.strict) {
+        for (const key of ["noImplicitAny"]) {
+            if (!options[key]) {
+                throw new Error(`Expected \`"${key}": true\`.`);
+            }
+        }
+    }
+
     if (!("strict" in options)) {
-        for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
+        for (const key of ["noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
             if (!(key in options)) {
                 throw new Error(`Expected \`"${key}": true\` or \`"${key}": false\`.`);
             }
