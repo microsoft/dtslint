@@ -91,9 +91,12 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
         optionExamples: [
             true,
             [true, { mode: Mode.NameOnly }],
-            [true, {
-                mode: Mode.Code,
-                errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]] },
+            [
+                true,
+                {
+                    mode: Mode.Code,
+                    errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]],
+                },
             ],
         ],
         type: "functionality",
@@ -235,12 +238,9 @@ function filterErrors(diagnostics: CriticError[], ctx: Lint.WalkContext<Options>
 }
 
 function isSuggestion(diagnostic: CriticError, options: Options): boolean {
-    if (options.mode === Mode.Code
+    return options.mode === Mode.Code
         && (enabledSuggestions as ErrorKind[]).includes(diagnostic.kind)
-        && !(options.errors as Map<ErrorKind, boolean>).get(diagnostic.kind)) {
-        return true;
-    }
-    return false;
+        && !(options.errors as Map<ErrorKind, boolean>).get(diagnostic.kind);
 }
 
 function tslintDisableOption(error: ErrorKind): string {
