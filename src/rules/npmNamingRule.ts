@@ -11,9 +11,11 @@ import {
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
+import { addSuggestion } from "../suggestions";
 import { failure, isMainFile } from "../util";
 
-type Options = {
+/** Options as parsed from the rule configuration. */
+type ConfigOptions = {
     mode: Mode.NameOnly,
     singleLine?: boolean,
 } | {
@@ -22,7 +24,9 @@ type Options = {
     singleLine?: boolean,
 };
 
-const defaultOptions: Options = {
+type Options = CriticOptions & { singleLine?: boolean };
+
+const defaultOptions: ConfigOptions = {
     mode: Mode.NameOnly,
 };
 
@@ -73,6 +77,7 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
                                 minItems: 2,
                                 maxItems: 2,
                             },
+                            default: [],
                         },
                         "single-line": {
                             description: "Whether to print error messages in a single line. Used for testing.",
@@ -86,18 +91,24 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
         optionExamples: [
             true,
             [true, { mode: Mode.NameOnly }],
-            [true, { mode: Mode.Code, errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]] }],
-        ] as Array<true | [true, Options]>,
+            [
+                true,
+                {
+                    mode: Mode.Code,
+                    errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]],
+                },
+            ],
+        ],
         type: "functionality",
         typescriptOnly: true,
     };
 
     apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk, parseOptions(this.ruleArguments));
+        return this.applyWithFunction(sourceFile, walk, toCriticOptions(parseOptions(this.ruleArguments)));
     }
 }
 
-function parseOptions(args: unknown[]): Options {
+function parseOptions(args: unknown[]): ConfigOptions {
     if (args.length === 0) {
         return defaultOptions;
     }
@@ -145,7 +156,7 @@ function parseEnabledErrors(errors: unknown[]): Array<[ExportErrorKind, boolean]
     return enabledChecks;
 }
 
-function toCriticOptions(options: Options): CriticOptions {
+function toCriticOptions(options: ConfigOptions): Options {
     switch (options.mode) {
         case Mode.NameOnly:
             return options;
@@ -153,6 +164,83 @@ function toCriticOptions(options: Options): CriticOptions {
             const errors = new Map(options.errors);
             return { ...options, errors };
     }
+}
+
+function walk(ctx: Lint.WalkContext<CriticOptions>): void {
+    const { sourceFile } = ctx;
+    const { text } = sourceFile;
+    const lookFor = (search: string, explanation: string) => {
+        const idx = text.indexOf(search);
+        if (idx !== -1) {
+            ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
+        }
+    };
+    if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
+        try {
+            const optionsWithSuggestions = toOptionsWithSuggestions(ctx.options);
+            const diagnostics = critic(sourceFile.fileName, /* sourcePath */ undefined, optionsWithSuggestions);
+            const errors = filterErrors(diagnostics, ctx);
+            for (const error of errors) {
+                switch (error.kind) {
+                    case ErrorKind.NoMatchingNpmPackage:
+                    case ErrorKind.NoMatchingNpmVersion:
+                    case ErrorKind.NonNpmHasMatchingPackage:
+                        lookFor("// Type definitions for", errorMessage(error, ctx.options));
+                        break;
+                    case ErrorKind.DtsPropertyNotInJs:
+                    case ErrorKind.DtsSignatureNotInJs:
+                    case ErrorKind.JsPropertyNotInDts:
+                    case ErrorKind.JsSignatureNotInDts:
+                    case ErrorKind.NeedsExportEquals:
+                    case ErrorKind.NoDefaultExport:
+                        if (error.position) {
+                            ctx.addFailureAt(
+                                error.position.start,
+                                error.position.length,
+                                failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
+                        } else {
+                            ctx.addFailure(0, 1, failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
+                        }
+                        break;
+                }
+            }
+        } catch (e) {
+            // We're ignoring exceptions.
+        }
+    }
+    // Don't recur, we're done.
+}
+
+const enabledSuggestions: ExportErrorKind[] = [
+    ErrorKind.JsPropertyNotInDts,
+    ErrorKind.JsSignatureNotInDts,
+];
+
+function toOptionsWithSuggestions(options: CriticOptions): CriticOptions {
+    if (options.mode === Mode.NameOnly) {
+        return options;
+    }
+    const optionsWithSuggestions = { mode: options.mode, errors: new Map(options.errors) };
+    enabledSuggestions.forEach(err => optionsWithSuggestions.errors.set(err, true));
+    return optionsWithSuggestions;
+}
+
+function filterErrors(diagnostics: CriticError[], ctx: Lint.WalkContext<Options>): CriticError[] {
+    const errors: CriticError[] = [];
+    diagnostics.forEach(diagnostic => {
+        if (isSuggestion(diagnostic, ctx.options)) {
+            addSuggestion(ctx, diagnostic.message, diagnostic.position?.start, diagnostic.position?.length);
+        } else {
+            errors.push(diagnostic);
+        }
+    });
+    return errors;
+}
+
+function isSuggestion(diagnostic: CriticError, options: Options): boolean {
+    return options.mode === Mode.Code
+        && (enabledSuggestions as ErrorKind[]).includes(diagnostic.kind)
+        && !(options.errors as Map<ErrorKind, boolean>).get(diagnostic.kind);
 }
 
 function tslintDisableOption(error: ErrorKind): string {
@@ -185,54 +273,10 @@ you can disable this check by adding the following options to your project's tsl
     return message;
 }
 
-function walk(ctx: Lint.WalkContext<Options>): void {
-    const { sourceFile } = ctx;
-    const { text } = sourceFile;
-    const lookFor = (search: string, explanation: string) => {
-        const idx = text.indexOf(search);
-        if (idx !== -1) {
-            ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
-        }
-    };
-    if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
-        try {
-            const errors = critic(sourceFile.fileName, /* sourcePath */ undefined, toCriticOptions(ctx.options));
-            for (const error of errors) {
-                switch (error.kind) {
-                    case ErrorKind.NoMatchingNpmPackage:
-                    case ErrorKind.NoMatchingNpmVersion:
-                    case ErrorKind.NonNpmHasMatchingPackage:
-                        lookFor("// Type definitions for", errorMessage(error, ctx.options));
-                        break;
-                    case ErrorKind.DtsPropertyNotInJs:
-                    case ErrorKind.DtsSignatureNotInJs:
-                    case ErrorKind.JsPropertyNotInDts:
-                    case ErrorKind.JsSignatureNotInDts:
-                    case ErrorKind.NeedsExportEquals:
-                    case ErrorKind.NoDefaultExport:
-                        if (error.position) {
-                            ctx.addFailureAt(
-                                error.position.start,
-                                error.position.length,
-                                failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
-                        } else {
-                            ctx.addFailure(0, 1, failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
-                        }
-                        break;
-                }
-            }
-
-        } catch (e) {
-            // We're ignoring exceptions.
-        }
-    }
-    // Don't recur, we're done.
-}
-
 /**
- * Given lint failures of this rule, returns a rule configuration that disables such failures.
+ * Given npm-naming lint failures, returns a rule configuration that prevents such failures.
  */
-export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, Options] {
+export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, ConfigOptions] {
     const disabledErrors = new Set<ExportErrorKind>();
     for (const ruleFailure of failures) {
         if (ruleFailure.ruleName !== "npm-naming") {
