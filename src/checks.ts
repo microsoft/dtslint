@@ -82,6 +82,7 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
                 case "lib":
                 case "noImplicitAny":
                 case "noImplicitThis":
+                case "strict":
                 case "strictNullChecks":
                 case "strictFunctionTypes":
                 case "esModuleInterop":
@@ -109,7 +110,17 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
         throw new Error('Must specify "lib", usually to `"lib": ["es6"]` or `"lib": ["es6", "dom"]`.');
     }
 
-    if (!("strict" in options)) {
+    if ("strict" in options) {
+        if (options.strict !== true) {
+            throw new Error('When "strict" is present, it must be set to `true`.');
+        }
+
+        for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
+            if (key in options) {
+                throw new TypeError(`Expected "${key}" to not be set when "strict" is \`true\`.`);
+            }
+        }
+    } else {
         for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
             if (!(key in options)) {
                 throw new Error(`Expected \`"${key}": true\` or \`"${key}": false\`.`);
