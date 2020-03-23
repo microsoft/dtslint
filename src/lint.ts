@@ -66,9 +66,6 @@ function testDependencies(
 ): string | undefined {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
     assert(version !== "local" || tsLocal);
-    if (version === TypeScriptVersion.latest) {
-        version = "next";
-    }
     const ts: typeof TsType = require(typeScriptPath(version, tsLocal));
     const program = getProgram(tsconfigPath, ts, version, lintProgram);
     const diagnostics = ts.getPreEmitDiagnostics(program).filter(d => !d.file || isExternalDependency(d.file, dirPath, program));

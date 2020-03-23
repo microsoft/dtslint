@@ -49,6 +49,9 @@ export function typeScriptPath(version: TsVersion, tsLocal: string | undefined):
 
 function installDir(version: TsVersion): string {
     assert(version !== "local");
+    if (version === "next") {
+        version = TypeScriptVersion.latest;
+    }
     return path.join(installsDir, version);
 }
 
