@@ -21,7 +21,7 @@ export async function installNext() {
     await install("next");
 }
 
-async function install(version: TsVersion): Promise<void> {
+async function install(version: TsVersion | "next"): Promise<void> {
     if (version === "local") {
         return;
     }
@@ -47,7 +47,7 @@ export function typeScriptPath(version: TsVersion, tsLocal: string | undefined):
     return path.join(installDir(version), "node_modules", "typescript");
 }
 
-function installDir(version: TsVersion): string {
+function installDir(version: TsVersion | "next"): string {
     assert(version !== "local");
     if (version === "next") {
         version = TypeScriptVersion.latest;
@@ -72,7 +72,7 @@ async function execAndThrowErrors(cmd: string, cwd?: string): Promise<void> {
     });
 }
 
-function packageJson(version: TsVersion): {} {
+function packageJson(version: TsVersion | "next"): {} {
     return {
         description: `Installs typescript@${version}`,
         repository: "N/A",

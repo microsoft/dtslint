@@ -154,7 +154,7 @@ async function runTests(
     }
 
     if (onlyTestTsNext || tsLocal) {
-        const tsVersion = tsLocal ? "local" : "next";
+        const tsVersion = tsLocal ? "local" : TypeScriptVersion.latest;
         if (typesVersions.length === 0) {
             await testTypesVersion(dirPath, tsVersion, tsVersion, isOlderVersion, dt, indexText, expectOnly, tsLocal);
         } else {
@@ -177,7 +177,7 @@ async function runTests(
         }
 
         function getTsVersion(i: number): TsVersion {
-            return i === typesVersions.length ? "next" : assertDefined(TypeScriptVersion.previous(typesVersions[i]));
+            return i === typesVersions.length ? TypeScriptVersion.latest : assertDefined(TypeScriptVersion.previous(typesVersions[i]));
         }
     }
 }
