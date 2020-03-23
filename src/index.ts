@@ -177,7 +177,9 @@ async function runTests(
         }
 
         function getTsVersion(i: number): TsVersion {
-            return i === typesVersions.length ? TypeScriptVersion.latest : assertDefined(TypeScriptVersion.previous(typesVersions[i]));
+            return i === typesVersions.length
+                ? TypeScriptVersion.latest
+                : assertDefined(TypeScriptVersion.previous(typesVersions[i]));
         }
     }
 }
