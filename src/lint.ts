@@ -174,24 +174,19 @@ async function getLintConfig(
 }
 
 function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVersion> {
-    if (minVersion === "next") {
-        assert(maxVersion === "next");
-        return ["next"];
-    }
     if (minVersion === "local") {
         assert(maxVersion === "local");
         return ["local"];
     }
+    assert(maxVersion !== "local");
 
     // The last item of TypeScriptVersion is the unreleased version of Typescript,
     // which is called 'next' on npm, so replace it with 'next'.
-    const allReleased: TsVersion[] = [...TypeScriptVersion.supported];
-    allReleased[allReleased.length - 1] = "next";
-    const minIdx = allReleased.indexOf(minVersion);
+    const minIdx = TypeScriptVersion.supported.indexOf(minVersion);
     assert(minIdx >= 0);
-    const maxIdx = allReleased.indexOf(maxVersion);
+    const maxIdx = TypeScriptVersion.supported.indexOf(maxVersion as TypeScriptVersion);
     assert(maxIdx >= minIdx);
-    return allReleased.slice(minIdx, maxIdx + 1);
+    return TypeScriptVersion.supported.slice(minIdx, maxIdx + 1);
 }
 
-export type TsVersion = TypeScriptVersion | "next" | "local";
+export type TsVersion = TypeScriptVersion | "local";
