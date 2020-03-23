@@ -66,6 +66,9 @@ function testDependencies(
 ): string | undefined {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
     assert(version !== "local" || tsLocal);
+    if (version === TypeScriptVersion.latest) {
+        version = "next";
+    }
     const ts: typeof TsType = require(typeScriptPath(version, tsLocal));
     const program = getProgram(tsconfigPath, ts, version, lintProgram);
     const diagnostics = ts.getPreEmitDiagnostics(program).filter(d => !d.file || isExternalDependency(d.file, dirPath, program));
@@ -185,6 +188,12 @@ function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVe
 
     // The last item of TypeScriptVersion is the unreleased version of Typescript,
     // which is called 'next' on npm, so replace it with 'next'.
+    if (minVersion === TypeScriptVersion.latest) {
+        minVersion = "next";
+    }
+    if (maxVersion === TypeScriptVersion.latest) {
+        maxVersion = "next";
+    }
     const allReleased: TsVersion[] = [...TypeScriptVersion.supported];
     allReleased[allReleased.length - 1] = "next";
     const minIdx = allReleased.indexOf(minVersion);
