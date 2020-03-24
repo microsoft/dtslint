@@ -83,15 +83,23 @@ export function isExternalDependency(file: TsType.SourceFile, dirPath: string, p
     return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
 }
 
+function normalizePath(file: string) {
+    // replaces '\' with '/' and forces all DOS drive letters to be upper-case
+    return normalize(file)
+        .replace(/\\/g, "/")
+        .replace(/^[a-z](?=:)/, c => c.toUpperCase());
+}
+
 function isTypesVersionPath(fileName: string, dirPath: string) {
-    const subdirPath = withoutPrefix(fileName, dirPath);
+    const normalFileName = normalizePath(fileName);
+    const normalDirPath = normalizePath(dirPath);
+    const subdirPath = withoutPrefix(normalFileName, normalDirPath);
     return subdirPath && /^\/ts\d+\.\d/.test(subdirPath);
 }
 
 function startsWithDirectory(filePath: string, dirPath: string): boolean {
-    const normalFilePath = normalize(filePath);
-    const normalDirPath = normalize(dirPath);
-    assert(!normalDirPath.endsWith("/") && !normalDirPath.endsWith("\\"));
+    const normalFilePath = normalizePath(filePath);
+    const normalDirPath = normalizePath(dirPath).replace(/\/$/, "");
     return normalFilePath.startsWith(normalDirPath + "/") || normalFilePath.startsWith(normalDirPath + "\\");
 }
 
