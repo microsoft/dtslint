@@ -76,8 +76,7 @@ export function assertDefined<T>(a: T | undefined): T {
 }
 
 export async function mapDefinedAsync<T, U>(
-    arr: Iterable<T>, mapper: (t: T) => Promise<U | undefined>):
-Promise<Array<awaited U>> {
+    arr: Iterable<T>, mapper: (t: T) => Promise<U | undefined>): Promise<U[]> {
     const out = [];
     for (const a of arr) {
         const res = await mapper(a);

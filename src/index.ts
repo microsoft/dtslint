@@ -215,7 +215,7 @@ async function testTypesVersion(
 
 function assertPathIsInDefinitelyTyped(dirPath: string): void {
     const parent = dirname(dirPath);
-    const types = /^v\d+$/.test(basename(dirPath)) ? dirname(parent) : parent;
+    const types = /^v\d+(\.\d+)?$/.test(basename(dirPath)) ? dirname(parent) : parent;
     // TODO: It's not clear whether this assertion makes sense, and it's broken on Azure Pipelines
     // Re-enable it later if it makes sense.
     // const dt = dirname(types);
