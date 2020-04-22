@@ -32,7 +32,7 @@
     "fs-extra": "^6.0.1",
     "json-stable-stringify": "^1.0.1",
     "strip-json-comments": "^2.0.1",
-    "tslint": "5.14.0",
+    "tslint": "^6.1.1",
     "typescript": "next",
     "yargs": "^15.1.0"
   },
