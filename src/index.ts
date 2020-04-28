@@ -1,16 +1,12 @@
 #!/usr/bin/env node
 
-import {
-    AllTypeScriptVersion,
-    isTypeScriptVersion,
-    parseTypeScriptVersionLine,
-    TypeScriptVersion,
-} from "definitelytyped-header-parser";
+import { AllTypeScriptVersion, TypeScriptVersion } from "@definitelytyped/typescript-versions";
+import { parseTypeScriptVersionLine, } from "@definitelytyped/header-parser";
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths, resolve } from "path";
 
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, installAll, installNext } from "./installer";
+import { installAllTypeScriptVersions, installTypeScriptNext, cleanTypeScriptInstalls } from "@definitelytyped/utils";
 import { checkTslintJson, lint, TsVersion } from "./lint";
 import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
 
@@ -36,8 +32,8 @@ async function main(): Promise<void> {
             case "--installAll":
                 console.log("Cleaning old installs and installing for all TypeScript versions...");
                 console.log("Working...");
-                await cleanInstalls();
-                await installAll();
+                await cleanTypeScriptInstalls();
+                await installAllTypeScriptVersions();
                 return;
             case "--localTs":
                 lookingForTsLocal = true;
@@ -79,14 +75,14 @@ async function main(): Promise<void> {
         listen(dirPath, tsLocal);
         // Do this *after* to ensure messages sent during installation aren't dropped.
         if (!tsLocal) {
-            await installAll();
+            await installAllTypeScriptVersions();
         }
     } else {
         if (!tsLocal) {
             if (onlyTestTsNext) {
-                await installNext();
+                await installTypeScriptNext();
             } else {
-                await installAll();
+                await installAllTypeScriptVersions();
             }
         }
         await runTests(dirPath, onlyTestTsNext, expectOnly, tsLocal);
@@ -140,7 +136,7 @@ async function runTests(
         const version = withoutPrefix(name, "ts");
         if (version === undefined || !(await stat(joinPaths(dirPath, name))).isDirectory()) { return undefined; }
 
-        if (!isTypeScriptVersion(version)) {
+        if (!TypeScriptVersion.isTypeScriptVersion(version)) {
             throw new Error(`There is an entry named ${name}, but ${version} is not a valid TypeScript version.`);
         }
         if (!TypeScriptVersion.isRedirectable(version)) {

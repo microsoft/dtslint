@@ -1,5 +1,6 @@
 import assert = require("assert");
-import { TypeScriptVersion } from "definitelytyped-header-parser";
+import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
+import { typeScriptPath } from "@definitelytyped/utils";
 import { pathExists } from "fs-extra";
 import { join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
@@ -9,7 +10,6 @@ type IConfigurationFile = Configuration.IConfigurationFile;
 
 import { getProgram, Options as ExpectOptions } from "./rules/expectRule";
 
-import { typeScriptPath } from "./installer";
 import { readJson, withoutPrefix } from "./util";
 
 export async function lint(
@@ -181,6 +181,7 @@ async function getLintConfig(
     return config;
 }
 
+// TODO: This needs to be updated to use shipped (specifically, to support next correctly) (should support 2.9--3.8,next until end of RC)
 function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVersion> {
     if (minVersion === "local") {
         assert(maxVersion === "local");
@@ -190,11 +191,12 @@ function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVe
 
     // The last item of TypeScriptVersion is the unreleased version of Typescript,
     // which is called 'next' on npm, so replace it with 'next'.
-    const minIdx = TypeScriptVersion.supported.indexOf(minVersion);
+    // lolwut, where does this happen? I think this is now wrong
+    const minIdx = TypeScriptVersion.shipped.indexOf(minVersion);
     assert(minIdx >= 0);
-    const maxIdx = TypeScriptVersion.supported.indexOf(maxVersion as TypeScriptVersion);
+    const maxIdx = TypeScriptVersion.shipped.indexOf(maxVersion as TypeScriptVersion);
     assert(maxIdx >= minIdx);
-    return TypeScriptVersion.supported.slice(minIdx, maxIdx + 1);
+    return TypeScriptVersion.shipped.slice(minIdx, maxIdx + 1);
 }
 
 export type TsVersion = TypeScriptVersion | "local";
