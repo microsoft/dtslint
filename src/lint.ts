@@ -181,19 +181,22 @@ async function getLintConfig(
     return config;
 }
 
-// TODO: This needs to be updated to use shipped (specifically, to support next correctly) (should support 2.9--3.8,next until end of RC)
 function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVersion> {
     if (minVersion === "local") {
         assert(maxVersion === "local");
         return ["local"];
     }
+    if (minVersion === TypeScriptVersion.latest) {
+        assert(maxVersion === TypeScriptVersion.latest);
+        return [TypeScriptVersion.latest];
+    }
     assert(maxVersion !== "local");
 
-    // The last item of TypeScriptVersion is the unreleased version of Typescript,
-    // which is called 'next' on npm, so replace it with 'next'.
-    // lolwut, where does this happen? I think this is now wrong
     const minIdx = TypeScriptVersion.shipped.indexOf(minVersion);
     assert(minIdx >= 0);
+    if (maxVersion === TypeScriptVersion.latest) {
+        return [...TypeScriptVersion.shipped.slice(minIdx), TypeScriptVersion.latest];
+    }
     const maxIdx = TypeScriptVersion.shipped.indexOf(maxVersion as TypeScriptVersion);
     assert(maxIdx >= minIdx);
     return TypeScriptVersion.shipped.slice(minIdx, maxIdx + 1);
