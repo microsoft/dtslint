@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
+import { parseTypeScriptVersionLine } from "@definitelytyped/header-parser";
 import { AllTypeScriptVersion, TypeScriptVersion } from "@definitelytyped/typescript-versions";
-import { parseTypeScriptVersionLine, } from "@definitelytyped/header-parser";
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths, resolve } from "path";
 
+import { cleanTypeScriptInstalls, installAllTypeScriptVersions, installTypeScriptNext } from "@definitelytyped/utils";
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { installAllTypeScriptVersions, installTypeScriptNext, cleanTypeScriptInstalls } from "@definitelytyped/utils";
 import { checkTslintJson, lint, TsVersion } from "./lint";
 import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
 

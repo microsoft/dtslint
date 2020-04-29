@@ -1,6 +1,6 @@
-import assert = require("assert");
 import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
 import { typeScriptPath } from "@definitelytyped/utils";
+import assert = require("assert");
 import { pathExists } from "fs-extra";
 import { join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
