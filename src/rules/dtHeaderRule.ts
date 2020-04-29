@@ -1,4 +1,4 @@
-import { renderExpected, validate } from "definitelytyped-header-parser";
+import { renderExpected, validate } from "@definitelytyped/header-parser";
 import * as Lint from "tslint";
 import * as ts from "typescript";
 import { failure, isMainFile } from "../util";

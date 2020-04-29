@@ -1,5 +1,6 @@
 import assert = require("assert");
-import { TypeScriptVersion } from "definitelytyped-header-parser";
+import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
+import { typeScriptPath } from "@definitelytyped/utils";
 import { pathExists } from "fs-extra";
 import { join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
@@ -9,7 +10,6 @@ type IConfigurationFile = Configuration.IConfigurationFile;
 
 import { getProgram, Options as ExpectOptions } from "./rules/expectRule";
 
-import { typeScriptPath } from "./installer";
 import { readJson, withoutPrefix } from "./util";
 
 export async function lint(
@@ -186,15 +186,20 @@ function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVe
         assert(maxVersion === "local");
         return ["local"];
     }
+    if (minVersion === TypeScriptVersion.latest) {
+        assert(maxVersion === TypeScriptVersion.latest);
+        return [TypeScriptVersion.latest];
+    }
     assert(maxVersion !== "local");
 
-    // The last item of TypeScriptVersion is the unreleased version of Typescript,
-    // which is called 'next' on npm, so replace it with 'next'.
-    const minIdx = TypeScriptVersion.supported.indexOf(minVersion);
+    const minIdx = TypeScriptVersion.shipped.indexOf(minVersion);
     assert(minIdx >= 0);
-    const maxIdx = TypeScriptVersion.supported.indexOf(maxVersion as TypeScriptVersion);
+    if (maxVersion === TypeScriptVersion.latest) {
+        return [...TypeScriptVersion.shipped.slice(minIdx), TypeScriptVersion.latest];
+    }
+    const maxIdx = TypeScriptVersion.shipped.indexOf(maxVersion as TypeScriptVersion);
     assert(maxIdx >= minIdx);
-    return TypeScriptVersion.supported.slice(minIdx, maxIdx + 1);
+    return TypeScriptVersion.shipped.slice(minIdx, maxIdx + 1);
 }
 
 export type TsVersion = TypeScriptVersion | "local";
