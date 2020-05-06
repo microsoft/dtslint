@@ -72,21 +72,19 @@ async function main(): Promise<void> {
     }
 
     if (shouldListen) {
-        listen(dirPath, tsLocal);
-        // Do this *after* to ensure messages sent during installation aren't dropped.
-        if (!tsLocal) {
-            await installAllTypeScriptVersions();
-        }
+        listen(dirPath, tsLocal, onlyTestTsNext);
     } else {
-        if (!tsLocal) {
-            if (onlyTestTsNext) {
-                await installTypeScriptNext();
-            } else {
-                await installAllTypeScriptVersions();
-            }
-        }
+        await installTypeScriptAsNeeded(tsLocal, onlyTestTsNext);
         await runTests(dirPath, onlyTestTsNext, expectOnly, tsLocal);
     }
+}
+
+async function installTypeScriptAsNeeded(tsLocal: string | undefined, onlyTestTsNext: boolean): Promise<void> {
+    if (tsLocal) return;
+    if (onlyTestTsNext) {
+        return installTypeScriptNext();
+    }
+    return installAllTypeScriptVersions();
 }
 
 function usage(): void {
@@ -101,9 +99,13 @@ function usage(): void {
     console.error("onlyTestTsNext and localTs are (1) mutually exclusive and (2) test a single version of TS");
 }
 
-function listen(dirPath: string, tsLocal: string | undefined): void {
-    process.on("message", (message: {}) => {
+function listen(dirPath: string, tsLocal: string | undefined, onlyTestTsNext: boolean): void {
+    // Don't await this here to ensure that messages sent during installation aren't dropped.
+    const installationPromise = installTypeScriptAsNeeded(tsLocal, onlyTestTsNext);
+    process.on("message", async (message: {}) => {
         const { path, onlyTestTsNext, expectOnly } = message as { path: string, onlyTestTsNext: boolean, expectOnly?: boolean };
+
+        await installationPromise;
         runTests(joinPaths(dirPath, path), onlyTestTsNext, !!expectOnly, tsLocal)
             .catch(e => e.stack)
             .then(maybeError => {
