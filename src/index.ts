@@ -99,9 +99,9 @@ function usage(): void {
     console.error("onlyTestTsNext and localTs are (1) mutually exclusive and (2) test a single version of TS");
 }
 
-function listen(dirPath: string, tsLocal: string | undefined, onlyTestTsNext: boolean): void {
+function listen(dirPath: string, tsLocal: string | undefined, alwaysOnlyTestTsNext: boolean): void {
     // Don't await this here to ensure that messages sent during installation aren't dropped.
-    const installationPromise = installTypeScriptAsNeeded(tsLocal, onlyTestTsNext);
+    const installationPromise = installTypeScriptAsNeeded(tsLocal, alwaysOnlyTestTsNext);
     process.on("message", async (message: {}) => {
         const { path, onlyTestTsNext, expectOnly } = message as { path: string, onlyTestTsNext: boolean, expectOnly?: boolean };
 
