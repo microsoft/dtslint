@@ -1,6 +1,6 @@
 {
   "name": "dtslint",
-  "version": "3.6.2",
+  "version": "3.6.3",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
@@ -30,7 +30,7 @@
     "@definitelytyped/header-parser": "0.0.34",
     "@definitelytyped/typescript-versions": "0.0.34",
     "@definitelytyped/utils": "0.0.34",
-    "dts-critic": "^3.2.1",
+    "dts-critic": "^3.2.2",
     "fs-extra": "^6.0.1",
     "json-stable-stringify": "^1.0.1",
     "strip-json-comments": "^2.0.1",
