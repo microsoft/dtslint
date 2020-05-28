@@ -27,9 +27,9 @@
     "prepublishOnly": "npm run build && npm run test && npm run lint"
   },
   "dependencies": {
-    "@definitelytyped/header-parser": "0.0.34",
-    "@definitelytyped/typescript-versions": "0.0.34",
-    "@definitelytyped/utils": "0.0.34",
+    "@definitelytyped/header-parser": "latest",
+    "@definitelytyped/typescript-versions": "latest",
+    "@definitelytyped/utils": "latest",
     "dts-critic": "^3.2.3",
     "fs-extra": "^6.0.1",
     "json-stable-stringify": "^1.0.1",
