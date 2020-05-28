@@ -21,7 +21,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 function walk(ctx: Lint.WalkContext<void>): void {
     const { sourceFile } = ctx;
     sourceFile.forEachChild(function cb(node) {
-        if (ts.isTupleTypeNode(node) && node.elementTypes.length === 1) {
+        if (ts.isTupleTypeNode(node) && (node.elements ?? (node as any).elementTypes).length === 1) {
             ctx.addFailureAtNode(node, failure(
                 Rule.metadata.ruleName,
                 "Type [T] is a single-element tuple type. You probably meant T[]."));
