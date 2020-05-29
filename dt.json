@@ -8,7 +8,7 @@
 		"no-outside-dependencies": true,
 
 		"no-redundant-jsdoc": false,
-		"no-redundant-jsdoc-2": true,
+		"no-redundant-jsdoc-2": false,
 
 		"npm-naming": [true, { "mode": "code" }]
 	}
