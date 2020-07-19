@@ -48,6 +48,7 @@ export class Rule extends Lint.Rules.TypedRule {
             nextHigherVersion: string | undefined,
             writeOutput: boolean,
         ) => {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
             const ts = require(path);
             const program = getProgram(tsconfigPath, ts, versionName, lintProgram);
             const failures = this.applyWithFunction(sourceFile, ctx => walk(ctx, program, ts, versionName, nextHigherVersion));

@@ -13,7 +13,7 @@ export class Rule extends Lint.Rules.AbstractRule {
         typescriptOnly: true,
     };
 
-    static FAILURE_STRING(kind: "before" | "after", token: ts.SyntaxKind) {
+    static FAILURE_STRING(kind: "before" | "after", token: ts.SyntaxKind): string {
         return failure(
             Rule.metadata.ruleName,
             `Don't leave a blank line ${kind} '${ts.tokenToString(token)}'.`);
@@ -27,6 +27,9 @@ export class Rule extends Lint.Rules.AbstractRule {
 function walk(ctx: Lint.WalkContext<void>): void {
     const { sourceFile } = ctx;
     sourceFile.forEachChild(function cb(node) {
+        function fail(kind: "before" | "after"): void {
+            ctx.addFailureAtNode(child, Rule.FAILURE_STRING(kind, child.kind));
+        }
         const children = node.getChildren();
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
@@ -49,10 +52,6 @@ function walk(ctx: Lint.WalkContext<void>): void {
 
                 default:
                     cb(child);
-            }
-
-            function fail(kind: "before" | "after"): void {
-                ctx.addFailureAtNode(child, Rule.FAILURE_STRING(kind, child.kind));
             }
         }
     });

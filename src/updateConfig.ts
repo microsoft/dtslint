@@ -11,16 +11,14 @@ import cp = require("child_process");
 import fs = require("fs");
 import stringify = require("json-stable-stringify");
 import path = require("path");
-import { Configuration as Config, ILinterOptions, IRuleFailureJson, Linter, LintResult, RuleFailure } from "tslint";
-import * as ts from "typescript";
+import { ESLint, Linter } from "eslint";
 import yargs = require("yargs");
-import { isExternalDependency } from "./lint";
 import { disabler as npmNamingDisabler } from "./rules/npmNamingRule";
 
 // Rule "expect" needs TypeScript version information, which this script doesn't collect.
 const ignoredRules: string[] = ["expect"];
 
-function main() {
+async function main() {
     const args = yargs
         .usage(`\`$0 --dt=path-to-dt\` or \`$0 --package=path-to-dt-package\`
 'dt.json' is used as the base tslint config for running the linter.`)
@@ -52,54 +50,68 @@ function main() {
         }).argv;
 
     if (args.package) {
-        updatePackage(args.package, dtConfig(args.rules));
+        await updatePackage(args.package, await dtConfig(args.rules));
     } else if (args.dt) {
-        updateAll(args.dt, dtConfig(args.rules));
+        await updateAll(args.dt, await dtConfig(args.rules));
     }
 }
 
 const dtConfigPath = "dt.json";
 
-function dtConfig(updatedRules: string[]): Config.IConfigurationFile {
-    const config = Config.findConfiguration(dtConfigPath).results;
-    if (!config) {
-        throw new Error(`Could not load config at ${dtConfigPath}.`);
-    }
+/**
+ * Transforms an existing config file by disabling any rules no longer
+ * specified explicitly in the provided list.
+ */
+async function dtConfig(updatedRules: string[]): Promise<Linter.Config> {
+    const eslint = new ESLint({ fix: false });
+    const config = await eslint.calculateConfigForFile(dtConfigPath);
     // Disable ignored or non-updated rules.
-    for (const entry of config.rules.entries()) {
-        const [rule, ruleOpts] = entry;
-        if (ignoredRules.includes(rule) || (updatedRules.length > 0 && !updatedRules.includes(rule))) {
-            ruleOpts.ruleSeverity = "off";
+    if (config.rules) {
+        for (const rule in config.rules) {
+            if (config.rules.hasOwnProperty(rule)) {
+                if (ignoredRules.includes(rule) || (updatedRules.length > 0 && !updatedRules.includes(rule))) {
+                    config[rule] = "off";
+                }
+            }
         }
     }
     return config;
 }
 
-function updateAll(dtPath: string, config: Config.IConfigurationFile): void {
+/**
+ * Updates all types packages.
+ */
+function updateAll(dtPath: string, config: Linter.Config): Promise<void[]> {
     const packages = fs.readdirSync(path.join(dtPath, "types"));
-    for (const pkg of packages) {
-        updatePackage(path.join(dtPath, "types", pkg), config);
-    }
+    return Promise.all(packages.map(pkg =>
+        updatePackage(path.join(dtPath, "types", pkg), config)));
 }
 
-function updatePackage(pkgPath: string, baseConfig: Config.IConfigurationFile): void {
+/**
+ * Updates an individual package's lint rules.
+ * If a rule has failures, it will be disabled.
+ */
+async function updatePackage(pkgPath: string, baseConfig: Linter.Config): Promise<void> {
     installDependencies(pkgPath);
     const packages = walkPackageDir(pkgPath);
 
-    const linterOpts: ILinterOptions = {
+    const linterOpts: ESLint.Options = {
         fix: false,
     };
 
     for (const pkg of packages) {
-        const results = pkg.lint(linterOpts, baseConfig);
-        if (results.failures.length > 0) {
-            const disabledRules = disableRules(results.failures);
-            const newConfig = mergeConfigRules(pkg.config(), disabledRules, baseConfig);
+        const results = await pkg.lint(linterOpts, baseConfig);
+        if (results.some(result => result.errorCount > 0)) {
+            const disabledRules = disableRules(results);
+            const newConfig = mergeConfigRules(await pkg.config(), disabledRules, baseConfig);
             pkg.updateConfig(newConfig);
         }
     }
 }
 
+/**
+ * Installs the dependencies for a single package.
+ */
 function installDependencies(pkgPath: string): void {
     if (fs.existsSync(path.join(pkgPath, "package.json"))) {
         cp.execSync(
@@ -111,23 +123,28 @@ function installDependencies(pkgPath: string): void {
     }
 }
 
+/**
+ * Merges a set of rules into a configuration object.
+ */
 function mergeConfigRules(
-    config: Config.RawConfigFile,
-    newRules: Config.RawRulesConfig,
-    baseConfig: Config.IConfigurationFile): Config.RawConfigFile {
+    config: Linter.Config,
+    newRules: Partial<Linter.RulesRecord>,
+    baseConfig: Linter.Config): Linter.Config {
         const activeRules: string[] = [];
-        baseConfig.rules.forEach((ruleOpts, ruleName) => {
-            if (ruleOpts.ruleSeverity !== "off") {
-                activeRules.push(ruleName);
+        if (baseConfig.rules) {
+            for (const [ruleName, ruleOpts] of Object.entries(baseConfig.rules)) {
+                if (ruleOpts !== "off" || (Array.isArray(ruleOpts) && ruleOpts[0] !== "off")) {
+                    activeRules.push(ruleName);
+                }
             }
-        });
-        const oldRules: Config.RawRulesConfig = config.rules || {};
-        let newRulesConfig: Config.RawRulesConfig = {};
-        for (const rule of Object.keys(oldRules)) {
-            if (activeRules.includes(rule)) {
+        }
+        const oldRules: Partial<Linter.RulesRecord> = config.rules ?? {};
+        let newRulesConfig: Partial<Linter.RulesRecord> = {};
+        for (const [ruleName, ruleOpts] of Object.entries(oldRules)) {
+            if (activeRules.includes(ruleName)) {
                 continue;
             }
-            newRulesConfig[rule] = oldRules[rule];
+            newRulesConfig[ruleName] = ruleOpts;
         }
         newRulesConfig = { ...newRulesConfig, ...newRules };
         return { ...config, rules: newRulesConfig };
@@ -139,47 +156,40 @@ function mergeConfigRules(
  * packages.
  */
 class LintPackage {
-    private files: ts.SourceFile[] = [];
-    private program: ts.Program;
+    private files: Set<string> = new Set();
 
     constructor(private rootDir: string) {
-        this.program = Linter.createProgram(path.join(this.rootDir, "tsconfig.json"));
     }
 
-    config(): Config.RawConfigFile {
-        return Config.readConfigurationFile(path.join(this.rootDir, "tslint.json"));
+    config(): Promise<Linter.Config> {
+        const eslint = new ESLint({ fix: false });
+        const tsConfigPath = path.join(this.rootDir, "tsconfig.json");
+        return eslint.calculateConfigForFile(tsConfigPath);
     }
 
     addFile(filePath: string): void {
-        const file = this.program.getSourceFile(filePath);
-        if (file) {
-            this.files.push(file);
-        }
+        this.files.add(filePath);
     }
 
-    lint(opts: ILinterOptions, config: Config.IConfigurationFile): LintResult {
-        const linter = new Linter(opts, this.program);
-        for (const file of this.files) {
-            if (ignoreFile(file, this.rootDir, this.program)) {
-                continue;
-            }
-            linter.lint(file.fileName, file.text, config);
-        }
-        return linter.getResult();
+    lint(opts: ESLint.Options, config: Linter.Config): Promise<ESLint.LintResult[]> {
+        const linter = new ESLint({
+            ...opts,
+            overrideConfig: config
+        });
+        return linter.lintFiles([...this.files]);
     }
 
-    updateConfig(config: Config.RawConfigFile): void {
+    updateConfig(config: Linter.Config): void {
         fs.writeFileSync(
-            path.join(this.rootDir, "tslint.json"),
+            path.join(this.rootDir, "eslint.json"),
             stringify(config, { space: 4 }),
             { encoding: "utf8", flag: "w" });
     }
 }
 
-function ignoreFile(file: ts.SourceFile, dirPath: string, program: ts.Program): boolean {
-    return program.isSourceFileDefaultLibrary(file) || isExternalDependency(file, path.resolve(dirPath), program);
-}
-
+/**
+ * Walks a package's directory for files to lint.
+ */
 function walkPackageDir(rootDir: string): LintPackage[] {
     const packages: LintPackage[] = [];
 
@@ -214,32 +224,34 @@ function isVersionDir(dirName: string): boolean {
     return /^ts\d+\.\d$/.test(dirName) || /^v\d+(\.\d+)?$/.test(dirName);
 }
 
-type RuleOptions = boolean | unknown[];
-type RuleDisabler = (failures: IRuleFailureJson[]) => RuleOptions;
+type RuleDisabler = (failures: Linter.LintMessage[]) => Linter.RuleEntry;
 const defaultDisabler: RuleDisabler = _ => {
-    return false;
+    return 0;
 };
 
-function disableRules(allFailures: RuleFailure[]): Config.RawRulesConfig {
-    const ruleToFailures: Map<string, IRuleFailureJson[]> = new Map();
-    for (const failure of allFailures) {
-        const failureJson = failure.toJson();
-        if (ruleToFailures.has(failureJson.ruleName)) {
-            ruleToFailures.get(failureJson.ruleName)!.push(failureJson);
-        } else {
-            ruleToFailures.set(failureJson.ruleName, [failureJson]);
+function disableRules(results: ESLint.LintResult[]): Partial<Linter.RulesRecord> {
+    const ruleToFailures: Map<string, Linter.LintMessage[]> = new Map();
+    for (const result of results) {
+        for (const message of result.messages) {
+            if (message.fatal && message.ruleId) {
+                if (ruleToFailures.has(message.ruleId)) {
+                    ruleToFailures.get(message.ruleId)!.push(message);
+                } else {
+                    ruleToFailures.set(message.ruleId, [message]);
+                }
+            }
         }
     }
 
-    const newRulesConfig: Config.RawRulesConfig = {};
-    ruleToFailures.forEach((failures, rule) => {
-        if (ignoredRules.includes(rule)) {
-            return;
+    const newRulesConfig: Partial<Linter.RulesRecord> = {};
+    for (const [ruleName, messages] of ruleToFailures.entries()) {
+        if (ignoredRules.includes(ruleName)) {
+            return {};
         }
-        const disabler = rule === "npm-naming" ? npmNamingDisabler : defaultDisabler;
-        const opts: RuleOptions = disabler(failures);
-        newRulesConfig[rule] = opts;
-    });
+        const disabler = ruleName === "npm-naming" ? npmNamingDisabler : defaultDisabler;
+        const opts: Linter.RuleEntry = disabler(messages);
+        newRulesConfig[ruleName] = opts;
+    }
 
     return newRulesConfig;
 }
