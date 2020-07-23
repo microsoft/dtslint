@@ -154,24 +154,10 @@ npm run watch
 Use `npm run test` to run all tests.
 To run a single test: `node node_modules/tslint/bin/tslint --rules-dir bin/rules --test test/expect`.
 
-
 ## Publish
 
-#### `production` branch
-
-```sh
-npm run push-production
-```
-
-This script merges changes from master into `production` and updates the `bin/` directory.
-The `production` branch is a dependency of [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) and [types-publisher](https://github.com/Microsoft/types-publisher).
-
-#### NPM
-
-1. Update package.json
-2. Follow publish steps except for the `git push` at the end.
-3. Make sure you are logged in to npm as typescript.
-4. `npm publish`
+1. Change the version in the `package.json`
+2. Push to master
 
 ## Code of Conduct
 
