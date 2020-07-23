@@ -159,13 +159,6 @@ To run a single test: `node node_modules/tslint/bin/tslint --rules-dir bin/rules
 
 #### `production` branch
 
-```sh
-npm run push-production
-```
-
-This script merges changes from master into `production` and updates the `bin/` directory.
-The `production` branch is a dependency of [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) and [types-publisher](https://github.com/Microsoft/types-publisher).
-
 #### NPM
 
 1. Update package.json
