@@ -18,7 +18,6 @@ jobs:
 
       # Ensure everything is set up right
       - run: "npm install"
-      - run: "npm build"
       - run: "npm test"
 
       - uses: orta/npm-should-deploy-action@master
