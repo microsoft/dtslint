@@ -63,7 +63,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
         const jsdocDeprecatedTag = ts.SyntaxKind.JSDocDeprecatedTag || 0;
         switch (tag.kind) {
             case jsdocDeprecatedTag:
-                // A deprecated tag always has meaning 
+                // A deprecated tag always has meaning
                 break;
             case ts.SyntaxKind.JSDocTag: {
                 const { tagName } = tag;
