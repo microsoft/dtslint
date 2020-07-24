@@ -62,6 +62,9 @@ function walk(ctx: Lint.WalkContext<void>): void {
         // @ts-ignore (until support for 4.0 is added)
         const jsdocDeprecatedTag = ts.SyntaxKind.JSDocDeprecatedTag || 0;
         switch (tag.kind) {
+            case jsdocDeprecatedTag:
+                // A deprecated tag always has meaning
+                break;
             case ts.SyntaxKind.JSDocTag: {
                 const { tagName } = tag;
                 const { text } = tagName;
@@ -87,7 +90,6 @@ function walk(ctx: Lint.WalkContext<void>): void {
             case ts.SyntaxKind.JSDocCallbackTag:
             case ts.SyntaxKind.JSDocThisTag:
             case ts.SyntaxKind.JSDocEnumTag:
-            case jsdocDeprecatedTag:
 
                 // Always redundant
                 ctx.addFailureAtNode(
