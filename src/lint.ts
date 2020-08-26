@@ -16,7 +16,7 @@ export async function lint(
     dirPath: string,
     minVersion: TsVersion,
     maxVersion: TsVersion,
-    inTypesVersionDirectory: boolean,
+    isLatest: boolean,
     expectOnly: boolean,
     tsLocal: string | undefined): Promise<string | undefined> {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
@@ -49,7 +49,7 @@ export async function lint(
         // External dependencies should have been handled by `testDependencies`;
         // typesVersions should be handled in a separate lint
         if (!isExternalDependency(file, dirPath, lintProgram) &&
-            (inTypesVersionDirectory || !isTypesVersionPath(fileName, dirPath))) {
+            (!isLatest || !isTypesVersionPath(fileName, dirPath))) {
             linter.lint(fileName, text, config);
         }
     }
