@@ -2,9 +2,9 @@
 
 import { parseTypeScriptVersionLine } from "@definitelytyped/header-parser";
 import { AllTypeScriptVersion, TypeScriptVersion } from "@definitelytyped/typescript-versions";
+import assert = require("assert");
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths, resolve } from "path";
-import assert = require("assert");
 
 import { cleanTypeScriptInstalls, installAllTypeScriptVersions, installTypeScriptNext } from "@definitelytyped/utils";
 import { checkPackageJson, checkTsconfig } from "./checks";
@@ -152,7 +152,9 @@ async function runTests(
         await checkPackageJson(dirPath, typesVersions);
     }
 
-    const minVersion = maxVersion(getMinimumTypeScriptVersionFromComment(indexText), TypeScriptVersion.lowest) as TypeScriptVersion;
+    const minVersion = maxVersion(
+        getMinimumTypeScriptVersionFromComment(indexText),
+        TypeScriptVersion.lowest) as TypeScriptVersion;
     if (onlyTestTsNext || tsLocal) {
         const tsVersion = tsLocal ? "local" : TypeScriptVersion.latest;
         await testTypesVersion(dirPath, tsVersion, tsVersion, isOlderVersion, dt, expectOnly, tsLocal, /*isLatest*/ true);
@@ -161,17 +163,19 @@ async function runTests(
         // associated ts3.2, ts3.5, ts3.6 directories, for
         // <=3.2, <=3.5, <=3.6 respectively; the root level is for 3.7 and above.
         // so this code needs to generate ranges [lowest-3.2, 3.3-3.5, 3.6-3.6, 3.7-latest]
-        const lows = [TypeScriptVersion.lowest, ...typesVersions.map(next)]
-        const his = [...typesVersions, TypeScriptVersion.latest]
-        assert.strictEqual(lows.length, his.length)
+        const lows = [TypeScriptVersion.lowest, ...typesVersions.map(next)];
+        const his = [...typesVersions, TypeScriptVersion.latest];
+        assert.strictEqual(lows.length, his.length);
         for (let i = 0; i < lows.length; i++) {
             const low = maxVersion(minVersion, lows[i]);
             const hi = his[i];
-            assert(parseFloat(hi) >= parseFloat(low), `'// Minimum TypeScript Version: ${minVersion}' in header skips ts${hi} folder.`);
+            assert(
+                parseFloat(hi) >= parseFloat(low),
+                `'// Minimum TypeScript Version: ${minVersion}' in header skips ts${hi} folder.`);
             const isLatest = hi === TypeScriptVersion.latest;
-            let versionPath = isLatest ? dirPath : joinPaths(dirPath, `ts${hi}`);
+            const versionPath = isLatest ? dirPath : joinPaths(dirPath, `ts${hi}`);
             if (lows.length > 1) {
-                console.log('testing from', low, 'to', hi, 'in', versionPath)
+                console.log("testing from", low, "to", hi, "in", versionPath);
             }
             await testTypesVersion(versionPath, low, hi, isOlderVersion, dt, expectOnly, undefined, isLatest);
         }
@@ -197,7 +201,7 @@ function next(v: TypeScriptVersion): TypeScriptVersion {
 async function testTypesVersion(
     dirPath: string,
     lowVersion: TsVersion,
-    maxVersion: TsVersion,
+    hiVersion: TsVersion,
     isOlderVersion: boolean,
     dt: boolean,
     expectOnly: boolean,
@@ -208,7 +212,7 @@ async function testTypesVersion(
     await checkTsconfig(dirPath, dt
         ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (isLatest ? "" : "/..") + "/" }
         : undefined);
-    const err = await lint(dirPath, lowVersion, maxVersion, isLatest, expectOnly, tsLocal);
+    const err = await lint(dirPath, lowVersion, hiVersion, isLatest, expectOnly, tsLocal);
     if (err) {
         throw new Error(err);
     }
