@@ -152,9 +152,10 @@ async function runTests(
         await checkPackageJson(dirPath, typesVersions);
     }
 
+    const minVersion = maxVersion(getMinimumTypeScriptVersionFromComment(indexText), TypeScriptVersion.lowest) as TypeScriptVersion;
     if (onlyTestTsNext || tsLocal) {
         const tsVersion = tsLocal ? "local" : TypeScriptVersion.latest;
-        await testTypesVersion(dirPath, tsVersion, tsVersion, isOlderVersion, dt, indexText, expectOnly, tsLocal, /*isLatest*/ true);
+        await testTypesVersion(dirPath, tsVersion, tsVersion, isOlderVersion, dt, expectOnly, tsLocal, /*isLatest*/ true);
     } else {
         // For example, typesVersions of [3.2, 3.5, 3.6] will have
         // associated ts3.2, ts3.5, ts3.6 directories, for
@@ -164,47 +165,50 @@ async function runTests(
         const his = [...typesVersions, TypeScriptVersion.latest]
         assert.strictEqual(lows.length, his.length)
         for (let i = 0; i < lows.length; i++) {
-            const low = lows[i];
+            const low = maxVersion(minVersion, lows[i]);
             const hi = his[i];
+            assert(parseFloat(hi) >= parseFloat(low), `'// Minimum TypeScript Version: ${minVersion}' in header skips ts${hi} folder.`);
             const isLatest = hi === TypeScriptVersion.latest;
             let versionPath = isLatest ? dirPath : joinPaths(dirPath, `ts${hi}`);
-            let versionIndexText = isLatest ? indexText : await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
-            console.log('testing from', low, 'to', hi, 'in', versionPath)
-            await testTypesVersion(versionPath, low, hi, isOlderVersion, dt, versionIndexText, expectOnly, undefined, isLatest);
+            if (lows.length > 1) {
+                console.log('testing from', low, 'to', hi, 'in', versionPath)
+            }
+            await testTypesVersion(versionPath, low, hi, isOlderVersion, dt, expectOnly, undefined, isLatest);
         }
     }
 }
 
-function next(v: TypeScriptVersion): TypeScriptVersion | undefined {
+function maxVersion(v1: TypeScriptVersion | undefined, v2: TypeScriptVersion | undefined): TypeScriptVersion;
+function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion | undefined): AllTypeScriptVersion;
+function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion | undefined) {
+    if (!v1) return v2;
+    if (!v2) return v1;
+    if (parseFloat(v1) >= parseFloat(v2)) return v1;
+    return v2;
+}
+
+function next(v: TypeScriptVersion): TypeScriptVersion {
     const index = TypeScriptVersion.supported.indexOf(v);
     assert.notStrictEqual(index, -1);
-    return index === TypeScriptVersion.supported.length - 1 ? undefined : TypeScriptVersion.supported[index + 1];
+    assert(index < TypeScriptVersion.supported.length);
+    return TypeScriptVersion.supported[index + 1];
 }
 
 async function testTypesVersion(
     dirPath: string,
-    lowVersion: TsVersion | undefined,
+    lowVersion: TsVersion,
     maxVersion: TsVersion,
     isOlderVersion: boolean,
     dt: boolean,
-    indexText: string,
     expectOnly: boolean,
     tsLocal: string | undefined,
     isLatest: boolean,
 ): Promise<void> {
-    const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
-    if (minVersionFromComment !== undefined && !isLatest) {
-        throw new Error(`Already in the \`ts${maxVersion}\` directory, don't need \`// Minimum TypeScript Version\`.`);
-    }
-    const minVersion = lowVersion
-        || minVersionFromComment && TypeScriptVersion.isSupported(minVersionFromComment) && minVersionFromComment
-        || TypeScriptVersion.lowest;
-
     await checkTslintJson(dirPath, dt);
     await checkTsconfig(dirPath, dt
         ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (isLatest ? "" : "/..") + "/" }
         : undefined);
-    const err = await lint(dirPath, minVersion, maxVersion, isLatest, expectOnly, tsLocal);
+    const err = await lint(dirPath, lowVersion, maxVersion, isLatest, expectOnly, tsLocal);
     if (err) {
         throw new Error(err);
     }
@@ -236,7 +240,7 @@ function assertPathIsNotBanned(dirPath: string) {
     }
 }
 
-function getTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
+function getMinimumTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
     const match = text.match(/\/\/ (?:Minimum )?TypeScript Version: /);
     if (!match) {
         return undefined;
