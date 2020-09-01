@@ -182,9 +182,9 @@ async function runTests(
     }
 }
 
-function maxVersion(v1: TypeScriptVersion | undefined, v2: TypeScriptVersion | undefined): TypeScriptVersion;
-function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion | undefined): AllTypeScriptVersion;
-function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion | undefined) {
+function maxVersion(v1: TypeScriptVersion | undefined, v2: TypeScriptVersion): TypeScriptVersion;
+function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion): AllTypeScriptVersion;
+function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion) {
     if (!v1) return v2;
     if (!v2) return v1;
     if (parseFloat(v1) >= parseFloat(v2)) return v1;
