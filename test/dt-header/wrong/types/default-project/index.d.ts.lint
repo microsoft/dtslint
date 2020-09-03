@@ -1,0 +1,5 @@
+// Type definitions for dt-header 1.0
+// Project: https://github.com/baz/foo (Does not have to be to GitHub, but prefer linking to a source code repository rather than to a project website.)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ [Project should be a link to the project's source code repository, not the default. See: https://github.com/Microsoft/dtslint/blob/master/docs/dt-header.md]
+// Definitions by: Jane Doe <https://github.com/janedoe>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
