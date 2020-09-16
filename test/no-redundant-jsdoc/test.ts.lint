@@ -1,2 +1,4 @@
 /** @deprecated */
 export const x: number;
+/** @see x */
+export const y: number;
