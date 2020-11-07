@@ -19,16 +19,16 @@ export async function checkPackageJson(
         return;
     }
 
-    const pkgJson = await readJson(pkgJsonPath) as {};
+    const pkgJson = await readJson(pkgJsonPath) as Record<string, unknown>;
 
-    if ((pkgJson as any).private !== true) {
+    if (pkgJson.private !== true) {
         throw new Error(`${pkgJsonPath} should set \`"private": true\``);
     }
 
     if (needsTypesVersions) {
-        assert.strictEqual((pkgJson as any).types, "index", `"types" in '${pkgJsonPath}' should be "index".`);
+        assert.strictEqual(pkgJson.types, "index", `"types" in '${pkgJsonPath}' should be "index".`);
         const expected = makeTypesVersionsForPackageJson(typesVersions);
-        assert.deepEqual((pkgJson as any).typesVersions, expected,
+        assert.deepEqual(pkgJson.typesVersions, expected,
             `"typesVersions" in '${pkgJsonPath}' is not set right. Should be: ${JSON.stringify(expected, undefined, 4)}`);
     }
 
@@ -136,7 +136,7 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
     }
 }
 
-function deepEquals(expected: {} | null | undefined, actual: {} | null | undefined): boolean {
+function deepEquals(expected: unknown, actual: unknown): boolean {
     if (expected instanceof Array) {
         return actual instanceof Array
             && actual.length === expected.length

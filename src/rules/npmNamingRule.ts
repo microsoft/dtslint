@@ -6,38 +6,37 @@ import {
     ErrorKind,
     ExportErrorKind,
     Mode,
-    parseExportErrorKind,
-    parseMode } from "dts-critic";
-import * as Lint from "tslint";
-import * as ts from "typescript";
+} from "dts-critic";
+import { Linter, Rule as ESLintRule } from "eslint";
+import * as ESTree from 'estree';
 
 import { addSuggestion } from "../suggestions";
 import { failure, isMainFile } from "../util";
 
 /** Options as parsed from the rule configuration. */
-type ConfigOptions = {
+type ConfigOptions = Linter.RuleEntry<[{
     mode: Mode.NameOnly,
     singleLine?: boolean,
 } | {
     mode: Mode.Code,
     errors: Array<[ExportErrorKind, boolean]>,
     singleLine?: boolean,
-};
+}]>;
 
 type Options = CriticOptions & { singleLine?: boolean };
 
-const defaultOptions: ConfigOptions = {
+const defaultOptions: ConfigOptions = ['error', {
     mode: Mode.NameOnly,
-};
+}];
 
-export class Rule extends Lint.Rules.AbstractRule {
-    static metadata: Lint.IRuleMetadata = {
-        ruleName: "npm-naming",
-        description: "Ensure that package name and DefinitelyTyped header match npm package info.",
-        optionsDescription: `An object with a \`mode\` property should be provided.
-If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
-\`errors\` should be an array specifying which code checks should be enabled or disabled.`,
-        options: {
+const ruleName = "npm-naming";
+
+export const rule: ESLintRule.RuleModule = {
+    meta: {
+        docs: {
+            description: "Ensure that package name and DefinitelyTyped header match npm package info.",
+        },
+        schema: {
             oneOf: [
                 {
                     type: "object",
@@ -88,128 +87,65 @@ If \`mode\` is '${Mode.Code}', then option \`errors\` can be provided.
                 },
             ],
         },
-        optionExamples: [
-            true,
-            [true, { mode: Mode.NameOnly }],
-            [
-                true,
-                {
-                    mode: Mode.Code,
-                    errors: [[ErrorKind.NeedsExportEquals, true], [ErrorKind.NoDefaultExport, false]],
-                },
-            ],
-        ],
-        type: "functionality",
-        typescriptOnly: true,
-    };
+        type: "suggestion",
+    },
 
-    apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk, toCriticOptions(parseOptions(this.ruleArguments)));
-    }
-}
-
-function parseOptions(args: unknown[]): ConfigOptions {
-    if (args.length === 0) {
-        return defaultOptions;
-    }
-
-    const arg = args[0] as { [prop: string]: unknown } | null | undefined;
-    if (arg == null) {
-        return defaultOptions;
-    }
-
-    if (!arg.mode || typeof arg.mode !== "string") {
-        return defaultOptions;
-    }
-
-    const mode = parseMode(arg.mode);
-    if (!mode) {
-        return defaultOptions;
-    }
-
-    const singleLine = !!arg["single-line"];
-
-    switch (mode) {
-        case Mode.NameOnly:
-            return { mode, singleLine };
-        case Mode.Code:
-            if (!arg.errors || !Array.isArray(arg.errors)) {
-                return { mode, errors: [], singleLine };
+    create(context: ESLintRule.RuleContext): ESLintRule.RuleListener {
+        const source = context.getSourceCode();
+        const lookFor = (node: ESTree.Node, search: string, explanation: string) => {
+            const idx = source.getText(node).indexOf(search);
+            if (idx !== -1) {
+                context.report({
+                    message: failure(ruleName, explanation),
+                    node
+                });
             }
-            return { mode, errors: parseEnabledErrors(arg.errors), singleLine };
-    }
-}
-
-function parseEnabledErrors(errors: unknown[]): Array<[ExportErrorKind, boolean]> {
-    const enabledChecks: Array<[ExportErrorKind, boolean]> = [];
-    for (const tuple of errors) {
-        if (Array.isArray(tuple)
-            && tuple.length === 2
-            && typeof tuple[0] === "string"
-            && typeof tuple[1] === "boolean") {
-            const error = parseExportErrorKind(tuple[0]);
-            if (error) {
-                enabledChecks.push([error, tuple[1]]);
-            }
-        }
-    }
-    return enabledChecks;
-}
-
-function toCriticOptions(options: ConfigOptions): Options {
-    switch (options.mode) {
-        case Mode.NameOnly:
-            return options;
-        case Mode.Code:
-            const errors = new Map(options.errors);
-            return { ...options, errors };
-    }
-}
-
-function walk(ctx: Lint.WalkContext<CriticOptions>): void {
-    const { sourceFile } = ctx;
-    const { text } = sourceFile;
-    const lookFor = (search: string, explanation: string) => {
-        const idx = text.indexOf(search);
-        if (idx !== -1) {
-            ctx.addFailureAt(idx, search.length, failure(Rule.metadata.ruleName, explanation));
-        }
-    };
-    if (isMainFile(sourceFile.fileName, /*allowNested*/ false)) {
-        try {
-            const optionsWithSuggestions = toOptionsWithSuggestions(ctx.options);
-            const diagnostics = critic(sourceFile.fileName, /* sourcePath */ undefined, optionsWithSuggestions);
-            const errors = filterErrors(diagnostics, ctx);
-            for (const error of errors) {
-                switch (error.kind) {
-                    case ErrorKind.NoMatchingNpmPackage:
-                    case ErrorKind.NoMatchingNpmVersion:
-                    case ErrorKind.NonNpmHasMatchingPackage:
-                        lookFor("// Type definitions for", errorMessage(error, ctx.options));
-                        break;
-                    case ErrorKind.DtsPropertyNotInJs:
-                    case ErrorKind.DtsSignatureNotInJs:
-                    case ErrorKind.JsPropertyNotInDts:
-                    case ErrorKind.JsSignatureNotInDts:
-                    case ErrorKind.NeedsExportEquals:
-                    case ErrorKind.NoDefaultExport:
-                        if (error.position) {
-                            ctx.addFailureAt(
-                                error.position.start,
-                                error.position.length,
-                                failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
-                        } else {
-                            ctx.addFailure(0, 1, failure(Rule.metadata.ruleName, errorMessage(error, ctx.options)));
+        };
+        const fileName = context.getFilename();
+        const options = context.options[0] ?? defaultOptions;
+        return {
+            Program(node) {
+                if (isMainFile(fileName, /*allowNested*/ false)) {
+                    try {
+                        const optionsWithSuggestions = toOptionsWithSuggestions(options);
+                        const diagnostics = critic(fileName, /* sourcePath */ undefined, optionsWithSuggestions);
+                        const errors = filterErrors(diagnostics, context);
+                        for (const error of errors) {
+                            switch (error.kind) {
+                                case ErrorKind.NoMatchingNpmPackage:
+                                case ErrorKind.NoMatchingNpmVersion:
+                                case ErrorKind.NonNpmHasMatchingPackage:
+                                    lookFor(node, "// Type definitions for", errorMessage(error, options));
+                                    break;
+                                case ErrorKind.DtsPropertyNotInJs:
+                                case ErrorKind.DtsSignatureNotInJs:
+                                case ErrorKind.JsPropertyNotInDts:
+                                case ErrorKind.JsSignatureNotInDts:
+                                case ErrorKind.NeedsExportEquals:
+                                case ErrorKind.NoDefaultExport:
+                                    if (error.position) {
+                                        context.report({
+                                            message: failure(ruleName, errorMessage(error, options)),
+                                            node
+                                        });
+                                    } else {
+                                        context.report({
+                                            message: failure(ruleName, errorMessage(error, options)),
+                                            node
+                                        });
+                                    }
+                                    break;
+                            }
                         }
-                        break;
+                    } catch (e) {
+                        // We're ignoring exceptions.
+                    }
                 }
+                // Don't recur, we're done.
             }
-        } catch (e) {
-            // We're ignoring exceptions.
-        }
+        };
     }
-    // Don't recur, we're done.
-}
+};
 
 const enabledSuggestions: ExportErrorKind[] = [
     ErrorKind.JsPropertyNotInDts,
@@ -225,10 +161,10 @@ function toOptionsWithSuggestions(options: CriticOptions): CriticOptions {
     return optionsWithSuggestions;
 }
 
-function filterErrors(diagnostics: CriticError[], ctx: Lint.WalkContext<Options>): CriticError[] {
+function filterErrors(diagnostics: CriticError[], ctx: ESLintRule.RuleContext): CriticError[] {
     const errors: CriticError[] = [];
     diagnostics.forEach(diagnostic => {
-        if (isSuggestion(diagnostic, ctx.options)) {
+        if (isSuggestion(diagnostic, ctx.options[0])) {
             addSuggestion(ctx, diagnostic.message, diagnostic.position?.start, diagnostic.position?.length);
         } else {
             errors.push(diagnostic);
@@ -243,7 +179,7 @@ function isSuggestion(diagnostic: CriticError, options: Options): boolean {
         && !(options.errors as Map<ErrorKind, boolean>).get(diagnostic.kind);
 }
 
-function tslintDisableOption(error: ErrorKind): string {
+function eslintDisableOption(error: ErrorKind): string {
     switch (error) {
         case ErrorKind.NoMatchingNpmPackage:
         case ErrorKind.NoMatchingNpmVersion:
@@ -255,7 +191,7 @@ function tslintDisableOption(error: ErrorKind): string {
         case ErrorKind.JsPropertyNotInDts:
         case ErrorKind.DtsSignatureNotInJs:
         case ErrorKind.DtsPropertyNotInJs:
-            return JSON.stringify([true, { mode: Mode.Code, errors: [[error, false]]}]);
+            return JSON.stringify(["error", { mode: Mode.Code, errors: [[error, false]]}]);
     }
 }
 
@@ -264,7 +200,7 @@ function errorMessage(error: CriticError, opts: Options): string {
 `\nIf you won't fix this error now or you think this error is wrong,
 you can disable this check by adding the following options to your project's tslint.json file under "rules":
 
-    "npm-naming": ${tslintDisableOption(error.kind)}
+    "npm-naming": ${eslintDisableOption(error.kind)}
 `;
     if (opts.singleLine) {
         return message.replace(/(\r\n|\n|\r|\t)/gm, " ");
@@ -276,18 +212,18 @@ you can disable this check by adding the following options to your project's tsl
 /**
  * Given npm-naming lint failures, returns a rule configuration that prevents such failures.
  */
-export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, ConfigOptions] {
+export function disabler(failures: Linter.LintMessage[]): Linter.RuleEntry {
     const disabledErrors = new Set<ExportErrorKind>();
     for (const ruleFailure of failures) {
-        if (ruleFailure.ruleName !== "npm-naming") {
-            throw new Error(`Expected failures of rule "npm-naming", found failures of rule ${ruleFailure.ruleName}.`);
+        if (ruleFailure.ruleId !== "npm-naming") {
+            throw new Error(`Expected failures of rule "npm-naming", found failures of rule ${ruleFailure.ruleId}.`);
         }
-        const message = ruleFailure.failure;
+        const message = ruleFailure.message;
         // Name errors.
         if (message.includes("must have a matching npm package")
             || message.includes("must match a version that exists on npm")
             || message.includes("conflicts with the existing npm package")) {
-            return false;
+            return "off";
         }
         // Code errors.
         if (message.includes("declaration should use 'export =' syntax")) {
@@ -296,14 +232,14 @@ export function disabler(failures: Lint.IRuleFailureJson[]): false | [true, Conf
             does not mention 'default' anywhere")) {
             disabledErrors.add(ErrorKind.NoDefaultExport);
         } else {
-            return [true, { mode: Mode.NameOnly }];
+            return ["error", { mode: Mode.NameOnly }];
         }
     }
 
     if ((defaultErrors as ExportErrorKind[]).every(error => disabledErrors.has(error))) {
-        return [true, { mode: Mode.NameOnly }];
+        return ["error", { mode: Mode.NameOnly }];
     }
     const errors: Array<[ExportErrorKind, boolean]> = [];
     disabledErrors.forEach(error => errors.push([error, false]));
-    return [true, { mode: Mode.Code, errors }];
+    return ["error", { mode: Mode.Code, errors }];
 }

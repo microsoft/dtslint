@@ -13,13 +13,13 @@ export class Rule extends Lint.Rules.TypedRule {
         typescriptOnly: true,
     };
 
-    static FAILURE_STRING(typeParameter: string) {
+    static FAILURE_STRING(typeParameter: string): string {
         return failure(
             Rule.metadata.ruleName,
             `Type parameter ${typeParameter} is used only once.`);
     }
 
-    static FAILURE_STRING_NEVER(typeParameter: string) {
+    static FAILURE_STRING_NEVER(typeParameter: string): string {
         return failure(
             Rule.metadata.ruleName,
             `Type parameter ${typeParameter} is never used.`);

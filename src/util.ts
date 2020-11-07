@@ -4,7 +4,7 @@ import { basename, dirname, join } from "path";
 import stripJsonComments = require("strip-json-comments");
 import * as ts from "typescript";
 
-export async function readJson(path: string) {
+export async function readJson(path: string): Promise<any> {
     const text = await readFile(path, "utf-8");
     return JSON.parse(stripJsonComments(text));
 }
@@ -87,7 +87,7 @@ export async function mapDefinedAsync<T, U>(
     return out;
 }
 
-export function isMainFile(fileName: string, allowNested: boolean) {
+export function isMainFile(fileName: string, allowNested: boolean): boolean {
     // Linter may be run with cwd of the package. We want `index.d.ts` but not `submodule/index.d.ts` to match.
     if (fileName === "index.d.ts") {
         return true;

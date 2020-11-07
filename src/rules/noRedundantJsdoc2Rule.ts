@@ -154,11 +154,13 @@ function removeTag(tag: ts.JSDocTag, sourceFile: ts.SourceFile): Lint.Replacemen
     switch (tag.tagName.text) {
         // @ts-ignore (fallthrough)
         case "param":
+        {
             const { isBracketed, isNameFirst, typeExpression } = tag as ts.JSDocParameterTag;
             if (!isBracketed && !(isNameFirst && typeExpression !== undefined)) {
                 break;
             }
             // falls through
+        }
         case "name":
         case "return":
         case "returns":

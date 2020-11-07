@@ -1,7 +1,7 @@
 import fs = require("fs");
 import os = require("os");
 import path = require("path");
-import { WalkContext } from "tslint";
+import { Rule } from "eslint";
 
 const suggestionsDir = path.join(os.homedir(), ".dts", "suggestions");
 
@@ -19,16 +19,20 @@ const existingPackages = new Set();
 /**
  *  A rule should call this function to provide a suggestion instead of a lint failure.
  */
-export function addSuggestion<T>(ctx: WalkContext<T>, message: string, start?: number, width?: number) {
+export function addSuggestion(
+        ctx: Rule.RuleContext,
+        message: string,
+        start?: number,
+        width?: number): void {
     const suggestion: Suggestion = {
-        fileName: ctx.sourceFile.fileName,
-        ruleName: ctx.ruleName,
+        fileName: ctx.getFilename(),
+        ruleName: ctx.id,
         message,
         start,
         width,
     };
 
-    const packageName = dtPackageName(ctx.sourceFile.fileName);
+    const packageName = dtPackageName(ctx.getFilename());
     if (!packageName) {
         return;
     }
