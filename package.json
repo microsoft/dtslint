@@ -1,6 +1,6 @@
 {
   "name": "dtslint",
-  "version": "2.0.2",
+  "version": "4.0.6",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
@@ -27,22 +27,30 @@
     "prepublishOnly": "npm run build && npm run test && npm run lint"
   },
   "dependencies": {
-    "definitelytyped-header-parser": "3.8.1",
-    "dts-critic": "^2.2.3",
+    "@definitelytyped/header-parser": "latest",
+    "@definitelytyped/typescript-versions": "latest",
+    "@definitelytyped/utils": "latest",
+    "dts-critic": "latest",
     "fs-extra": "^6.0.1",
-    "request": "^2.88.0",
+    "json-stable-stringify": "^1.0.1",
     "strip-json-comments": "^2.0.1",
     "tslint": "5.14.0",
     "tsutils": "^2.29.0",
-    "typescript": "next"
+    "yargs": "^15.1.0"
+  },
+  "peerDependencies": {
+    "typescript": ">= 3.0.0-dev || >= 3.1.0-dev || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.7.0-dev || >= 3.8.0-dev || >= 3.9.0-dev || >= 4.0.0-dev"
   },
   "devDependencies": {
     "@types/fs-extra": "^5.0.2",
-    "@types/node": "^7.10.7",
-    "@types/strip-json-comments": "^0.0.28"
+    "@types/json-stable-stringify": "^1.0.32",
+    "@types/node": "12.0.x",
+    "@types/strip-json-comments": "^0.0.28",
+    "@types/yargs": "^15.0.3",
+    "typescript": "next"
   },
   "engines": {
-    "node": ">=6.10.0"
+    "node": ">=10.0.0"
   },
   "license": "MIT"
 }

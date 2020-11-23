@@ -1,0 +1,6 @@
+{
+  "rulesDirectory": ["../../bin/rules"],
+  "rules": {
+    "no-redundant-jsdoc2": true
+  }
+}

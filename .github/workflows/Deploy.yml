@@ -1,0 +1,29 @@
+name: Deploy to npm
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          registry-url: "https://registry.npmjs.org"
+
+      # Ensure everything is set up right
+      - run: "npm install"
+      - run: "npm test"
+
+      - uses: orta/npm-should-deploy-action@main
+        id: check
+
+      - run: "npm publish"
+        if: ${{ steps.check.outputs.deploy == 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

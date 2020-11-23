@@ -1,18 +1,15 @@
 #!/usr/bin/env node
 
-import {
-    AllTypeScriptVersion,
-    isTypeScriptVersion,
-    parseTypeScriptVersionLine,
-    TypeScriptVersion,
-} from "definitelytyped-header-parser";
+import { parseTypeScriptVersionLine } from "@definitelytyped/header-parser";
+import { AllTypeScriptVersion, TypeScriptVersion } from "@definitelytyped/typescript-versions";
+import assert = require("assert");
 import { readdir, readFile, stat } from "fs-extra";
 import { basename, dirname, join as joinPaths, resolve } from "path";
 
+import { cleanTypeScriptInstalls, installAllTypeScriptVersions, installTypeScriptNext } from "@definitelytyped/utils";
 import { checkPackageJson, checkTsconfig } from "./checks";
-import { cleanInstalls, installAll, installNext } from "./installer";
 import { checkTslintJson, lint, TsVersion } from "./lint";
-import { assertDefined, last, mapDefinedAsync, withoutPrefix } from "./util";
+import { mapDefinedAsync, withoutPrefix } from "./util";
 
 async function main(): Promise<void> {
     const args = process.argv.slice(2);
@@ -36,8 +33,8 @@ async function main(): Promise<void> {
             case "--installAll":
                 console.log("Cleaning old installs and installing for all TypeScript versions...");
                 console.log("Working...");
-                await cleanInstalls();
-                await installAll();
+                await cleanTypeScriptInstalls();
+                await installAllTypeScriptVersions();
                 return;
             case "--localTs":
                 lookingForTsLocal = true;
@@ -76,21 +73,19 @@ async function main(): Promise<void> {
     }
 
     if (shouldListen) {
-        listen(dirPath, tsLocal);
-        // Do this *after* to ensure messages sent during installation aren't dropped.
-        if (!tsLocal) {
-            await installAll();
-        }
+        listen(dirPath, tsLocal, onlyTestTsNext);
     } else {
-        if (!tsLocal) {
-            if (onlyTestTsNext) {
-                await installNext();
-            } else {
-                await installAll();
-            }
-        }
+        await installTypeScriptAsNeeded(tsLocal, onlyTestTsNext);
         await runTests(dirPath, onlyTestTsNext, expectOnly, tsLocal);
     }
+}
+
+async function installTypeScriptAsNeeded(tsLocal: string | undefined, onlyTestTsNext: boolean): Promise<void> {
+    if (tsLocal) return;
+    if (onlyTestTsNext) {
+        return installTypeScriptNext();
+    }
+    return installAllTypeScriptVersions();
 }
 
 function usage(): void {
@@ -105,9 +100,13 @@ function usage(): void {
     console.error("onlyTestTsNext and localTs are (1) mutually exclusive and (2) test a single version of TS");
 }
 
-function listen(dirPath: string, tsLocal: string | undefined): void {
-    process.on("message", (message: {}) => {
+function listen(dirPath: string, tsLocal: string | undefined, alwaysOnlyTestTsNext: boolean): void {
+    // Don't await this here to ensure that messages sent during installation aren't dropped.
+    const installationPromise = installTypeScriptAsNeeded(tsLocal, alwaysOnlyTestTsNext);
+    process.on("message", async (message: {}) => {
         const { path, onlyTestTsNext, expectOnly } = message as { path: string, onlyTestTsNext: boolean, expectOnly?: boolean };
+
+        await installationPromise;
         runTests(joinPaths(dirPath, path), onlyTestTsNext, !!expectOnly, tsLocal)
             .catch(e => e.stack)
             .then(maybeError => {
@@ -140,7 +139,7 @@ async function runTests(
         const version = withoutPrefix(name, "ts");
         if (version === undefined || !(await stat(joinPaths(dirPath, name))).isDirectory()) { return undefined; }
 
-        if (!isTypeScriptVersion(version)) {
+        if (!TypeScriptVersion.isTypeScriptVersion(version)) {
             throw new Error(`There is an entry named ${name}, but ${version} is not a valid TypeScript version.`);
         }
         if (!TypeScriptVersion.isRedirectable(version)) {
@@ -153,59 +152,67 @@ async function runTests(
         await checkPackageJson(dirPath, typesVersions);
     }
 
+    const minVersion = maxVersion(
+        getMinimumTypeScriptVersionFromComment(indexText),
+        TypeScriptVersion.lowest) as TypeScriptVersion;
     if (onlyTestTsNext || tsLocal) {
-        const tsVersion = tsLocal ? "local" : "next";
-        if (typesVersions.length === 0) {
-            await testTypesVersion(dirPath, tsVersion, tsVersion, isOlderVersion, dt, indexText, expectOnly, tsLocal);
-        } else {
-            const latestTypesVersion = last(typesVersions);
-            const versionPath = joinPaths(dirPath, `ts${latestTypesVersion}`);
-            const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
-            await testTypesVersion(
-                versionPath, tsVersion, tsVersion,
-                isOlderVersion, dt, versionIndexText, expectOnly, tsLocal, /*inTypesVersionDirectory*/ true);
-        }
+        const tsVersion = tsLocal ? "local" : TypeScriptVersion.latest;
+        await testTypesVersion(dirPath, tsVersion, tsVersion, isOlderVersion, dt, expectOnly, tsLocal, /*isLatest*/ true);
     } else {
-        await testTypesVersion(dirPath, undefined, getTsVersion(0), isOlderVersion, dt, indexText, expectOnly, undefined);
-        for (let i = 0; i < typesVersions.length; i++) {
-            const version = typesVersions[i];
-            const versionPath = joinPaths(dirPath, `ts${version}`);
-            const versionIndexText = await readFile(joinPaths(versionPath, "index.d.ts"), "utf-8");
-            await testTypesVersion(
-                versionPath, version, getTsVersion(i + 1), isOlderVersion, dt, versionIndexText,
-                expectOnly, undefined, /*inTypesVersionDirectory*/ true);
-        }
-
-        function getTsVersion(i: number): TsVersion {
-            return i === typesVersions.length ? "next" : assertDefined(TypeScriptVersion.previous(typesVersions[i]));
+        // For example, typesVersions of [3.2, 3.5, 3.6] will have
+        // associated ts3.2, ts3.5, ts3.6 directories, for
+        // <=3.2, <=3.5, <=3.6 respectively; the root level is for 3.7 and above.
+        // so this code needs to generate ranges [lowest-3.2, 3.3-3.5, 3.6-3.6, 3.7-latest]
+        const lows = [TypeScriptVersion.lowest, ...typesVersions.map(next)];
+        const his = [...typesVersions, TypeScriptVersion.latest];
+        assert.strictEqual(lows.length, his.length);
+        for (let i = 0; i < lows.length; i++) {
+            const low = maxVersion(minVersion, lows[i]);
+            const hi = his[i];
+            assert(
+                parseFloat(hi) >= parseFloat(low),
+                `'// Minimum TypeScript Version: ${minVersion}' in header skips ts${hi} folder.`);
+            const isLatest = hi === TypeScriptVersion.latest;
+            const versionPath = isLatest ? dirPath : joinPaths(dirPath, `ts${hi}`);
+            if (lows.length > 1) {
+                console.log("testing from", low, "to", hi, "in", versionPath);
+            }
+            await testTypesVersion(versionPath, low, hi, isOlderVersion, dt, expectOnly, undefined, isLatest);
         }
     }
 }
 
+function maxVersion(v1: TypeScriptVersion | undefined, v2: TypeScriptVersion): TypeScriptVersion;
+function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion): AllTypeScriptVersion;
+function maxVersion(v1: AllTypeScriptVersion | undefined, v2: AllTypeScriptVersion) {
+    if (!v1) return v2;
+    if (!v2) return v1;
+    if (parseFloat(v1) >= parseFloat(v2)) return v1;
+    return v2;
+}
+
+function next(v: TypeScriptVersion): TypeScriptVersion {
+    const index = TypeScriptVersion.supported.indexOf(v);
+    assert.notStrictEqual(index, -1);
+    assert(index < TypeScriptVersion.supported.length);
+    return TypeScriptVersion.supported[index + 1];
+}
+
 async function testTypesVersion(
     dirPath: string,
-    lowVersion: TsVersion | undefined,
-    maxVersion: TsVersion,
+    lowVersion: TsVersion,
+    hiVersion: TsVersion,
     isOlderVersion: boolean,
     dt: boolean,
-    indexText: string,
     expectOnly: boolean,
     tsLocal: string | undefined,
-    inTypesVersionDirectory?: boolean,
+    isLatest: boolean,
 ): Promise<void> {
-    const minVersionFromComment = getTypeScriptVersionFromComment(indexText);
-    if (minVersionFromComment !== undefined && inTypesVersionDirectory) {
-        throw new Error(`Already in the \`ts${lowVersion}\` directory, don't need \`// TypeScript Version\`.`);
-    }
-    const minVersion = lowVersion
-        || minVersionFromComment && TypeScriptVersion.isSupported(minVersionFromComment) && minVersionFromComment
-        || TypeScriptVersion.lowest;
-
     await checkTslintJson(dirPath, dt);
     await checkTsconfig(dirPath, dt
-        ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (inTypesVersionDirectory ? "/.." : "") + "/" }
+        ? { relativeBaseUrl: ".." + (isOlderVersion ? "/.." : "") + (isLatest ? "" : "/..") + "/" }
         : undefined);
-    const err = await lint(dirPath, minVersion, maxVersion, !!inTypesVersionDirectory, expectOnly, tsLocal);
+    const err = await lint(dirPath, lowVersion, hiVersion, isLatest, expectOnly, tsLocal);
     if (err) {
         throw new Error(err);
     }
@@ -213,7 +220,7 @@ async function testTypesVersion(
 
 function assertPathIsInDefinitelyTyped(dirPath: string): void {
     const parent = dirname(dirPath);
-    const types = /^v\d+$/.test(basename(dirPath)) ? dirname(parent) : parent;
+    const types = /^v\d+(\.\d+)?$/.test(basename(dirPath)) ? dirname(parent) : parent;
     // TODO: It's not clear whether this assertion makes sense, and it's broken on Azure Pipelines
     // Re-enable it later if it makes sense.
     // const dt = dirname(types);
@@ -237,14 +244,13 @@ function assertPathIsNotBanned(dirPath: string) {
     }
 }
 
-function getTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
-    const searchString = "// TypeScript Version: ";
-    const x = text.indexOf(searchString);
-    if (x === -1) {
+function getMinimumTypeScriptVersionFromComment(text: string): AllTypeScriptVersion | undefined {
+    const match = text.match(/\/\/ (?:Minimum )?TypeScript Version: /);
+    if (!match) {
         return undefined;
     }
 
-    let line = text.slice(x, text.indexOf("\n", x));
+    let line = text.slice(match.index, text.indexOf("\n", match.index));
     if (line.endsWith("\r")) {
         line = line.slice(0, line.length - 1);
     }

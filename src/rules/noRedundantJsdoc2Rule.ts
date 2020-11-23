@@ -59,7 +59,13 @@ function walk(ctx: Lint.WalkContext<void>): void {
     });
 
     function checkTag(tag: ts.JSDocTag): void {
+        const jsdocSeeTag = (ts.SyntaxKind as any).JSDocSeeTag || 0;
+        const jsdocDeprecatedTag = (ts.SyntaxKind as any).JSDocDeprecatedTag || 0;
         switch (tag.kind) {
+            case jsdocSeeTag:
+            case jsdocDeprecatedTag:
+                // @deprecated and @see always have meaning
+                break;
             case ts.SyntaxKind.JSDocTag: {
                 const { tagName } = tag;
                 const { text } = tagName;
@@ -85,6 +91,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
             case ts.SyntaxKind.JSDocCallbackTag:
             case ts.SyntaxKind.JSDocThisTag:
             case ts.SyntaxKind.JSDocEnumTag:
+
                 // Always redundant
                 ctx.addFailureAtNode(
                     tag.tagName,

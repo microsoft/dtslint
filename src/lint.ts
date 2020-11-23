@@ -1,5 +1,6 @@
+import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
+import { typeScriptPath } from "@definitelytyped/utils";
 import assert = require("assert");
-import { TypeScriptVersion } from "definitelytyped-header-parser";
 import { pathExists } from "fs-extra";
 import { join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
@@ -9,14 +10,13 @@ type IConfigurationFile = Configuration.IConfigurationFile;
 
 import { getProgram, Options as ExpectOptions } from "./rules/expectRule";
 
-import { typeScriptPath } from "./installer";
 import { readJson, withoutPrefix } from "./util";
 
 export async function lint(
     dirPath: string,
     minVersion: TsVersion,
     maxVersion: TsVersion,
-    inTypesVersionDirectory: boolean,
+    isLatest: boolean,
     expectOnly: boolean,
     tsLocal: string | undefined): Promise<string | undefined> {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
@@ -49,7 +49,7 @@ export async function lint(
         // External dependencies should have been handled by `testDependencies`;
         // typesVersions should be handled in a separate lint
         if (!isExternalDependency(file, dirPath, lintProgram) &&
-            (inTypesVersionDirectory || !isTypesVersionPath(fileName, dirPath))) {
+            (!isLatest || !isTypesVersionPath(fileName, dirPath))) {
             linter.lint(fileName, text, config);
         }
     }
@@ -79,19 +79,27 @@ function testDependencies(
     return `Errors in typescript@${version} for external dependencies:\n${showDiags}`;
 }
 
-function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
+export function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
     return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
 }
 
+function normalizePath(file: string) {
+    // replaces '\' with '/' and forces all DOS drive letters to be upper-case
+    return normalize(file)
+        .replace(/\\/g, "/")
+        .replace(/^[a-z](?=:)/, c => c.toUpperCase());
+}
+
 function isTypesVersionPath(fileName: string, dirPath: string) {
-    const subdirPath = withoutPrefix(fileName, dirPath);
+    const normalFileName = normalizePath(fileName);
+    const normalDirPath = normalizePath(dirPath);
+    const subdirPath = withoutPrefix(normalFileName, normalDirPath);
     return subdirPath && /^\/ts\d+\.\d/.test(subdirPath);
 }
 
 function startsWithDirectory(filePath: string, dirPath: string): boolean {
-    const normalFilePath = normalize(filePath);
-    const normalDirPath = normalize(dirPath);
-    assert(!normalDirPath.endsWith("/") && !normalDirPath.endsWith("\\"));
+    const normalFilePath = normalizePath(filePath);
+    const normalDirPath = normalizePath(dirPath).replace(/\/$/, "");
     return normalFilePath.startsWith(normalDirPath + "/") || normalFilePath.startsWith(normalDirPath + "\\");
 }
 
@@ -174,24 +182,24 @@ async function getLintConfig(
 }
 
 function range(minVersion: TsVersion, maxVersion: TsVersion): ReadonlyArray<TsVersion> {
-    if (minVersion === "next") {
-        assert(maxVersion === "next");
-        return ["next"];
-    }
     if (minVersion === "local") {
         assert(maxVersion === "local");
         return ["local"];
     }
+    if (minVersion === TypeScriptVersion.latest) {
+        assert(maxVersion === TypeScriptVersion.latest);
+        return [TypeScriptVersion.latest];
+    }
+    assert(maxVersion !== "local");
 
-    // The last item of TypeScriptVersion is the unreleased version of Typescript,
-    // which is called 'next' on npm, so replace it with 'next'.
-    const allReleased: TsVersion[] = [...TypeScriptVersion.supported];
-    allReleased[allReleased.length - 1] = "next";
-    const minIdx = allReleased.indexOf(minVersion);
+    const minIdx = TypeScriptVersion.shipped.indexOf(minVersion);
     assert(minIdx >= 0);
-    const maxIdx = allReleased.indexOf(maxVersion);
+    if (maxVersion === TypeScriptVersion.latest) {
+        return [...TypeScriptVersion.shipped.slice(minIdx), TypeScriptVersion.latest];
+    }
+    const maxIdx = TypeScriptVersion.shipped.indexOf(maxVersion as TypeScriptVersion);
     assert(maxIdx >= minIdx);
-    return allReleased.slice(minIdx, maxIdx + 1);
+    return TypeScriptVersion.shipped.slice(minIdx, maxIdx + 1);
 }
 
-export type TsVersion = TypeScriptVersion | "next" | "local";
+export type TsVersion = TypeScriptVersion | "local";

@@ -1,4 +1,4 @@
-import { renderExpected, validate } from "definitelytyped-header-parser";
+import { renderExpected, validate } from "@definitelytyped/header-parser";
 import * as Lint from "tslint";
 import * as ts from "typescript";
 import { failure, isMainFile } from "../util";
@@ -30,6 +30,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
     if (!isMainFile(sourceFile.fileName, /*allowNested*/ true)) {
         lookFor("// Type definitions for", "Header should only be in `index.d.ts` of the root.");
         lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
+        lookFor("// Minimum TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
         return;
     }
 
