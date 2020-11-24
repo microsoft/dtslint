@@ -2,7 +2,7 @@ import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
 import { typeScriptPath } from "@definitelytyped/utils";
 import assert = require("assert");
 import { pathExists } from "fs-extra";
-import { join as joinPaths, normalize } from "path";
+import { basename, dirname, join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
 import * as TsType from "typescript";
 type Configuration = typeof Configuration;
@@ -80,7 +80,8 @@ function testDependencies(
 }
 
 export function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
-    return !startsWithDirectory(file.fileName, dirPath) || program.isSourceFileFromExternalLibrary(file);
+    return !startsWithDirectory(file.fileName, /^ts\d+\.\d$/.test(basename(dirPath)) ? dirname(dirPath) : dirPath) ||
+        program.isSourceFileFromExternalLibrary(file);
 }
 
 function normalizePath(file: string) {

@@ -11,6 +11,21 @@ branches:
 
 install:
   - npm install
+  - patch --directory node_modules/dts-critic --strip 1 <<'patchfile
+    --- a/dist/index.js
+    +++ b/dist/index.js
+    @@ -307,9 +307,7 @@ function downloadNpmPackage(name, version, outDir) {
+         const npmName = dtToNpmName(name);
+         const fullName = `${npmName}@${version}`;
+         const cpOpts = { encoding: "utf8", maxBuffer: 100 * 1024 * 1024 };
+    -    const npmPack = cp.execFileSync("npm", ["pack", fullName, "--json", "--silent"], cpOpts);
+    -    const npmPackOut = JSON.parse(npmPack)[0];
+    -    const tarballName = npmPackOut.filename;
+    +    const tarballName = cp.execFileSync("npm", ["pack", fullName, "--silent"], cpOpts).slice(0, -1);
+         const outPath = path.join(outDir, name);
+         initDir(outPath);
+         const args = os.platform() === "darwin"
+    patchfile
 
 git:
   depth: 1
