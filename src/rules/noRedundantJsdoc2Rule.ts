@@ -2,7 +2,7 @@
 
 import assert = require("assert");
 import * as Lint from "tslint";
-import { canHaveJsDoc, getJsDoc } from "tsutils"; // tslint:disable-line no-implicit-dependencies (from tslint)
+import { canHaveJsDoc, getJsDoc } from "tsutils";
 import * as ts from "typescript";
 
 export class Rule extends Lint.Rules.AbstractRule {
