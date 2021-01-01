@@ -53,7 +53,7 @@ async function main(): Promise<void> {
             case "--listen":
                 shouldListen = true;
                 break;
-            default:
+            default: {
                 if (arg.startsWith("--")) {
                     console.error(`Unknown option '${arg}'`);
                     usage();
@@ -66,6 +66,7 @@ async function main(): Promise<void> {
                     ? arg.substr(1).replace("/", "__")
                     : arg;
                 dirPath = joinPaths(dirPath, path);
+            }
         }
     }
     if (lookingForTsLocal) {
@@ -103,7 +104,7 @@ function usage(): void {
 function listen(dirPath: string, tsLocal: string | undefined, alwaysOnlyTestTsNext: boolean): void {
     // Don't await this here to ensure that messages sent during installation aren't dropped.
     const installationPromise = installTypeScriptAsNeeded(tsLocal, alwaysOnlyTestTsNext);
-    process.on("message", async (message: {}) => {
+    process.on("message", async (message: unknown) => {
         const { path, onlyTestTsNext, expectOnly } = message as { path: string, onlyTestTsNext: boolean, expectOnly?: boolean };
 
         await installationPromise;

@@ -22,7 +22,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
-    "lint": "tslint --project tsconfig.json --format stylish",
+    "lint": "eslint --ext ts src",
     "test": "npm run build && node test/test.js",
     "prepublishOnly": "npm run build && npm run test && npm run lint"
   },
@@ -47,6 +47,9 @@
     "@types/node": "12.0.x",
     "@types/strip-json-comments": "^0.0.28",
     "@types/yargs": "^15.0.3",
+    "@typescript-eslint/eslint-plugin": "^4.11.1",
+    "@typescript-eslint/parser": "^4.11.1",
+    "eslint": "^7.16.0",
     "typescript": "next"
   },
   "engines": {

@@ -216,7 +216,7 @@ function isVersionDir(dirName: string): boolean {
 
 type RuleOptions = boolean | unknown[];
 type RuleDisabler = (failures: IRuleFailureJson[]) => RuleOptions;
-const defaultDisabler: RuleDisabler = _ => {
+const defaultDisabler: RuleDisabler = () => {
     return false;
 };
 
