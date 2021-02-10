@@ -2,7 +2,7 @@ import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
 import { typeScriptPath } from "@definitelytyped/utils";
 import assert = require("assert");
 import { pathExists } from "fs-extra";
-import { basename, dirname, join as joinPaths, normalize } from "path";
+import { dirname, join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
 import * as TsType from "typescript";
 type Configuration = typeof Configuration;
@@ -83,13 +83,14 @@ function testDependencies(
     const cannotFindDepsDiags = diagnostics.find(d => d.code === 2307 && d.messageText.toString().includes("Cannot find module"));
     if (cannotFindDepsDiags && cannotFindDepsDiags.file) {
         const path = cannotFindDepsDiags.file.fileName;
-        const typesFolder = basename(dirname(path));
+        const typesFolder = dirname(path);
 
         return `
 A module look-up failed, this often occurs when you need to run \`npm install\` on a dependent module before you can lint.
 
 Before you debug, first try running:
-   npm install --prefix types/${typesFolder}
+
+   npm install --prefix ${typesFolder}
 
 Then re-run. Full error logs are below.
 
