@@ -2,3 +2,23 @@
 export const x: number;
 /** @see x */
 export const y: number;
+/** @author <Bjorn> look, nobody can remember the format for this thing */
+export const z: number;
+/** @private */
+     ~~~~~~~    [JSDoc tag '@private' is redundant in TypeScript code.]
+export const soHidden: number;
+/** @protected */
+     ~~~~~~~~~    [JSDoc tag '@protected' is redundant in TypeScript code.]
+export const muchSecurity: number;
+/** @readonly */
+     ~~~~~~~~    [JSDoc tag '@readonly' is redundant in TypeScript code.]
+export const wow: number;
+/** @implements {Glorfindel}
+     ~~~~~~~~~~    [JSDoc tag '@implements' is redundant in TypeScript code.]
+ * narrator: it doesn't.
+ */
+class Yubatyu {
+}
+
+
+

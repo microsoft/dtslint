@@ -64,6 +64,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
         switch (tag.kind) {
             case jsdocSeeTag:
             case jsdocDeprecatedTag:
+            case ts.SyntaxKind.JSDocAuthorTag:
                 // @deprecated and @see always have meaning
                 break;
             case ts.SyntaxKind.JSDocTag: {
@@ -83,11 +84,16 @@ function walk(ctx: Lint.WalkContext<void>): void {
                 }
                 // falls through
 
+            case ts.SyntaxKind.JSDocPublicTag:
+            case ts.SyntaxKind.JSDocPrivateTag:
+            case ts.SyntaxKind.JSDocProtectedTag:
             case ts.SyntaxKind.JSDocClassTag:
             case ts.SyntaxKind.JSDocTypeTag:
             case ts.SyntaxKind.JSDocTypedefTag:
+            case ts.SyntaxKind.JSDocReadonlyTag:
             case ts.SyntaxKind.JSDocPropertyTag:
             case ts.SyntaxKind.JSDocAugmentsTag:
+            case ts.SyntaxKind.JSDocImplementsTag:
             case ts.SyntaxKind.JSDocCallbackTag:
             case ts.SyntaxKind.JSDocThisTag:
             case ts.SyntaxKind.JSDocEnumTag:
@@ -225,7 +231,6 @@ const redundantTags = new Set([
     "exports",
     "function",
     "global",
-    "implements",
     "inherits",
     "interface",
     "instance",
@@ -239,11 +244,7 @@ const redundantTags = new Set([
     "name",
     "namespace",
     "override",
-    "private",
     "property",
-    "protected",
-    "public",
-    "readonly",
     "requires",
     "static",
     "this",
