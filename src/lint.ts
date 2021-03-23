@@ -39,11 +39,13 @@ export async function lint(
         if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
 
         const { fileName, text } = file;
-        const err = testNoTsIgnore(text) || testNoTslintDisables(text);
-        if (err) {
-            const { pos, message } = err;
-            const place = file.getLineAndCharacterOfPosition(pos);
-            return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
+        if (!fileName.includes("node_modules")) {
+            const err = testNoTsIgnore(text) || testNoTslintDisables(text);
+            if (err) {
+                const { pos, message } = err;
+                const place = file.getLineAndCharacterOfPosition(pos);
+                return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
+            }
         }
 
         // External dependencies should have been handled by `testDependencies`;
