@@ -19,7 +19,7 @@ export async function checkPackageJson(
         return;
     }
 
-    const pkgJson = await readJson(pkgJsonPath) as {};
+    const pkgJson = await readJson(pkgJsonPath) as Record<string, unknown>;
 
     if ((pkgJson as any).private !== true) {
         throw new Error(`${pkgJsonPath} should set \`"private": true\``);
@@ -136,7 +136,7 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
     }
 }
 
-function deepEquals(expected: {} | null | undefined, actual: {} | null | undefined): boolean {
+function deepEquals(expected: unknown, actual: unknown): boolean {
     if (expected instanceof Array) {
         return actual instanceof Array
             && actual.length === expected.length

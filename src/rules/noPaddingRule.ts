@@ -26,6 +26,11 @@ export class Rule extends Lint.Rules.AbstractRule {
 
 function walk(ctx: Lint.WalkContext<void>): void {
     const { sourceFile } = ctx;
+
+    function fail(kind: "before" | "after", child: ts.Node): void {
+        ctx.addFailureAtNode(child, Rule.FAILURE_STRING(kind, child.kind));
+    }
+
     sourceFile.forEachChild(function cb(node) {
         const children = node.getChildren();
         for (let i = 0; i < children.length; i++) {
@@ -35,7 +40,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
                 case ts.SyntaxKind.OpenBracketToken:
                 case ts.SyntaxKind.OpenBraceToken:
                     if (i < children.length - 1 && blankLineInBetween(child.getEnd(), children[i + 1].getStart())) {
-                        fail("after");
+                        fail("after", child);
                     }
                     break;
 
@@ -43,16 +48,12 @@ function walk(ctx: Lint.WalkContext<void>): void {
                 case ts.SyntaxKind.CloseBracketToken:
                 case ts.SyntaxKind.CloseBraceToken:
                     if (i > 0 && blankLineInBetween(child.getStart() - 1, children[i - 1].getEnd() - 1)) {
-                        fail("before");
+                        fail("before", child);
                     }
                     break;
 
                 default:
                     cb(child);
-            }
-
-            function fail(kind: "before" | "after"): void {
-                ctx.addFailureAtNode(child, Rule.FAILURE_STRING(kind, child.kind));
             }
         }
     });

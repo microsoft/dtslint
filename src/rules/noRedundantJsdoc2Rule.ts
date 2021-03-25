@@ -77,6 +77,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
                 break;
             }
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore (fallthrough)
             case ts.SyntaxKind.JSDocTemplateTag:
                 if (tag.comment !== "") {
@@ -158,13 +159,16 @@ function removeTag(tag: ts.JSDocTag, sourceFile: ts.SourceFile): Lint.Replacemen
     // For some tags, like `@name`, `end` will be before the start of the comment.
     // And `@typedef` doesn't end until the last `@property` tag attached to it ends.
     switch (tag.tagName.text) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore (fallthrough)
-        case "param":
+        case "param": {
             const { isBracketed, isNameFirst, typeExpression } = tag as ts.JSDocParameterTag;
             if (!isBracketed && !(isNameFirst && typeExpression !== undefined)) {
                 break;
             }
             // falls through
+        }
+        // eslint-disable-next-line no-fallthrough
         case "name":
         case "return":
         case "returns":

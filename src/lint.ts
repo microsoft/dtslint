@@ -135,6 +135,7 @@ function testNoTsIgnore(text: string): Err | undefined {
 function testNoTslintDisables(text: string): Err | undefined {
     const tslintDisable = "tslint:disable";
     let lastIndex = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         const pos = text.indexOf(tslintDisable, lastIndex);
         if (pos === -1) {

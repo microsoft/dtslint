@@ -36,6 +36,7 @@ function walk(ctx: Lint.WalkContext<void>): void {
     // Start search at the first statement. (`/// <reference>` before that is OK.)
     rgx.lastIndex = statements[0].getStart();
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         const match = rgx.exec(text);
         if (match === null) {

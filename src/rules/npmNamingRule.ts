@@ -161,8 +161,7 @@ function toCriticOptions(options: ConfigOptions): Options {
         case Mode.NameOnly:
             return options;
         case Mode.Code:
-            const errors = new Map(options.errors);
-            return { ...options, errors };
+            return { ...options, errors: new Map(options.errors) };
     }
 }
 
