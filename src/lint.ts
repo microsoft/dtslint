@@ -2,7 +2,7 @@ import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
 import { typeScriptPath } from "@definitelytyped/utils";
 import assert = require("assert");
 import { pathExists } from "fs-extra";
-import { join as joinPaths, normalize } from "path";
+import { dirname, join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
 import * as TsType from "typescript";
 type Configuration = typeof Configuration;
@@ -39,11 +39,13 @@ export async function lint(
         if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
 
         const { fileName, text } = file;
-        const err = testNoTsIgnore(text) || testNoTslintDisables(text);
-        if (err) {
-            const { pos, message } = err;
-            const place = file.getLineAndCharacterOfPosition(pos);
-            return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
+        if (!fileName.includes("node_modules")) {
+            const err = testNoTsIgnore(text) || testNoTslintDisables(text);
+            if (err) {
+                const { pos, message } = err;
+                const place = file.getLineAndCharacterOfPosition(pos);
+                return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
+            }
         }
 
         // External dependencies should have been handled by `testDependencies`;
@@ -76,7 +78,28 @@ function testDependencies(
         getCurrentDirectory: () => dirPath,
         getNewLine: () => "\n",
     });
-    return `Errors in typescript@${version} for external dependencies:\n${showDiags}`;
+
+    const message = `Errors in typescript@${version} for external dependencies:\n${showDiags}`;
+
+    // Add an edge-case for someone needing to `npm install` in react when they first edit a DT module which depends on it - #226
+    const cannotFindDepsDiags = diagnostics.find(d => d.code === 2307 && d.messageText.toString().includes("Cannot find module"));
+    if (cannotFindDepsDiags && cannotFindDepsDiags.file) {
+        const path = cannotFindDepsDiags.file.fileName;
+        const typesFolder = dirname(path);
+
+        return `
+A module look-up failed, this often occurs when you need to run \`npm install\` on a dependent module before you can lint.
+
+Before you debug, first try running:
+
+   npm install --prefix ${typesFolder}
+
+Then re-run. Full error logs are below.
+
+${message}`;
+    } else {
+        return message;
+    }
 }
 
 export function isExternalDependency(file: TsType.SourceFile, dirPath: string, program: TsType.Program): boolean {
