@@ -1,0 +1,138 @@
+"npm-naming": {
+      "ruleArguments": [
+        {
+          "mode": "code",
+          "errors": [
+            [
+              "NeedsExportEquals",
+              false
+            ]
+          ]
+        }
+      ],
+      "ruleSeverity": "error"
+    }
+
+adjacent-overload-signatures:false 
+array-type:false 
+arrow-return-shorthand:false 
+await-promise:[true,"CancellablePromise"] 
+await-promise:false 
+ban-types:false 
+ban-types:true 
+callable-types:false 
+callable-types:true 
+class-name:true 
+comment-format:false 
+deprecation:true 
+dt-header:false 
+dt-header:true 
+eofline:false 
+export-just-namespace:false 
+file-name-casing:[true,"kebab-case"] 
+import-spacing:false 
+indent:[true,"spaces",4] 
+indent:[true,"spaces"] 
+interface-name:false 
+interface-over-type-literal:false 
+invalid-void:false 
+jsdoc-format:false 
+max-line-length:[false,140] 
+max-line-length:[true,100] 
+max-line-length:false 
+max-line-length:{"options":[180]} 
+member-access:false 
+new-parens:false 
+no-angle-bracket-type-assertion:true 
+no-any-union:false 
+no-any:true 
+no-boolean-literal-compare:false 
+no-conditional-assignment:false 
+no-consecutive-blank-lines:false 
+no-const-enum:false 
+no-construct:false 
+no-declare-current-package:false 
+no-duplicate-imports:[true,{"allow-namespace-imports":true}] 
+no-duplicate-imports:false 
+no-duplicate-variable:false 
+no-empty-interface:false 
+no-eval:false 
+no-floating-promises:true 
+no-for-in-array:false 
+no-inferrable-types:false 
+no-inferred-empty-object-type:true 
+no-internal-module:false 
+no-invalid-template-strings:false 
+no-irregular-whitespace:false 
+no-mergeable-namespace:false 
+no-misused-new:false 
+no-namespace:false 
+no-object-literal-type-assertion:false 
+no-outside-dependencies:false 
+no-padding:false 
+no-redundant-jsdoc-2:false 
+no-redundant-jsdoc:false 
+no-redundant-jsdoc:true 
+no-redundant-undefined:false 
+no-reference-import:false 
+no-return-await:false 
+no-self-import:false 
+no-shadowed-variable:true 
+no-single-declare-module:false 
+no-string-throw:false 
+no-trailing-whitespac 
+no-trailing-whitespace:false 
+no-unbound-method:true 
+no-unnecessary-callback-wrapper:false 
+no-unnecessary-class:false 
+no-unnecessary-generics:false 
+no-unnecessary-initializer:false 
+no-unnecessary-qualifier:false 
+no-unnecessary-type-assertion:false 
+no-useless-files:false 
+no-var-keyword:false 
+no-var-requires:false 
+no-void-expression:false 
+npm-naming:[true,{"errors":[["NeedsExportEquals",false]],"mode":"code"}] 
+npm-naming:[true,{"mode":"code","errors":[["NeedsExportEquals",false]]}] 
+npm-naming:[true,{"mode":"code","errors":[["NoDefaultExport",false]]}] 
+npm-naming:[true,{"mode":"name-only"}] 
+npm-naming:false 
+object-literal-key-quotes:false 
+object-literal-shorthand:false 
+one-line:false 
+one-variable-per-declaration:false 
+only-arrow-functions:false 
+prefer-conditional-expression:false 
+prefer-const:false 
+prefer-declare-function:false 
+prefer-for-of:false 
+prefer-function-over-method:true 
+prefer-method-signature:false 
+prefer-method-signature:true 
+prefer-object-spread:false 
+prefer-switch:false 
+prefer-template:false 
+quotemark:[true,"double","avoid-escape","avoid-template"] 
+quotemark:[true,"double","avoid-escape"] 
+quotemark:[true,"double"] 
+quotemark:[true,"single","avoid-escape"] 
+quotemark:[true,"single"] 
+radix:false 
+restrict-plus-operands:true 
+semicolon:false 
+space-before-function-paren:false 
+space-within-parens:false 
+strict-comparisons:false 
+strict-export-declare-modifiers:false 
+strict-type-predicates:true 
+trim-file:false 
+trim-file:falsee:false 
+triple-equals:false 
+typedef-whitespace:false 
+typedef:[true,"call-signature","arrow-call-signature","parameter","arrow-parameter","property-declaration","member-variable-declaration","object-destructuring","array-destructuring"] 
+unified-signatures:false 
+use-default-type-parameter:false 
+variable-name:[true,"check-format"] 
+void-return:false 
+whitespace:false 
