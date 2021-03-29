@@ -3,7 +3,8 @@ import { typeScriptPath } from "@definitelytyped/utils";
 import assert = require("assert");
 import { pathExists } from "fs-extra";
 import { dirname, join as joinPaths, normalize } from "path";
-import { Configuration, ILinterOptions, Linter } from "tslint";
+import { Configuration,  Linter } from "tslint";
+import { ESLint } from 'eslint'
 import * as TsType from "typescript";
 type Configuration = typeof Configuration;
 type IConfigurationFile = Configuration.IConfigurationFile;
@@ -16,10 +17,11 @@ export async function lint(
     dirPath: string,
     minVersion: TsVersion,
     maxVersion: TsVersion,
-    isLatest: boolean,
-    expectOnly: boolean,
+    _isLatest: boolean,
+    _expectOnly: boolean,
     tsLocal: string | undefined): Promise<string | undefined> {
     const tsconfigPath = joinPaths(dirPath, "tsconfig.json");
+    const tsconfig = require(tsconfigPath) as { files: string[] } // TODO: Assert this
     const lintProgram = Linter.createProgram(tsconfigPath);
 
     for (const version of [maxVersion, minVersion]) {
@@ -27,37 +29,42 @@ export async function lint(
         if (errors) { return errors; }
     }
 
-    const lintOptions: ILinterOptions = {
-        fix: false,
-        formatter: "stylish",
-    };
-    const linter = new Linter(lintOptions, lintProgram);
-    const configPath = expectOnly ? joinPaths(__dirname, "..", "dtslint-expect-only.json") : getConfigPath(dirPath);
-    const config = await getLintConfig(configPath, tsconfigPath, minVersion, maxVersion, tsLocal);
+    // const lintOptions: ILinterOptions = {
+    //     fix: false,
+    //     formatter: "stylish",
+    // };
+    // const linter = new Linter(lintOptions, lintProgram);
+    const eslint = new ESLint()
+    const results = await eslint.lintFiles(tsconfig.files.map(f => joinPaths(dirPath, f)))
+    const formatter = await eslint.loadFormatter("stylish")
+    return formatter.format(results)
+    
+    // const configPath = expectOnly ? joinPaths(__dirname, "..", "dtslint-expect-only.json") : getConfigPath(dirPath);
+    // const config = await getLintConfig(configPath, tsconfigPath, minVersion, maxVersion, tsLocal);
 
-    for (const file of lintProgram.getSourceFiles()) {
-        if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
+    // for (const file of lintProgram.getSourceFiles()) {
+    //     if (lintProgram.isSourceFileDefaultLibrary(file)) { continue; }
 
-        const { fileName, text } = file;
-        if (!fileName.includes("node_modules")) {
-            const err = testNoTsIgnore(text) || testNoTslintDisables(text);
-            if (err) {
-                const { pos, message } = err;
-                const place = file.getLineAndCharacterOfPosition(pos);
-                return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
-            }
-        }
+    //     const { fileName, text } = file;
+    //     if (!fileName.includes("node_modules")) {
+    //         const err = testNoTsIgnore(text) || testNoTslintDisables(text);
+    //         if (err) {
+    //             const { pos, message } = err;
+    //             const place = file.getLineAndCharacterOfPosition(pos);
+    //             return `At ${fileName}:${JSON.stringify(place)}: ${message}`;
+    //         }
+    //     }
 
-        // External dependencies should have been handled by `testDependencies`;
-        // typesVersions should be handled in a separate lint
-        if (!isExternalDependency(file, dirPath, lintProgram) &&
-            (!isLatest || !isTypesVersionPath(fileName, dirPath))) {
-            linter.lint(fileName, text, config);
-        }
-    }
+    //     // External dependencies should have been handled by `testDependencies`;
+    //     // typesVersions should be handled in a separate lint
+    //     if (!isExternalDependency(file, dirPath, lintProgram) &&
+    //         (!isLatest || !isTypesVersionPath(fileName, dirPath))) {
+    //         linter.lint(fileName, text, config);
+    //     }
+    // }
 
-    const result = linter.getResult();
-    return result.failures.length ? result.output : undefined;
+    // const result = linter.getResult();
+    // return result.failures.length ? result.output : undefined;
 }
 
 function testDependencies(
@@ -113,7 +120,7 @@ function normalizePath(file: string) {
         .replace(/^[a-z](?=:)/, c => c.toUpperCase());
 }
 
-function isTypesVersionPath(fileName: string, dirPath: string) {
+export function isTypesVersionPath(fileName: string, dirPath: string) {
     const normalFileName = normalizePath(fileName);
     const normalDirPath = normalizePath(dirPath);
     const subdirPath = withoutPrefix(normalFileName, normalDirPath);
@@ -127,12 +134,12 @@ function startsWithDirectory(filePath: string, dirPath: string): boolean {
 }
 
 interface Err { pos: number; message: string; }
-function testNoTsIgnore(text: string): Err | undefined {
+export function testNoTsIgnore(text: string): Err | undefined {
     const tsIgnore = "ts-ignore";
     const pos = text.indexOf(tsIgnore);
     return pos === -1 ? undefined : { pos, message: "'ts-ignore' is forbidden." };
 }
-function testNoTslintDisables(text: string): Err | undefined {
+export function testNoTslintDisables(text: string): Err | undefined {
     const tslintDisable = "tslint:disable";
     let lastIndex = 0;
     // eslint-disable-next-line no-constant-condition
@@ -177,7 +184,7 @@ function getConfigPath(dirPath: string): string {
     return joinPaths(dirPath, "tslint.json");
 }
 
-async function getLintConfig(
+export async function getLintConfig(
     expectedConfigPath: string,
     tsconfigPath: string,
     minVersion: TsVersion,

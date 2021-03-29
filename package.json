@@ -42,14 +42,21 @@
     "typescript": ">= 3.0.0-dev || >= 3.1.0-dev || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.7.0-dev || >= 3.8.0-dev || >= 3.9.0-dev || >= 4.0.0-dev"
   },
   "devDependencies": {
+    "@types/eslint": "^7.2.7",
     "@types/fs-extra": "^5.0.2",
     "@types/json-stable-stringify": "^1.0.32",
     "@types/node": "12.0.x",
     "@types/strip-json-comments": "^0.0.28",
     "@types/yargs": "^15.0.3",
     "@typescript-eslint/eslint-plugin": "^4.11.1",
-    "@typescript-eslint/parser": "^4.11.1",
-    "eslint": "^7.16.0",
+    "@typescript-eslint/eslint-plugin-tslint": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
+    "eslint": "^7.22.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsdoc": "^32.3.0",
+    "eslint-plugin-no-null": "^1.0.2",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint-plugin-unicorn": "^29.0.0",
     "typescript": "next"
   },
   "engines": {
