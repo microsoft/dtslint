@@ -46,6 +46,13 @@ function clear(array: any[]): void;
 
 ---
 
+`getMeAT<T>(): T`:
+If a type parameter does not appear in the types of any parameters, you don't really have a generic function, you just have a disguised type assertion.
+Prefer to use a real type assertion, e.g. `getMeAT() as number`.
+Example where a type parameter is acceptable: `function id<T>(value: T): T;`.
+Example where it is not acceptable: `function parseJson<T>(json: string): T;`.
+Exception: `new Map<string, number>()` is OK.
+
 **Bad**:
 
 ```ts
