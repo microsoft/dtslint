@@ -1,6 +1,6 @@
 {
   "name": "dtslint",
-  "version": "4.0.8",
+  "version": "4.0.9",
   "description": "Runs tests on TypeScript definition files",
   "files": [
     "bin",
@@ -44,7 +44,7 @@
   "devDependencies": {
     "@types/fs-extra": "^5.0.2",
     "@types/json-stable-stringify": "^1.0.32",
-    "@types/node": "12.0.x",
+    "@types/node": "14.0.x",
     "@types/strip-json-comments": "^0.0.28",
     "@types/yargs": "^15.0.3",
     "@typescript-eslint/eslint-plugin": "^4.11.1",
