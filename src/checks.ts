@@ -85,6 +85,7 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
                 case "noImplicitThis":
                 case "strict":
                 case "strictNullChecks":
+                case "noUncheckedIndexedAccess":
                 case "strictFunctionTypes":
                 case "esModuleInterop":
                 case "allowSyntheticDefaultImports":
