@@ -123,7 +123,7 @@ async function runTests(
     expectOnly: boolean,
     tsLocal: string | undefined,
 ): Promise<void> {
-    const isOlderVersion = /^v\d+$/.test(basename(dirPath));
+    const isOlderVersion = /^v(\d+)(\.(\d+))?$/.test(basename(dirPath));
 
     const indexText = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
     // If this *is* on DefinitelyTyped, types-publisher will fail if it can't parse the header.
