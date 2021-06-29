@@ -1,6 +1,6 @@
 {
   "rulesDirectory": ["../../bin/rules"],
   "rules": {
-    "no-redundant-undefined": true
+    "redundant-undefined": true
   }
 }

@@ -10,7 +10,7 @@
         "no-dead-reference": true,
         "no-import-default-of-export-equals": true,
         "no-padding": true,
-        "no-redundant-undefined": true,
+        "redundant-undefined": true,
         "no-relative-import-in-test": true,
         "strict-export-declare-modifiers": true,
         "no-any-union": true,
