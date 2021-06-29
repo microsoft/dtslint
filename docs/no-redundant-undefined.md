@@ -1,6 +1,7 @@
 # no-redundant-undefined
 
-Avoid explicitly specifying `undefined` as a type for a parameter or property which is already optional.
+Avoid explicitly specifying `undefined` as a type for a parameter which is already optional.
+Require explicitly specifying `undefined` as a type for a parameter which is already optional &mdash; this provides the correct semantics for people who have exactOptionalPropertyType: true.
 
 **Bad**:
 
@@ -18,7 +19,7 @@ function f(s?: string): void {}
 
 ```ts
 interface I {
-    s?: string | undefined;
+    s?: string;
 }
 ```
 
@@ -26,6 +27,6 @@ interface I {
 
 ```ts
 interface I {
-    s?: string;
+    s?: string | undefined;
 }
 ```

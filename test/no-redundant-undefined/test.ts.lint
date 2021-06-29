@@ -1,9 +1,13 @@
 function f(s?: string | undefined): void {}
-                        ~~~~~~~~~ [0 % ("Parameter")]
+                        ~~~~~~~~~ [0]
 
 interface I {
-    s?: string | undefined;
-                 ~~~~~~~~~ [0 % ("Property")]
+    ok?: string | undefined;
+    s?: string;
+    ~~~~~~~~~~~ [1]
+    almost?: number | string;
+    ~~~~~~~~~~~~~~~~~~~~~~~~~ [1]
 }
 
-[0]: %s is optional, so no need to specify `undefined` as a possible value. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-redundant-undefined.md
+[0]: Parameter is optional, so no need to include `undefined` in the type. See: https://github.com/Microsoft/dtslint/blob/master/docs/redundant-undefined.md
+[1]: Property is optional, so `undefined` must be included in the type. See: https://github.com/Microsoft/dtslint/blob/master/docs/redundant-undefined.md
