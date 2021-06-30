@@ -26,10 +26,11 @@ function walk(ctx: Lint.WalkContext<void>): void {
                 && p.type
                 && !typeContainsUndefined(p.type)) {
                 ctx.addFailureAtNode(
-                    node, 
+                    node,
                     failure(
                         Rule.metadata.ruleName,
-                        `Property is optional, so \`undefined\` must be included in the type.`));
+                        `Property is optional, so \`undefined\` must be included in the type.`),
+                    Lint.Replacement.appendText(p.type.getEnd(), " | undefined"));
             }
         }
         else if (node.kind === ts.SyntaxKind.UndefinedKeyword
