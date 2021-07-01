@@ -19,6 +19,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 }
 
 function walk(ctx: Lint.WalkContext<void>): void {
+    if (ctx.sourceFile.fileName.includes('node_modules')) return;
     ctx.sourceFile.forEachChild(function recur(node) {
         if ((node.kind === ts.SyntaxKind.PropertyDeclaration || node.kind === ts.SyntaxKind.PropertySignature)) {
             const p = node as ts.PropertyDeclaration
@@ -30,7 +31,9 @@ function walk(ctx: Lint.WalkContext<void>): void {
                     failure(
                         Rule.metadata.ruleName,
                         `Property is optional, so \`undefined\` must be included in the type.`),
-                    Lint.Replacement.appendText(p.type.getEnd(), " | undefined"));
+                    p.type.kind === ts.SyntaxKind.AnyKeyword ? []
+                    : p.type.kind === ts.SyntaxKind.FunctionType ? [Lint.Replacement.appendText(p.type.getStart(), "("), Lint.Replacement.appendText(p.type.end, ") | undefined")]
+                    : Lint.Replacement.appendText(p.type.end, " | undefined"));
             }
         }
         else if (node.kind === ts.SyntaxKind.UndefinedKeyword
