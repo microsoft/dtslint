@@ -1,9 +1,0 @@
-function f(s?: string | undefined): void {}
-                        ~~~~~~~~~ [0 % ("Parameter")]
-
-interface I {
-    s?: string | undefined;
-                 ~~~~~~~~~ [0 % ("Property")]
-}
-
-[0]: %s is optional, so no need to specify `undefined` as a possible value. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-redundant-undefined.md

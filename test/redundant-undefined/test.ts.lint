@@ -1,0 +1,10 @@
+function f(s?: string | undefined): void {}
+                        ~~~~~~~~~ [0]
+
+interface I {
+    ok?: string | undefined;
+    s?: string;
+    almost?: number | string;
+}
+
+[0]: Parameter is optional, so no need to include `undefined` in the type. See: https://github.com/Microsoft/dtslint/blob/master/docs/redundant-undefined.md
