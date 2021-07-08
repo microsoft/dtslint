@@ -4,10 +4,7 @@ function f(s?: string | undefined): void {}
 interface I {
     ok?: string | undefined;
     s?: string;
-    ~~~~~~~~~~~ [1]
     almost?: number | string;
-    ~~~~~~~~~~~~~~~~~~~~~~~~~ [1]
 }
 
 [0]: Parameter is optional, so no need to include `undefined` in the type. See: https://github.com/Microsoft/dtslint/blob/master/docs/redundant-undefined.md
-[1]: Property is optional, so `undefined` must be included in the type. See: https://github.com/Microsoft/dtslint/blob/master/docs/redundant-undefined.md

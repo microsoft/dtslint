@@ -21,22 +21,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 function walk(ctx: Lint.WalkContext<void>): void {
     if (ctx.sourceFile.fileName.includes('node_modules')) return;
     ctx.sourceFile.forEachChild(function recur(node) {
-        if ((node.kind === ts.SyntaxKind.PropertyDeclaration || node.kind === ts.SyntaxKind.PropertySignature)) {
-            const p = node as ts.PropertyDeclaration
-            if (p.questionToken
-                && p.type
-                && !typeContainsUndefined(p.type)) {
-                ctx.addFailureAtNode(
-                    node,
-                    failure(
-                        Rule.metadata.ruleName,
-                        `Property is optional, so \`undefined\` must be included in the type.`),
-                    p.type.kind === ts.SyntaxKind.AnyKeyword ? []
-                    : p.type.kind === ts.SyntaxKind.FunctionType ? [Lint.Replacement.appendText(p.type.getStart(), "("), Lint.Replacement.appendText(p.type.end, ") | undefined")]
-                    : Lint.Replacement.appendText(p.type.end, " | undefined"));
-            }
-        }
-        else if (node.kind === ts.SyntaxKind.UndefinedKeyword
+        if (node.kind === ts.SyntaxKind.UndefinedKeyword
             && ts.isUnionTypeNode(node.parent!)
             && isOptionalParameter(node.parent!.parent!)) {
             ctx.addFailureAtNode(
@@ -47,14 +32,6 @@ function walk(ctx: Lint.WalkContext<void>): void {
         }
         node.forEachChild(recur);
     });
-}
-
-function typeContainsUndefined(t: ts.TypeNode) {
-    if (ts.isUnionTypeNode(t)) {
-        return t.types.some(t => t.kind === ts.SyntaxKind.UndefinedKeyword)
-    }
-    else
-        return t.kind === ts.SyntaxKind.UndefinedKeyword
 }
 
 function isOptionalParameter(node: ts.Node): boolean {
