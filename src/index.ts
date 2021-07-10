@@ -123,7 +123,8 @@ async function runTests(
     expectOnly: boolean,
     tsLocal: string | undefined,
 ): Promise<void> {
-    const isOlderVersion = /^v\d+$/.test(basename(dirPath));
+    const parent = dirname(dirPath);
+    const isOlderVersion = basename(parent) !== "types" && /^v\d+(\.\d+)?$/.test(basename(dirPath));
 
     const indexText = await readFile(joinPaths(dirPath, "index.d.ts"), "utf-8");
     // If this *is* on DefinitelyTyped, types-publisher will fail if it can't parse the header.
@@ -220,13 +221,10 @@ async function testTypesVersion(
 }
 
 function assertPathIsInDefinitelyTyped(dirPath: string): void {
+    // A DefinitelyTyped package must be a child of a "types" directory,
+    // or be an older version and a grandchild of a "types" directory
     const parent = dirname(dirPath);
-    const types = /^v\d+(\.\d+)?$/.test(basename(dirPath)) ? dirname(parent) : parent;
-    // TODO: It's not clear whether this assertion makes sense, and it's broken on Azure Pipelines
-    // Re-enable it later if it makes sense.
-    // const dt = dirname(types);
-    // if (basename(dt) !== "DefinitelyTyped" || basename(types) !== "types") {
-    if (basename(types) !== "types") {
+    if (basename(parent) !== "types" && (basename(dirname(parent)) !== "types" || !/^v\d+(\.\d+)?$/.test(basename(dirPath)))) {
         throw new Error("Since this type definition includes a header (a comment starting with `// Type definitions for`), "
             + "assumed this was a DefinitelyTyped package.\n"
             + "But it is not in a `DefinitelyTyped/types/xxx` directory: "
