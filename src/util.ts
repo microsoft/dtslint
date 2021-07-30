@@ -100,7 +100,7 @@ export function isMainFile(fileName: string, allowNested: boolean) {
     let parent = dirname(fileName);
     // May be a directory for an older version, e.g. `v0`.
     // Note a types redirect `foo/ts3.1` should not have its own header.
-    if (allowNested && /^v\d+$/.test(basename(parent))) {
+    if (allowNested && /^v(0\.)?\d+$/.test(basename(parent))) {
         parent = dirname(parent);
     }
 
