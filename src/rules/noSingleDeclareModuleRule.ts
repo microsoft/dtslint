@@ -34,6 +34,11 @@ function walk(ctx: Lint.WalkContext<void>): void {
     let moduleDecl: ts.ModuleDeclaration | undefined;
     for (const statement of sourceFile.statements) {
         if (ts.isModuleDeclaration(statement) && ts.isStringLiteral(statement.name)) {
+            if (statement.name.text.indexOf('*') !== -1) {
+                // Ignore wildcard module declarations
+                return;
+            }
+
             if (moduleDecl === undefined) {
                 moduleDecl = statement;
             } else {
