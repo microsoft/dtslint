@@ -6,7 +6,7 @@ import { failure, getCommonDirectoryName } from "../util";
 export class Rule extends Lint.Rules.TypedRule {
     static metadata: Lint.IRuleMetadata = {
         ruleName: "no-declare-current-package",
-        description: "Don't use an ambient module declaration of the current package; use an external module.",
+        description: "Don't use an ambient module declaration of the current package; use a normal module.",
         optionsDescription: "Not configurable.",
         options: null,
         type: "functionality",
