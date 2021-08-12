@@ -1,5 +1,5 @@
 declare module "foo" {}
-~~~~~~~~~~~~~~~~~~~~~~~  [File has only 1 module declaration — write it as an external module. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-single-declare-module.md]
+~~~~~~~~~~~~~~~~~~~~~~~  [File has only 1 ambient module declaration. Move the contents outside the ambient module block, rename the file to match the ambient module name, and remove the block. See: https://github.com/Microsoft/dtslint/blob/master/docs/no-single-declare-module.md]
 
 // Other global declarations don't affect this. They should go in "declare global".
 interface I {}

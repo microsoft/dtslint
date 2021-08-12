@@ -6,7 +6,7 @@ import { failure } from "../util";
 export class Rule extends Lint.Rules.AbstractRule {
     static metadata: Lint.IRuleMetadata = {
         ruleName: "no-single-declare-module",
-        description: "Don't use an ambient module declaration if you can use an external module file.",
+        description: "Don't use an ambient module declaration if there's just one -- write it as a normal module.",
         rationale: "Cuts down on nesting",
         optionsDescription: "Not configurable.",
         options: null,
@@ -16,7 +16,7 @@ export class Rule extends Lint.Rules.AbstractRule {
 
     static FAILURE_STRING = failure(
         Rule.metadata.ruleName,
-        "File has only 1 module declaration — write it as an external module.");
+        "File has only 1 ambient module declaration. Move the contents outside the ambient module block, rename the file to match the ambient module name, and remove the block.");
 
     apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
         return this.applyWithFunction(sourceFile, walk);
