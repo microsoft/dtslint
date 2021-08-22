@@ -34,6 +34,9 @@ function walk(ctx: Lint.WalkContext<void>): void {
         return;
     }
 
+    lookFor(
+        "// Project: https://github.com/baz/foo",
+        "Project should be a link to the project's source code repository, not the default.");
     lookFor("// Definitions by: My Self", "Author name should be your name, not the default.");
     const error = validate(text);
     if (error) {
