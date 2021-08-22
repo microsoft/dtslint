@@ -123,7 +123,13 @@ export async function checkTsconfig(dirPath: string, dt: DefinitelyTypedInfo | u
             }
         }
     } else {
-        for (const key of ["noImplicitAny", "noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
+        for (const key of ["noImplicitAny"]) {
+            if (!options[key]) {
+                throw new Error(`Expected \`"${key}": true\`.`);
+            }
+        }
+
+        for (const key of ["noImplicitThis", "strictNullChecks", "strictFunctionTypes"]) {
             if (!(key in options)) {
                 throw new Error(`Expected \`"${key}": true\` or \`"${key}": false\`.`);
             }
