@@ -1,3 +1,4 @@
+import * as path from "path";
 import * as Lint from "tslint";
 import * as ts from "typescript";
 
@@ -29,7 +30,8 @@ function walk(ctx: Lint.WalkContext<void>): void {
     const { sourceFile } = ctx;
     for (const ref of sourceFile.referencedFiles) {
         if (sourceFile.isDeclarationFile) {
-            if (ref.fileName.startsWith("..")) {
+            const dirPath = path.dirname(sourceFile.fileName);
+            if (path.normalize(ref.fileName).startsWith(/^ts\d+\.\d$/.test(path.basename(dirPath)) ? "../.." : "..")) {
                 ctx.addFailure(ref.pos, ref.end, Rule.FAILURE_STRING);
             }
         } else {
