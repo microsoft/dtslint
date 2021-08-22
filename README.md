@@ -1,5 +1,5 @@
 `dtslint` tests a TypeScript declaration file for style and correctness.
-It will install `typescript` and `tslint` for you, so this is the only tool you need to test a type definition.
+It will install `typescript` and `eslint` for you, so this is the only tool you need to test a type definition.
 
 Lint rules new to dtslint are documented in the [docs](docs) directory.
 
@@ -16,7 +16,6 @@ Use [`--declaration`](http://www.typescriptlang.org/docs/handbook/compiler-optio
 
 If you are a library author, read below.
 
-
 ## Add types for a library (not on DefinitelyTyped)
 
 [`dts-gen`](https://github.com/Microsoft/dts-gen#readme) may help, but is not required.
@@ -25,13 +24,11 @@ Create a `types` directory. (Name is arbitrary.)
 Add `"types": "types"` to your `package.json`.
 Read more on bundling types [here](http://www.typescriptlang.org/docs/handbook/declaration-files/publishing.html).
 
-
 #### `types/index.d.ts`
 
 Only `index.d.ts` needs to be published to NPM. Other files are just for testing.
 Write your type definitions here.
 Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html) or `dts-gen`'s templates for how to do this.
-
 
 #### `types/tsconfig.json`
 
@@ -57,30 +54,25 @@ Refer to the [handbook](http://www.typescriptlang.org/docs/handbook/declaration-
 You may extend `"lib"` to, for example, `["es6", "dom"]` if you need those typings.
 You may also have to add `"target": "es6"` if using certain language features.
 
-
-#### `types/tslint.json`
+#### `types/eslintrc.json`
 
 If you are using the default rules, this is optional.
 
 If present, this will override `dtslint`'s [default](https://github.com/Microsoft/dtslint/blob/master/dtslint.json) settings.
-You can specify new lint [rules](https://palantir.github.io/tslint/rules/), or disable some. An example:
+You can specify new lint [configuration](https://eslint.org/docs/user-guide/configuring), or disable some. An example:
 
 ```json5
 {
-    "extends": "dtslint/dtslint.json", // Or "dtslint/dt.json" if on DefinitelyTyped
+    "extends": "dtslint/dtslint.json",
     "rules": {
-        "semicolon": false,
-        "indent": [true, "tabs"]
+        "@typescript-eslint/no-floating-promises": false
     }
 }
 ```
 
-
 #### `types/test.ts`
 
 You can have any number of test files you want, with any names. See below on what to put in them.
-
-
 
 ## Write tests
 
@@ -102,7 +94,6 @@ f(2); // $ExpectType void
 f("one");
 ```
 
-
 ## Specify a TypeScript version
 
 Normally packages will be tested using TypeScript 2.0.
@@ -114,7 +105,6 @@ To use a newer version, specify it by including a comment like so:
 
 For DefinitelyTyped packages, this should go just under the header (on line 5).
 For bundled typings, this can go on any line (but should be near the top).
-
 
 ## Run tests
 
@@ -131,14 +121,6 @@ Use your locally installed version of TypeScript.
 ```sh
 dtslint --localTs node_modules/typescript/lib types
 ```
-- `--expectOnly`
-
-Disable all the lint rules except the one that checks for type correctness.
-
-```sh
-dtslint --expectOnly types
-```
-
 
 # Contributing
 
@@ -152,7 +134,6 @@ npm run watch
 ## Test
 
 Use `npm run test` to run all tests.
-To run a single test: `node node_modules/tslint/bin/tslint --rules-dir bin/rules --test test/expect`.
 
 ## Publish
 
@@ -164,8 +145,11 @@ To run a single test: `node node_modules/tslint/bin/tslint --rules-dir bin/rules
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 ## FAQ
+
 I'm getting an error about a missing typescript install.
+
 ```
 Error: Cannot find module '/node_modules/dtslint/typescript-installs/3.1/node_modules/typescript`
 ```
+
 Package lock files such as `yarn.lock` and `package-lock.json` may cause this issue because of our github dependency on `"definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production"`, which contains the list of typescript versions to install. To fix this, try deleting your lock file and re-installing.
