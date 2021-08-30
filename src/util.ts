@@ -1,13 +1,6 @@
 import assert = require("assert");
-import { pathExists, readFile } from "fs-extra";
-import { basename, dirname, join } from "path";
-import stripJsonComments = require("strip-json-comments");
+import { basename, dirname } from "path";
 import * as ts from "typescript";
-
-export async function readJson(path: string) {
-    const text = await readFile(path, "utf-8");
-    return JSON.parse(stripJsonComments(text));
-}
 
 export function failure(ruleName: string, s: string): string {
     return `${s} See: https://github.com/Microsoft/dtslint/blob/master/docs/${ruleName}.md`;
@@ -51,14 +44,6 @@ export function getModuleDeclarationStatements(node: ts.ModuleDeclaration): Read
         body = body.body;
     }
     return body && ts.isModuleBlock(body) ? body.statements : undefined;
-}
-
-export async function getCompilerOptions(dirPath: string): Promise<ts.CompilerOptions> {
-    const tsconfigPath = join(dirPath, "tsconfig.json");
-    if (!await pathExists(tsconfigPath)) {
-        throw new Error(`Need a 'tsconfig.json' file in ${dirPath}`);
-    }
-    return (await readJson(tsconfigPath)).compilerOptions;
 }
 
 export function withoutPrefix(s: string, prefix: string): string | undefined {
