@@ -1,32 +1,27 @@
-import * as Lint from "tslint";
-import * as ts from "typescript";
+import {Rule} from 'eslint';
+import * as ESTree from 'estree';
+import {TSESTree} from '@typescript-eslint/experimental-utils';
 
-import { failure } from "../util";
-
-export class Rule extends Lint.Rules.AbstractRule {
-    static metadata: Lint.IRuleMetadata = {
-        ruleName: "no-any-union",
-        description: "Forbid a union to contain `any`",
-        optionsDescription: "Not configurable.",
-        options: null,
-        type: "functionality",
-        typescriptOnly: true,
-    };
-
-    static FAILURE_STRING = failure(
-        Rule.metadata.ruleName,
-        "Including `any` in a union will override all other members of the union.");
-
-    apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk);
+export const rule: Rule.RuleModule = {
+  meta: {
+    docs: {
+      description: 'Forbid a union to contain `any`',
+      category: 'Functionality'
+    },
+    messages: {
+      noAny: 'Including `any` in a union will override all other members of the union.'
     }
-}
+  },
 
-function walk(ctx: Lint.WalkContext<void>): void {
-    ctx.sourceFile.forEachChild(function recur(node) {
-        if (node.kind === ts.SyntaxKind.AnyKeyword && ts.isUnionTypeNode(node.parent!)) {
-            ctx.addFailureAtNode(node, Rule.FAILURE_STRING);
-        }
-        node.forEachChild(recur);
-    });
-}
+  create(context): Rule.RuleListener {
+    return {
+      'TSUnionType > TSAnyKeyword': (node: ESTree.Node): void => {
+        const tsNode = node as unknown as TSESTree.TSAnyKeyword;
+        context.report({
+          node,
+          messageId: 'noAny'
+        });
+      }
+    };
+  }
+};

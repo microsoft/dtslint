@@ -1,40 +1,34 @@
-import * as Lint from "tslint";
-import * as ts from "typescript";
+import {Rule} from 'eslint';
+import * as ESTree from 'estree';
+import {TSESTree} from '@typescript-eslint/experimental-utils';
 
-import { failure } from "../util";
+const selector = 'TSPropertySignature[optional] TSUnionType > TSUndefinedKeyword,' +
+  'ClassProperty[optional] TSUnionType > TSUndefinedKeyword';
 
-export class Rule extends Lint.Rules.AbstractRule {
-    static metadata: Lint.IRuleMetadata = {
-        ruleName: "redundant-undefined",
-        description: "Forbids optional parameters to include an explicit `undefined` in their type; requires it in optional properties.",
-        optionsDescription: "Not configurable.",
-        options: null,
-        type: "style",
-        typescriptOnly: true,
-    };
-
-    apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk);
+export const rule: Rule.RuleModule = {
+  meta: {
+    docs: {
+      description: 'Forbids optional parameters to include an explicit `undefined` in their type; requires it in optional properties.',
+      category: 'Style'
+    },
+    messages: {
+      noUndefined: 'Parameter is optional, so no need to include `undefined` in the type.'
     }
-}
+  },
 
-function walk(ctx: Lint.WalkContext<void>): void {
-    if (ctx.sourceFile.fileName.includes('node_modules')) return;
-    ctx.sourceFile.forEachChild(function recur(node) {
-        if (node.kind === ts.SyntaxKind.UndefinedKeyword
-            && ts.isUnionTypeNode(node.parent!)
-            && isOptionalParameter(node.parent!.parent!)) {
-            ctx.addFailureAtNode(
-                node,
-                failure(
-                    Rule.metadata.ruleName,
-                    `Parameter is optional, so no need to include \`undefined\` in the type.`));
-        }
-        node.forEachChild(recur);
-    });
-}
+  create(context): Rule.RuleListener {
+    if (context.getFilename().includes('node_modules')) {
+      return {};
+    }
+    return {
+      [selector]: (node: ESTree.Node): void => {
+        const tsNode = node as unknown as TSESTree.TSUndefinedKeyword;
 
-function isOptionalParameter(node: ts.Node): boolean {
-    return node.kind === ts.SyntaxKind.Parameter
-        && (node as ts.ParameterDeclaration).questionToken !== undefined;
-}
+        context.report({
+          node,
+          messageId: 'noUndefined'
+        });
+      }
+    };
+  }
+};

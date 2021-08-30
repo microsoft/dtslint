@@ -1,39 +1,52 @@
-import * as Lint from "tslint";
-import * as ts from "typescript";
+import {Rule} from 'eslint';
+import * as ESTree from 'estree';
+import {TSESTree} from '@typescript-eslint/experimental-utils';
 
-import { failure } from "../util";
+const referencePattern = /^\/\s*<reference\s*path=(?:"([^"]*)"|'([^']*)')/;
 
-export class Rule extends Lint.Rules.AbstractRule {
-    static metadata: Lint.IRuleMetadata = {
-        ruleName: "no-bad-reference",
-        description: 'Forbid <reference path="../etc"/> in any file, and forbid <reference path> in test files.',
-        optionsDescription: "Not configurable.",
-        options: null,
-        type: "functionality",
-        typescriptOnly: true,
-    };
-
-    static FAILURE_STRING = failure(
-        Rule.metadata.ruleName,
-        "Don't use <reference path> to reference another package. Use an import or <reference types> instead.");
-    static FAILURE_STRING_REFERENCE_IN_TEST = failure(
-        Rule.metadata.ruleName,
-        "Don't use <reference path> in test files. Use <reference types> or include the file in 'tsconfig.json'.");
-
-    apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk);
+export const rule: Rule.RuleModule = {
+  meta: {
+    docs: {
+      description: 'Forbid <reference path="../etc"/> in any file, and forbid <reference path> in test files.',
+      category: 'Functionality'
+    },
+    messages: {
+      noRef: 'Don\'t use <reference path> to reference another package. Use an import or <reference types> instead.',
+      noRefInTests: 'Don\'t use <reference path> in test files. Use <reference types> or include the file in \'tsconfig.json\'.'
     }
-}
+  },
 
-function walk(ctx: Lint.WalkContext<void>): void {
-    const { sourceFile } = ctx;
-    for (const ref of sourceFile.referencedFiles) {
-        if (sourceFile.isDeclarationFile) {
-            if (ref.fileName.startsWith("..")) {
-                ctx.addFailure(ref.pos, ref.end, Rule.FAILURE_STRING);
+  create(context): Rule.RuleListener {
+    const source = context.getSourceCode();
+
+    return {
+      Program: (node: ESTree.Program): void => {
+        const comments = source.getCommentsBefore(node);
+        
+        for (const comment of comments) {
+          if (comment.type === 'Line') {
+            const matches = referencePattern.exec(comment.value);
+            // TODO (43081j): get this from somewhere...
+            const isDeclarationFile = true;
+
+            if (matches) {
+              if (isDeclarationFile) {
+                if ((matches[1] || matches[2]).startsWith('..')) {
+                  context.report({
+                    node: comment as unknown as ESTree.Node,
+                    messageId: 'noRef'
+                  });
+                }
+              } else {
+                context.report({
+                  node: comment as unknown as ESTree.Node,
+                  messageId: 'noRefInTests'
+                });
+              }
             }
-        } else {
-            ctx.addFailure(ref.pos, ref.end, Rule.FAILURE_STRING_REFERENCE_IN_TEST);
+          }
         }
-    }
-}
+      }
+    };
+  }
+};
