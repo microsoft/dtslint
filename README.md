@@ -170,4 +170,8 @@ I'm getting an error about a missing typescript install.
 ```
 Error: Cannot find module '/node_modules/dtslint/typescript-installs/3.1/node_modules/typescript`
 ```
-Package lock files such as `yarn.lock` and `package-lock.json` may cause this issue because of our github dependency on `"definitelytyped-header-parser": "github:Microsoft/definitelytyped-header-parser#production"`, which contains the list of typescript versions to install. To fix this, try deleting your lock file and re-installing.
+Your dependencies may be out of date.
+[@definitelytyped/typescript-versions](https://github.com/microsoft/DefinitelyTyped-tools/tree/master/packages/typescript-versions) is the package that contains the list of TypeScript versions to install.
+
+Alternatively this error can be caused by concurrent dtslint invocations trampling each other's TypeScript installations, especially in the context of continuous integration, if dtslint is installed from scratch in each run.
+If for example you use [Lerna](https://github.com/lerna/lerna/tree/main/commands/run#readme), try running dtslint with [`lerna --concurrency 1 run ...`](https://github.com/lerna/lerna/tree/main/core/global-options#--concurrency).
