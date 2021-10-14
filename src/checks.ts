@@ -37,6 +37,9 @@ export async function checkPackageJson(
             case "private":
             case "dependencies":
             case "license":
+            case "imports":
+            case "exports":
+            case "type":
                 // "private"/"typesVersions"/"types" checked above, "dependencies" / "license" checked by types-publisher,
                 break;
             case "typesVersions":
