@@ -239,6 +239,7 @@ function assertPathIsNotBanned(dirPath: string) {
     if (/(^|\W)download($|\W)/.test(basedir) &&
         basedir !== "download" &&
         basedir !== "downloadjs" &&
+        basedir !== "download-git-repo" &&
         basedir !== "s3-download-stream") {
         // Since npm won't release their banned-words list, we'll have to manually add to this list.
         throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
