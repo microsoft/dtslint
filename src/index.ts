@@ -237,9 +237,13 @@ function assertPathIsInDefinitelyTyped(dirPath: string): void {
 function assertPathIsNotBanned(dirPath: string) {
     const basedir = basename(dirPath);
     if (/(^|\W)download($|\W)/.test(basedir) &&
-        basedir !== "download" &&
-        basedir !== "downloadjs" &&
-        basedir !== "s3-download-stream") {
+        ![
+            "download-git-repo",
+            "download-package-tarball",
+            "download",
+            "downloadjs",
+            "s3-download-stream",
+        ].includes(basedir)) {
         // Since npm won't release their banned-words list, we'll have to manually add to this list.
         throw new Error(`${dirPath}: Contains the word 'download', which is banned by npm.`);
     }
