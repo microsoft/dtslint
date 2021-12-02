@@ -1,3 +1,9 @@
+This repo has moved: dtslint is now part of DefinitelyTyped-tools.
+
+It is not intended to be used on its own, but as part of the `@definitelytyped` set of packages.
+The source code has moved to https://github.com/microsoft/DefinitelyTyped-tools
+The new package name is `@definitelytyped/dtslint`.
+
 `dtslint` tests a TypeScript declaration file for style and correctness.
 It will install `typescript` and `tslint` for you, so this is the only tool you need to test a type definition.
 
