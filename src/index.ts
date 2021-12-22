@@ -234,6 +234,15 @@ function assertPathIsInDefinitelyTyped(dirPath: string): void {
     }
 }
 
+/**
+ * Starting at some point in time, npm has banned all new packages whose names
+ * contain the word `download`. However, some older packages exist that still
+ * contain this name.
+ * @NOTE for contributors: The list below list should ONLY be extended with
+ * packages for which there already exists a corresponding type definition
+ * package in the `@types` scope. More information:
+ * https://github.com/microsoft/dtslint/pull/351.
+ */
 function assertPathIsNotBanned(dirPath: string) {
     const basedir = basename(dirPath);
     if (/(^|\W)download($|\W)/.test(basedir) &&
