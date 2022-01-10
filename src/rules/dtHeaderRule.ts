@@ -1,4 +1,7 @@
 import { renderExpected, validate } from "@definitelytyped/header-parser";
+import * as cp from "child_process";
+import { dtToNpmName, findDtsName } from "dts-critic";
+import { readFileSync } from "fs";
 import * as Lint from "tslint";
 import * as ts from "typescript";
 import { failure, isMainFile } from "../util";
@@ -32,6 +35,20 @@ function walk(ctx: Lint.WalkContext<void>): void {
         lookFor("// TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
         lookFor("// Minimum TypeScript Version", "TypeScript version should be specified under header in `index.d.ts`.");
         return;
+    }
+
+    let message = "This link seems to be broken. There was an error trying to visit it.";
+    const name = findDtsName(sourceFile.fileName);
+    const npmName = dtToNpmName(name);
+    const { stdout } = cp.spawnSync("npm", ["view", npmName, "homepage"], { encoding: "utf8" });
+    const [homepage] = stdout.split(/\r?\n/, 1);
+    if (homepage) {
+        message += ` Did you mean ${homepage}?`;
+    }
+    for (const brokenLink of readFileSync("broken-links.txt", "utf8").split(/\r?\n/)) {
+        if (brokenLink) {
+            lookFor(brokenLink, message);
+        }
     }
 
     lookFor("// Definitions by: My Self", "Author name should be your name, not the default.");
