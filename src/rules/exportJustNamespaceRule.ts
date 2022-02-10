@@ -1,96 +1,73 @@
-import * as Lint from "tslint";
-import * as ts from "typescript";
+import {Rule} from 'eslint';
+import * as ESTree from 'estree';
+import {TSESTree} from '@typescript-eslint/experimental-utils';
 
-import { failure } from "../util";
+type DeclarationLike =
+  | ESTree.FunctionDeclaration
+  | ESTree.ClassDeclaration
+  | TSESTree.TSTypeAliasDeclaration
+  | TSESTree.TSInterfaceDeclaration
+  | TSESTree.TSDeclareFunction;
+const declarationSelector = [
+  'FunctionDeclaration',
+  'ClassDeclaration',
+  'TSTypeAliasDeclaration',
+  'TSInterfaceDeclaration',
+  'TSDeclareFunction'
+].join(',');
 
-export class Rule extends Lint.Rules.AbstractRule {
-    static metadata: Lint.IRuleMetadata = {
-        ruleName: "export-just-namespace",
-        description:
-            "Forbid to `export = foo` where `foo` is a namespace and isn't merged with a function/class/type/interface.",
-        optionsDescription: "Not configurable.",
-        options: null,
-        type: "functionality",
-        typescriptOnly: true,
-    };
-
-    static FAILURE_STRING = failure(
-        Rule.metadata.ruleName,
-        "Instead of `export =`-ing a namespace, use the body of the namespace as the module body.");
-
-    apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        return this.applyWithFunction(sourceFile, walk);
+export const rule: Rule.RuleModule = {
+  meta: {
+    docs: {
+      description: 'Forbid to `export = foo` where `foo` is a namespace and isn\'t merged with a function/class/type/interface.',
+      category: 'Functionality'
+    },
+    messages: {
+      exportNamespace: 'Instead of `export =`-ing a namespace, use the body of the namespace as the module body.'
     }
-}
+  },
 
-function walk(ctx: Lint.WalkContext<void>): void {
-    const { sourceFile: { statements } } = ctx;
-    const exportEqualsNode = statements.find(isExportEquals) as ts.ExportAssignment | undefined;
-    if (!exportEqualsNode) {
-        return;
-    }
-    const expr = exportEqualsNode.expression;
-    if (!ts.isIdentifier(expr)) {
-        return;
-    }
-    const exportEqualsName = expr.text;
+  create(context): Rule.RuleListener {
+    const exportNodes = new Set<TSESTree.TSExportAssignment>();
+    const namespaces = new Set<string>();
+    const variables = new Set<string>();
 
-    if (exportEqualsName && isJustNamespace(statements, exportEqualsName)) {
-        ctx.addFailureAtNode(exportEqualsNode, Rule.FAILURE_STRING);
-    }
-}
-
-function isExportEquals(node: ts.Node): boolean {
-    return ts.isExportAssignment(node) && !!node.isExportEquals;
-}
-
-/** Returns true if there is a namespace but there are no functions/classes with the name. */
-function isJustNamespace(statements: ReadonlyArray<ts.Statement>, exportEqualsName: string): boolean {
-    let anyNamespace = false;
-
-    for (const statement of statements) {
-        switch (statement.kind) {
-            case ts.SyntaxKind.ModuleDeclaration:
-                anyNamespace = anyNamespace || nameMatches((statement as ts.ModuleDeclaration).name);
-                break;
-            case ts.SyntaxKind.VariableStatement:
-                if ((statement as ts.VariableStatement).declarationList.declarations.some(d => nameMatches(d.name))) {
-                    // OK. It's merged with a variable.
-                    return false;
-                }
-                break;
-            case ts.SyntaxKind.FunctionDeclaration:
-            case ts.SyntaxKind.ClassDeclaration:
-            case ts.SyntaxKind.TypeAliasDeclaration:
-            case ts.SyntaxKind.InterfaceDeclaration:
-                if (nameMatches((statement as ts.DeclarationStatement).name)) {
-                    // OK. It's merged with a function/class/type/interface.
-                    return false;
-                }
-                break;
-            default:
+    return {
+      TSExportAssignment: (node: ESTree.Node): void => {
+        const tsNode = node as unknown as TSESTree.TSExportAssignment;
+        exportNodes.add(tsNode);
+      },
+      TSModuleDeclaration: (node: ESTree.Node): void => {
+        const tsNode = node as unknown as TSESTree.TSModuleDeclaration;
+        if (tsNode.id.type === 'Identifier') {
+          namespaces.add(tsNode.id.name);
         }
-    }
-
-    return anyNamespace;
-
-    function nameMatches(nameNode: ts.Node | undefined): boolean {
-        return nameNode !== undefined && ts.isIdentifier(nameNode) && nameNode.text === exportEqualsName;
-    }
-}
-
-/*
-Tests:
-
-OK:
-    export = foo;
-    declare namespace foo {}
-    declare function foo(): void; // or interface, type, class
-
-Error:
-    export = foo;
-    declare namespace foo {}
-
-OK: (it's assumed to come from elsewhere)
-    export = foo;
-*/
+      },
+      VariableDeclaration: (node: ESTree.VariableDeclaration): void => {
+        for (const decl of node.declarations) {
+          if (decl.id.type === 'Identifier') {
+            variables.add(decl.id.name);
+          }
+        }
+      },
+      [declarationSelector]: (node: ESTree.Node): void => {
+        const tsNode = node as unknown as DeclarationLike;
+        if (tsNode.id.type === 'Identifier') {
+          variables.add(tsNode.id.name);
+        }
+      },
+      'Program:exit': (node: ESTree.Program): void => {
+        for (const exportNode of exportNodes) {
+          if (exportNode.expression.type === 'Identifier' &&
+            namespaces.has(exportNode.expression.name) &&
+            !variables.has(exportNode.expression.name)) {
+            context.report({
+              node: exportNode,
+              messageId: 'exportNamespace'
+            });
+          }
+        }
+      }
+    };
+  }
+};
