@@ -1,6 +1,7 @@
 import { TypeScriptVersion } from "@definitelytyped/typescript-versions";
 import { typeScriptPath } from "@definitelytyped/utils";
 import assert = require("assert");
+import * as fs from "fs";
 import { pathExists } from "fs-extra";
 import { dirname, join as joinPaths, normalize } from "path";
 import { Configuration, ILinterOptions, Linter } from "tslint";
@@ -25,6 +26,28 @@ export async function lint(
     for (const version of [maxVersion, minVersion]) {
         const errors = testDependencies(version, dirPath, lintProgram, tsLocal);
         if (errors) { return errors; }
+    }
+
+    {
+        const { config } = TsType.readConfigFile(tsconfigPath, TsType.sys.readFile);
+        const parseConfigHost: TsType.ParseConfigHost = {
+            fileExists: fs.existsSync,
+            readDirectory: TsType.sys.readDirectory,
+            readFile: file => fs.readFileSync(file, "utf8"),
+            useCaseSensitiveFileNames: true,
+        };
+        const projectDirectory = dirname(tsconfigPath);
+        const parsed = TsType.parseJsonConfigFileContent(config, parseConfigHost, projectDirectory, { noEmit: true });
+        const program = TsType.createProgram(parsed.fileNames.filter(fileName => fileName.endsWith(".d.ts")), parsed.options);
+        const diagnostics = TsType.getPreEmitDiagnostics(program);
+        if (diagnostics.length) {
+            const showDiags = TsType.formatDiagnostics(diagnostics, {
+                getCanonicalFileName: f => f,
+                getCurrentDirectory: () => dirPath,
+                getNewLine: () => "\n",
+            });
+            return showDiags;
+        }
     }
 
     const lintOptions: ILinterOptions = {
