@@ -1,7 +1,7 @@
 
 // $ExpectType xxx
 
-~nil [TypeScript@next: Can not match a node to this assertion.]
+~nil [TypeScript@next: Can not match a node to this assertion. If this is a multiline function call, ensure the assertion is on the line above.]
 
 // $ExpectType number[]
 [1, 2];
@@ -21,6 +21,15 @@ declare function f(
 
 // Test that we never truncate types.
 f; // $ExpectType (one: number, two: [number, number], three: [number, number, number], four: [number, number, number, number]) => number
+
+// Test assertion at the end of a multiline function call
+f(
+    1,
+    [2, 2],
+    [3, 3, 3,],
+    [4, 4, 4, 4]
+) // $ExpectType number;
+~~~~~~~~~~~~~~~~~~~~~~~~ [TypeScript@next: Can not match a node to this assertion. If this is a multiline function call, ensure the assertion is on the line above.]
 
 // Test that we get the type of the initializer on a variable declaration.
 // $ExpectType 1

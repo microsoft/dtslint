@@ -27,7 +27,7 @@ export class Rule extends Lint.Rules.TypedRule {
     /* tslint:enable:object-literal-sort-keys */
 
     static FAILURE_STRING_DUPLICATE_ASSERTION = "This line has 2 $ExpectType assertions.";
-    static FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this assertion.";
+    static FAILURE_STRING_ASSERTION_MISSING_NODE = "Can not match a node to this assertion. If this is a multiline function call, ensure the assertion is on the line above.";
     static FAILURE_STRING_EXPECTED_ERROR = "Expected an error on this line, but found none.";
 
     static FAILURE_STRING(expectedVersion: string, expectedType: string, actualType: string): string {
